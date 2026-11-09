@@ -6,19 +6,19 @@
   <title>Prop Journal | 3D Liquid Backtest & Trade Takip</title>
   <style>
     :root {
-      /* Üretilen Palet Renkleri */
-      --color-neon-green: #23E799;   /* Kazanma/Kâr oranları, pozitif butonlar */
-      --color-neon-cyan: #23E6E7;    /* Canlı Turkuaz (Metrikler ve grafik vurguları) */
-      --color-bright-blue: #2398E7;  /* Canlı Mavi (İkincil butonlar ve linkler) */
-      --color-indigo-blue: #2349E7;  /* Birincil Marka Rengi ve buton tabanları */
+      /* Renk Paleti */
+      --color-neon-green: #23E799;
+      --color-neon-cyan: #23E6E7;
+      --color-bright-blue: #2398E7;
+      --color-indigo-blue: #2349E7;
 
       /* Koyu Arka Plan ve Sistem Renkleri */
-      --bg-dark-main: #0B0F19;       /* Genel sayfa arka planı */
-      --bg-gradient-glow: radial-gradient(circle at 50% -20%, #161EDF 0%, transparent 70%); /* Arka plandaki 3D neon ışıması */
-      --bg-panel-dark: rgba(15, 23, 42, 0.45); /* 3D Cam Kartların yarı saydam arka planı */
-      --glass-border: rgba(255, 255, 255, 0.08); /* İnce premium cam konturu */
-      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1); /* 3D iç ve dış gölge derinliği */
-      --text-main: #F8FAFC;          /* Okunabilir kırık beyaz metin */
+      --bg-dark-main: #0B0F19;
+      --bg-gradient-glow: radial-gradient(circle at 50% -20%, #161EDF 0%, transparent 70%);
+      --bg-panel-dark: rgba(15, 23, 42, 0.45);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      --text-main: #F8FAFC;
 
       --color-danger: #EF4444;
       --color-muted: #94A3B8;
@@ -56,7 +56,7 @@
       gap: 28px;
     }
 
-    /* iOS 26 Liquid Cam Mimarisi */
+    /* iOS 26 Liquid Cam Tasarımı */
     .glass-card {
       background: var(--bg-panel-dark);
       backdrop-filter: blur(24px) saturate(190%);
@@ -177,7 +177,7 @@
       color: var(--color-muted);
     }
 
-    /* 2. ANA ODAK - FOTOĞRAF VE AÇIKLAMA GİRİŞ FORMU (FX Replay Tarzı) */
+    /* 2. ANA ODAK - FOTOĞRAF VE AÇIKLAMA GİRİŞ ALANI (FX Replay Tarzı) */
     .form-panel {
       padding: 28px;
     }
@@ -235,10 +235,6 @@
       transition: transform 0.3s;
     }
 
-    .dropzone:hover svg {
-      transform: scale(1.08);
-    }
-
     .dropzone-title {
       font-weight: 600;
       font-size: 0.95rem;
@@ -278,6 +274,7 @@
       cursor: pointer;
       backdrop-filter: blur(8px);
       transition: var(--transition-smooth);
+      z-index: 5;
     }
 
     .preview-remove-btn:hover {
@@ -365,7 +362,7 @@
       transform: translateY(0);
     }
 
-    /* 3. ALT ALAN - GÖRSEL TRADE AKIŞI VE GALERİ */
+    /* 3. ALT ALAN - GÖRSEL TRADE GALERİSİ */
     .gallery-section {
       display: flex;
       flex-direction: column;
@@ -564,7 +561,6 @@
       box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
     }
 
-    /* Boş Durum */
     .empty-state {
       padding: 48px 24px;
       text-align: center;
@@ -605,12 +601,6 @@
       align-items: center;
       justify-content: center;
       padding: 24px;
-      animation: fadeIn 0.25s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
     }
 
     .lightbox-content-box {
@@ -684,7 +674,6 @@
 <body>
 
   <div class="container">
-    <!-- Üst Başlık & Durum Çubuğu -->
     <header class="glass-card top-header">
       <div class="brand-title">
         PROP JOURNAL
@@ -711,7 +700,7 @@
       <div class="glass-card metric-card">
         <span class="metric-label">Net Kâr / Zarar</span>
         <div class="metric-value blue" id="metric-net-pnl">$0.00</div>
-        <span class="metric-sub">Gerçekleşen Bakiye Değişimi</span>
+        <span class="metric-sub">Gerçekleşen Bakiye</span>
       </div>
       <div class="glass-card metric-card">
         <span class="metric-label">Profit Factor</span>
@@ -731,7 +720,6 @@
       </h2>
 
       <form id="trade-form" class="form-grid">
-        <!-- Dosya Yükleme Alanı -->
         <div class="dropzone-container">
           <div class="dropzone" id="dropzone">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -740,7 +728,7 @@
               <polyline points="21 15 16 10 5 21"></polyline>
             </svg>
             <div class="dropzone-title">Grafik Ekran Görüntüsünü Sürükleyin</div>
-            <div class="dropzone-subtitle">veya dosya seçmek için tıklayın (PNG, JPG, WEBP)</div>
+            <div class="dropzone-subtitle">veya dosya seçmek için tıklayın</div>
             
             <div class="preview-container" id="preview-container">
               <img id="preview-image" src="" alt="Önizleme">
@@ -750,7 +738,6 @@
           <input type="file" id="file-input" accept="image/*" style="display: none;">
         </div>
 
-        <!-- Form Detayları -->
         <div class="form-fields">
           <div class="input-row">
             <div class="field-group">
@@ -811,9 +798,7 @@
         </h2>
       </div>
 
-      <div class="trade-grid" id="trade-grid">
-        <!-- Dinamik Kartlar Buraya Basılır -->
-      </div>
+      <div class="trade-grid" id="trade-grid"></div>
     </section>
   </div>
 
@@ -826,12 +811,19 @@
   </div>
 
   <script>
-    // Global Durum ve LocalStorage Tanımları
     const STORAGE_KEY = 'prop_journal_trades_v1';
-    let trades = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    let trades = [];
+
+    // LocalStorage Güvenli Yükleme
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      trades = saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      trades = [];
+    }
+
     let currentUploadedImage = null;
 
-    // DOM Seçicileri
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file-input');
     const previewContainer = document.getElementById('preview-container');
@@ -843,16 +835,15 @@
     const lightboxImage = document.getElementById('lightbox-image');
     const lightboxClose = document.getElementById('lightbox-close');
 
-    // Metrik Seçicileri
     const metricTotalTrades = document.getElementById('metric-total-trades');
     const metricWinRate = document.getElementById('metric-win-rate');
     const metricNetPnl = document.getElementById('metric-net-pnl');
     const metricProfitFactor = document.getElementById('metric-profit-factor');
 
-    // Fotoğrafı Optimize Ederek LocalStorage Limitini Koruma
-    function compressAndStoreImage(file) {
+    // Görsel Sıkıştırma (LocalStorage Taşmasını Engeller)
+    function processImage(file) {
       if (!file.type.startsWith('image/')) {
-        alert('Lütfen sadece resim dosyası seçin.');
+        alert('Lütfen sadece görsel dosyası yükleyin.');
         return;
       }
 
@@ -863,15 +854,15 @@
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
-          const maxDimension = 1200;
+          const maxDim = 1200;
 
-          if (width > maxDimension || height > maxDimension) {
+          if (width > maxDim || height > maxDim) {
             if (width > height) {
-              height = Math.round((height * maxDimension) / width);
-              width = maxDimension;
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
             } else {
-              width = Math.round((width * maxDimension) / height);
-              height = maxDimension;
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
             }
           }
 
@@ -880,7 +871,6 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          // Kalite ve boyut dengesi (JPEG 0.8)
           currentUploadedImage = canvas.toDataURL('image/jpeg', 0.8);
           previewImage.src = currentUploadedImage;
           previewContainer.style.display = 'block';
@@ -890,12 +880,11 @@
       reader.readAsDataURL(file);
     }
 
-    // Drag & Drop Olayları
     dropzone.addEventListener('click', () => fileInput.click());
 
     fileInput.addEventListener('change', (e) => {
       if (e.target.files && e.target.files[0]) {
-        compressAndStoreImage(e.target.files[0]);
+        processImage(e.target.files[0]);
       }
     });
 
@@ -914,9 +903,8 @@
     });
 
     dropzone.addEventListener('drop', (e) => {
-      const dt = e.dataTransfer;
-      if (dt.files && dt.files[0]) {
-        compressAndStoreImage(dt.files[0]);
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        processImage(e.dataTransfer.files[0]);
       }
     });
 
@@ -932,7 +920,6 @@
       fileInput.value = '';
     }
 
-    // Metrikleri Hesaplama (FundedNext Mantığı)
     function updateMetrics() {
       const total = trades.length;
       metricTotalTrades.textContent = total;
@@ -965,11 +952,9 @@
         }
       });
 
-      // Win Rate
       const winRate = ((winCount / total) * 100).toFixed(1);
       metricWinRate.textContent = `${winRate}%`;
 
-      // Toplam Net Kâr/Zarar
       metricNetPnl.textContent = `${totalPnl >= 0 ? '+' : ''}$${totalPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       if (totalPnl > 0) {
         metricNetPnl.className = 'metric-value green';
@@ -979,16 +964,13 @@
         metricNetPnl.className = 'metric-value blue';
       }
 
-      // Profit Factor (Brüt Kâr / Brüt Zarar)
       if (grossLoss === 0) {
         metricProfitFactor.textContent = grossProfit > 0 ? 'MAX' : '0.00';
       } else {
-        const pf = (grossProfit / grossLoss).toFixed(2);
-        metricProfitFactor.textContent = pf;
+        metricProfitFactor.textContent = (grossProfit / grossLoss).toFixed(2);
       }
     }
 
-    // Galeri Kartlarını Render Etme
     function renderGallery() {
       tradeGrid.innerHTML = '';
 
@@ -1001,11 +983,13 @@
               <line x1="12" y1="17" x2="12" y2="21"></line>
             </svg>
             <div class="empty-title">Henüz Kayıtlı Trade Bulunmuyor</div>
-            <div class="empty-subtitle">Ekran görüntüsü yükleyip yukarıdaki formdan stratejinizi günlüğe ekleyin.</div>
+            <div class="empty-subtitle">Formu doldurup görsel ekleyerek ilk trade kaydınızı oluşturun.</div>
           </div>
         `;
         return;
       }
+
+      const defaultPlaceholder = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22 viewBox=%220 0 400 200%22%3E%3Crect fill=%22%230f172a%22 width=%22400%22 height=%22200%22/%3E%3Ctext fill=%22%23475569%22 font-family=%22sans-serif%22 font-size=%2216%22 dy=%2210.5%22 font-weight=%22bold%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22%3EGrafik Yok%3C/text%3E%3C/svg%3E";
 
       trades.forEach((trade) => {
         const card = document.createElement('div');
@@ -1026,11 +1010,11 @@
         if (pnlNum > 0) pnlClass = 'positive';
         if (pnlNum < 0) pnlClass = 'negative';
 
-        const fallbackImg = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200'%3E%3Crect fill='%230f172a' width='400' height='200'/%3E%3Ctext fill='%23475569' font-family='sans-serif' font-size='16' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3EGrafik Eklenmedi%3C/text%3E%3C/svg%3E";
+        const imgSrc = trade.image || defaultPlaceholder;
 
         card.innerHTML = `
-          <div class="trade-card-thumb-wrapper" onclick="openLightbox('${trade.image || fallbackImg}')">
-            <img src="${trade.image || fallbackImg}" class="trade-card-thumb" alt="${trade.asset}">
+          <div class="trade-card-thumb-wrapper">
+            <img src="${imgSrc}" class="trade-card-thumb" alt="${escapeHtml(trade.asset)}">
             <div class="thumb-overlay-hint">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
@@ -1045,7 +1029,7 @@
           <div class="trade-card-content">
             <div class="card-meta-row">
               <div class="card-asset">
-                ${trade.asset}
+                ${escapeHtml(trade.asset)}
                 <span class="card-direction ${trade.direction.toLowerCase()}">${trade.direction}</span>
               </div>
               <div class="card-pnl ${pnlClass}">
@@ -1055,7 +1039,7 @@
             <div class="card-notes">${escapeHtml(trade.notes || 'Açıklama girilmedi.')}</div>
             <div class="card-footer">
               <span class="card-date">${trade.date}</span>
-              <button class="delete-btn" onclick="deleteTrade('${trade.id}')">
+              <button class="delete-btn" type="button">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="3 6 5 6 21 6"></polyline>
                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -1066,11 +1050,22 @@
           </div>
         `;
 
+        // Güvenli DOM Event Bağlantıları (Syntax hatalarını önler)
+        const thumbWrapper = card.querySelector('.trade-card-thumb-wrapper');
+        thumbWrapper.addEventListener('click', () => {
+          openLightbox(imgSrc);
+        });
+
+        const deleteBtn = card.querySelector('.delete-btn');
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteTrade(trade.id);
+        });
+
         tradeGrid.appendChild(card);
       });
     }
 
-    // Form Gönderimi (Trade Kaydetme)
     tradeForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
@@ -1081,7 +1076,7 @@
       const notes = document.getElementById('input-notes').value.trim();
 
       const newTrade = {
-        id: 'trade_' + Date.now(),
+        id: 't_' + Date.now(),
         asset,
         direction,
         result,
@@ -1094,36 +1089,32 @@
       trades.unshift(newTrade);
       saveAndSync();
 
-      // Formu Sıfırla
       tradeForm.reset();
       resetDropzone();
     });
 
-    // Trade Silme
-    window.deleteTrade = function(id) {
+    function deleteTrade(id) {
       if (confirm('Bu trade kaydını silmek istediğinize emin misiniz?')) {
         trades = trades.filter(t => t.id !== id);
         saveAndSync();
       }
-    };
+    }
 
-    // Kalıcı Hafıza Senkronizasyonu
     function saveAndSync() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
       } catch (err) {
-        alert('Depolama alanı sınırı aşıldı! Lütfen gereksiz yüksek çözünürlüklü fotoğrafları silin.');
+        alert('Depolama alanı aşıldı! Eski trade görsellerini temizleyin.');
       }
       updateMetrics();
       renderGallery();
     }
 
-    // Lightbox İşlemleri
-    window.openLightbox = function(src) {
+    function openLightbox(src) {
       lightboxImage.src = src;
       lightboxModal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
-    };
+    }
 
     function closeLightbox() {
       lightboxModal.style.display = 'none';
@@ -1142,7 +1133,6 @@
       }
     });
 
-    // Güvenlik Yardımcısı (XSS Önleme)
     function escapeHtml(text) {
       const map = {
         '&': '&amp;',
@@ -1151,10 +1141,9 @@
         '"': '&quot;',
         "'": '&#039;'
       };
-      return text.replace(/[&<>"']/g, m => map[m]);
+      return String(text).replace(/[&<>"']/g, m => map[m]);
     }
 
-    // İlk Yükleme
     updateMetrics();
     renderGallery();
   </script>
