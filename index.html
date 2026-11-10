@@ -1965,6 +1965,29 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     </div>
   </div>
 
+  <div class="modal-backdrop" id="deleteConfirmModalBackdrop">
+    <div class="glass-surface modal-content-panel" style="max-width: 440px; text-align: center;">
+      <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(255, 130, 157, 0.15); border: 1px solid rgba(255, 130, 157, 0.35); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: var(--color-danger);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </div>
+      <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 8px;">İşlemi Sil</h3>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 22px;">
+        Bu işlem kaydını ve bağlı görselleri silmek istediğinize emin misiniz?
+      </p>
+      <div style="display: flex; gap: 12px; justify-content: center;">
+        <button type="button" class="btn-primary" id="cancelDeleteTradeModalBtn" style="background: rgba(255,255,255,0.08); border-color: var(--glass-border); color: var(--text-main);">
+          İptal
+        </button>
+        <button type="button" class="btn-primary" id="confirmDeleteTradeModalBtn" style="background: linear-gradient(135deg, #EF4444, #DC2626); border-color: rgba(239, 68, 68, 0.6); box-shadow: 0 8px 24px -4px rgba(239, 68, 68, 0.5);">
+          Evet, Sil
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="lightbox-wrapper" id="globalLightbox">
     <button type="button" class="modal-close-btn" id="closeLightboxBtn" style="position: absolute; top: 20px; right: 24px; font-size: 2rem;">&times;</button>
     <div class="lightbox-img-box">
@@ -4004,9 +4027,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     /* -------------------------------------------------------------
        İŞLEM SİLME (FIRESTORE SUBCOLLECTION & INDEXEDDB TEMİZLİĞİ)
        ------------------------------------------------------------- */
-    window.confirmDeleteTrade = async function(id) {
-      if (!confirm('Bu işlem kaydını ve bağlı görselleri silmek istediğinize emin misiniz?')) return;
+    let pendingDeleteTradeId = null;
 
+    async function executeDeleteTrade(id) {
       const trade = AppState.trades.find(t => t.id === id);
       
       // 1. Firestore Bulut alt koleksiyonunu ve ana belgeyi temizle
@@ -4047,7 +4070,41 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       AppState.trades = AppState.trades.filter(t => t.id !== id);
       saveTradesState();
       if (!AppState.user) showToast('İşlem yerel depolamadan silindi.', 'info');
+    }
+
+    window.confirmDeleteTrade = function(id) {
+      pendingDeleteTradeId = id;
+      const modal = document.getElementById('deleteConfirmModalBackdrop');
+      if (modal) {
+        modal.classList.add('active');
+      } else {
+        if (confirm('Bu işlem kaydını ve bağlı görselleri silmek istediğinize emin misiniz?')) {
+          executeDeleteTrade(id);
+        }
+      }
     };
+
+    document.getElementById('cancelDeleteTradeModalBtn')?.addEventListener('click', () => {
+      document.getElementById('deleteConfirmModalBackdrop')?.classList.remove('active');
+      pendingDeleteTradeId = null;
+    });
+
+    document.getElementById('confirmDeleteTradeModalBtn')?.addEventListener('click', async () => {
+      const modal = document.getElementById('deleteConfirmModalBackdrop');
+      modal?.classList.remove('active');
+      if (pendingDeleteTradeId) {
+        const idToDelete = pendingDeleteTradeId;
+        pendingDeleteTradeId = null;
+        await executeDeleteTrade(idToDelete);
+      }
+    });
+
+    document.getElementById('deleteConfirmModalBackdrop')?.addEventListener('click', (e) => {
+      if (e.target.id === 'deleteConfirmModalBackdrop') {
+        e.target.classList.remove('active');
+        pendingDeleteTradeId = null;
+      }
+    });
 
     /* -------------------------------------------------------------
        İŞLEM DETAY MODALI
