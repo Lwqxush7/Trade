@@ -640,29 +640,60 @@
       border: 1px solid var(--glass-border-highlight);
       background: #000;
       box-shadow: var(--neu-btn-shadow);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .image-chip-preview:hover {
+      border-color: var(--color-neon-cyan);
+      transform: scale(1.04);
     }
 
     .image-chip-preview img { width: 100%; height: 100%; object-fit: cover; }
 
     .remove-chip-btn {
       position: absolute;
-      top: 2px;
-      right: 2px;
-      width: 18px;
-      height: 18px;
+      top: 3px;
+      right: 3px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
-      background: rgba(239, 68, 68, 0.9);
+      background: rgba(239, 68, 68, 0.95);
       color: #fff;
-      border: none;
-      font-size: 0.7rem;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      font-size: 0.85rem;
+      font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       transition: var(--transition-fast);
+      z-index: 20;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
     }
 
-    .remove-chip-btn:hover { transform: scale(1.1); background: var(--color-danger); }
+    .remove-chip-btn:hover { transform: scale(1.15); background: var(--color-danger); }
+
+    .photo-preview-pill {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      background: rgba(35, 230, 231, 0.12);
+      border: 1px solid rgba(35, 230, 231, 0.3);
+      color: var(--color-neon-cyan);
+      font-weight: 700;
+      font-size: 0.78rem;
+      transition: var(--transition-fast);
+    }
+
+    .photo-preview-pill:hover {
+      background: rgba(35, 230, 231, 0.25);
+      border-color: var(--color-neon-cyan);
+      transform: scale(1.05);
+    }
 
     /* -------------------------------------------------------------
        8. FORM VE TABLO ELEMANLARI
@@ -1863,8 +1894,79 @@
       }
     }
 
+    /* -------------------------------------------------------------
+       GÖRSEL BELLEK VE EVRENSEL URL ÇÖZÜCÜ (INDEXEDDB & CACHE)
+       ------------------------------------------------------------- */
+    const imageMemoryCache = new Map();
+
+    async function getImageDisplayUrl(item) {
+      if (!item) return null;
+      if (typeof item === 'string') {
+        if (item.startsWith('http') || item.startsWith('data:') || item.startsWith('blob:')) return item;
+        if (imageMemoryCache.has(item)) return imageMemoryCache.get(item);
+        const fromDb = await dbGetImage(item);
+        if (fromDb) {
+          imageMemoryCache.set(item, fromDb);
+          return fromDb;
+        }
+        return null;
+      }
+
+      // Eğer doğrudan resim objesi ise
+      if (item.url && (item.url.startsWith('http') || item.url.startsWith('data:') || item.url.startsWith('blob:'))) {
+        return item.url;
+      }
+      if (item.id && imageMemoryCache.has(item.id)) {
+        return imageMemoryCache.get(item.id);
+      }
+      if (item.id) {
+        const fromDb = await dbGetImage(item.id);
+        if (fromDb) {
+          imageMemoryCache.set(item.id, fromDb);
+          return fromDb;
+        }
+      }
+      // Eğer trade objesi verilmişse (images dizisi)
+      if (item.images && item.images.length > 0) {
+        return await getImageDisplayUrl(item.images[0]);
+      }
+      // Eski sistem hasScreenshot yedeği
+      if (item.hasScreenshot && item.id) {
+        if (imageMemoryCache.has(item.id)) return imageMemoryCache.get(item.id);
+        const fromDb = await dbGetImage(item.id);
+        if (fromDb) {
+          imageMemoryCache.set(item.id, fromDb);
+          return fromDb;
+        }
+      }
+      return null;
+    }
+
+    function sanitizeTradesForLocalStorage(trades) {
+      if (!Array.isArray(trades)) return [];
+      return trades.map(trade => {
+        if (!trade || !trade.images || trade.images.length === 0) return trade;
+        const safeImages = trade.images.map(img => {
+          if (!img) return img;
+          if (img.url && img.url.startsWith('data:')) {
+            const safeId = img.id || ('img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4));
+            imageMemoryCache.set(safeId, img.url);
+            dbSaveImage(safeId, img.url).catch(() => {});
+            return { id: safeId, name: img.name || 'screenshot.jpg', isLocal: true };
+          }
+          return img;
+        });
+        return { ...trade, images: safeImages };
+      });
+    }
+
     function saveTradesState() {
-      localStorage.setItem(STORAGE_KEY_TRADES, JSON.stringify(AppState.trades));
+      try {
+        const safeTrades = sanitizeTradesForLocalStorage(AppState.trades);
+        localStorage.setItem(STORAGE_KEY_TRADES, JSON.stringify(safeTrades));
+      } catch (err) {
+        console.warn('LocalStorage kotası aşıldı veya yazma hatası (veriler bellekte korundu):', err);
+      }
       updateAllModules();
     }
 
@@ -2228,7 +2330,11 @@
     const tradeDropzone = document.getElementById('tradeDropzone');
     const tradeFileInput = document.getElementById('tradeFileInput');
 
-    tradeDropzone.addEventListener('click', () => tradeFileInput.click());
+    tradeDropzone.addEventListener('click', (e) => {
+      // tradeImagesStrip içine tıklandıysa dosya seçiciyi açma!
+      if (e.target.closest('#tradeImagesStrip')) return;
+      tradeFileInput.click();
+    });
 
     tradeFileInput.addEventListener('change', async (e) => {
       if (e.target.files && e.target.files.length > 0) {
@@ -2257,11 +2363,32 @@
       }
     });
 
+    // Pano (Clipboard Ctrl+V / Cmd+V) üzerinden doğrudan ekran görüntüsü yapıştırma
+    document.addEventListener('paste', async (e) => {
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      const imageFiles = [];
+      for (const item of items) {
+        if (item.type && item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) imageFiles.push(file);
+        }
+      }
+      if (imageFiles.length > 0) {
+        const journalSec = document.getElementById('sec-journal');
+        if (journalSec && journalSec.classList.contains('active')) {
+          await handleIncomingImages(imageFiles);
+          showToast(`${imageFiles.length} ekran görüntüsü panodan eklendi.`, 'success');
+        }
+      }
+    });
+
     async function handleIncomingImages(files) {
+      if (!files || files.length === 0) return;
       for (const file of files) {
-        if (!file.type.startsWith('image/')) continue;
-        if (file.size > 5 * 1024 * 1024) {
-          showToast(`${file.name} 5MB'dan büyük olduğu için eklenemedi.`, 'error');
+        if (!file.type || !file.type.startsWith('image/')) continue;
+        if (file.size > 15 * 1024 * 1024) {
+          showToast(`${file.name} 15MB'dan büyük olduğu için eklenemedi.`, 'error');
           continue;
         }
 
@@ -2270,45 +2397,99 @@
           AppState.pendingNewImages.push({
             blob: comp.blob,
             dataUrl: comp.dataUrl,
-            name: file.name
+            name: file.name || 'screenshot.jpg'
           });
         }
       }
-      renderTradeImagesStrip();
+      await renderTradeImagesStrip();
     }
 
-    function renderTradeImagesStrip() {
+    async function renderTradeImagesStrip() {
       tradeImagesStrip.innerHTML = '';
 
-      AppState.currentEditExistingImages.forEach((img, idx) => {
-        const div = document.createElement('div');
-        div.className = 'image-chip-preview';
-        div.innerHTML = `
-          <img src="${img.url}" alt="Görsel">
-          <button type="button" class="remove-chip-btn" onclick="window.removeExistingImage(${idx})">&times;</button>
-        `;
-        tradeImagesStrip.appendChild(div);
-      });
+      // 1. Düzenlenen işlemdeki mevcut görseller
+      for (let idx = 0; idx < AppState.currentEditExistingImages.length; idx++) {
+        const img = AppState.currentEditExistingImages[idx];
+        const displayUrl = await getImageDisplayUrl(img);
 
-      AppState.pendingNewImages.forEach((img, idx) => {
         const div = document.createElement('div');
         div.className = 'image-chip-preview';
-        div.innerHTML = `
-          <img src="${img.dataUrl}" alt="Önizleme">
-          <button type="button" class="remove-chip-btn" onclick="window.removePendingImage(${idx})">&times;</button>
-        `;
+        div.title = 'Önizlemek için tıklayın';
+
+        const imgEl = document.createElement('img');
+        imgEl.src = displayUrl || '';
+        imgEl.alt = img.name || 'Görsel';
+        div.appendChild(imgEl);
+
+        // Görsele tıklandığında Lightbox ile büyüt
+        div.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (displayUrl) window.openLightbox(displayUrl);
+        });
+
+        // Silme butonu (Olay yayılımını durdurarak dosya penceresinin açılmasını engeller)
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'remove-chip-btn';
+        delBtn.title = 'Görseli Kaldır';
+        delBtn.innerHTML = '&times;';
+        delBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.removeExistingImage(idx);
+        });
+        div.appendChild(delBtn);
+
         tradeImagesStrip.appendChild(div);
-      });
+      }
+
+      // 2. Yeni eklenen (bekleyen) görseller
+      for (let idx = 0; idx < AppState.pendingNewImages.length; idx++) {
+        const img = AppState.pendingNewImages[idx];
+        const displayUrl = img.dataUrl;
+
+        const div = document.createElement('div');
+        div.className = 'image-chip-preview';
+        div.title = 'Önizlemek için tıklayın';
+
+        const imgEl = document.createElement('img');
+        imgEl.src = displayUrl || '';
+        imgEl.alt = img.name || 'Önizleme';
+        div.appendChild(imgEl);
+
+        // Görsele tıklandığında Lightbox ile büyüt
+        div.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (displayUrl) window.openLightbox(displayUrl);
+        });
+
+        // Silme butonu
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'remove-chip-btn';
+        delBtn.title = 'Görseli Kaldır';
+        delBtn.innerHTML = '&times;';
+        delBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.removePendingImage(idx);
+        });
+        div.appendChild(delBtn);
+
+        tradeImagesStrip.appendChild(div);
+      }
     }
 
-    window.removeExistingImage = function(idx) {
+    window.removeExistingImage = async function(idx) {
       AppState.currentEditExistingImages.splice(idx, 1);
-      renderTradeImagesStrip();
+      await renderTradeImagesStrip();
     };
 
-    window.removePendingImage = function(idx) {
+    window.removePendingImage = async function(idx) {
       AppState.pendingNewImages.splice(idx, 1);
-      renderTradeImagesStrip();
+      await renderTradeImagesStrip();
     };
 
     /* -------------------------------------------------------------
@@ -2811,7 +2992,7 @@
             <td><span class="badge-pill ${badgeClass}">${t.result}</span></td>
             <td style="${pnlClass}">${formatCurrency(pnlNum)}</td>
             <td style="font-weight: 700;">${rVal} R</td>
-            <td>${imgCount > 0 ? `📷 ${imgCount}` : '-'}</td>
+            <td>${imgCount > 0 ? `<span class="photo-preview-pill" onclick="window.quickPreviewTradePhoto('${t.id}')" title="Görseli Önizle">📷 ${imgCount}</span>` : '-'}</td>
             <td style="text-align: right;">
               <div class="table-actions" style="justify-content: flex-end;">
                 <button type="button" class="action-icon-btn" onclick="window.openTradeDetail('${t.id}')" title="Detay">
@@ -3053,10 +3234,7 @@
 
         grid.appendChild(card);
 
-        let displayUrl = (t.images && t.images.length > 0) ? t.images[0].url : null;
-        if (!displayUrl && t.hasScreenshot) {
-          displayUrl = await dbGetImage(t.id);
-        }
+        const displayUrl = await getImageDisplayUrl(t);
 
         const thumbBox = document.getElementById(`thumb_box_${t.id}`);
         if (thumbBox && displayUrl) {
@@ -3132,18 +3310,18 @@
       if (AppState.currentEditExistingImages.length === 0 && trade.hasScreenshot) {
         const localImg = await dbGetImage(trade.id);
         if (localImg) {
-          AppState.currentEditExistingImages.push({ id: 'local_' + trade.id, url: localImg });
+          AppState.currentEditExistingImages.push({ id: 'local_' + trade.id, url: localImg, isLocal: true });
         }
       }
       AppState.pendingNewImages = [];
-      renderTradeImagesStrip();
+      await renderTradeImagesStrip();
 
       saveBtnText.textContent = 'Değişiklikleri Kaydet';
       cancelEditTradeBtn.style.display = 'inline-flex';
       document.getElementById('tradeForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
 
-    window.cancelTradeEdit = function() {
+    window.cancelTradeEdit = async function() {
       tradeForm.reset();
       document.getElementById('editTradeId').value = '';
       document.getElementById('journalFormHeading').textContent = 'Yeni İşlem Kaydı';
@@ -3151,7 +3329,7 @@
       cancelEditTradeBtn.style.display = 'none';
       AppState.currentEditExistingImages = [];
       AppState.pendingNewImages = [];
-      renderTradeImagesStrip();
+      await renderTradeImagesStrip();
       setDefaultDatetime();
       checkCurrentPairFavStatus();
     };
@@ -3191,32 +3369,50 @@
 
         const tradeId = editId || `trade_${Date.now()}`;
 
-        // Görselleri Storage'a yükle
+        // Görselleri Storage'a veya güvenli yerel IndexedDB'ye yükle
         const newlyUploaded = [];
-        if (AppState.pendingNewImages.length > 0 && AppState.user) {
-          setSyncState('syncing', 'Görseller Yükleniyor...');
-          try {
-            for (const fileObj of AppState.pendingNewImages) {
-              const uploaded = await uploadTradeImageToStorage(AppState.user.uid, tradeId, fileObj);
-              if (uploaded) newlyUploaded.push(uploaded);
-            }
-          } catch (storageErr) {
-            console.error('Storage Yükleme Hatası:', storageErr);
-            let errMsg = storageErr.code || storageErr.message || 'Bilinmeyen hata';
-            if (storageErr.code === 'storage/unauthorized') {
-              errMsg = 'Yetkisiz erişim. Firebase Storage kurallarını kontrol edin.';
-            } else if (storageErr.code === 'storage/quota-exceeded') {
-              errMsg = 'Storage kotası doldu.';
-            }
-            showToast(`Görsel yüklenemedi: ${errMsg}`, 'error');
-            setSyncState('error', 'Görsel Yükleme Başarısız');
-            return;
-          }
-        } else if (AppState.pendingNewImages.length > 0) {
+        if (AppState.pendingNewImages.length > 0) {
+          setSyncState('syncing', 'Görseller İşleniyor...');
           for (const fileObj of AppState.pendingNewImages) {
-            const localId = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
-            await dbSaveImage(localId, fileObj.dataUrl);
-            newlyUploaded.push({ id: localId, url: fileObj.dataUrl, name: fileObj.name });
+            const imgId = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            let uploadedToStorage = false;
+
+            // 1. Kullanıcı Google ile giriş yapmışsa Firebase Storage'a yüklemeyi dene
+            if (AppState.user) {
+              try {
+                const uploaded = await uploadTradeImageToStorage(AppState.user.uid, tradeId, fileObj);
+                if (uploaded && uploaded.url) {
+                  newlyUploaded.push({
+                    id: imgId,
+                    url: uploaded.url,
+                    storagePath: uploaded.storagePath,
+                    name: fileObj.name || `screenshot_${imgId}.jpg`,
+                    isLocal: false
+                  });
+                  uploadedToStorage = true;
+                }
+              } catch (storageErr) {
+                console.warn('Firebase Storage yükleme uyarısı (yerel yedek devreye giriyor):', storageErr);
+                let errMsg = storageErr.code || storageErr.message || 'Storage uyarısı';
+                if (storageErr.code === 'storage/unauthorized') {
+                  errMsg = 'Firebase Storage yazma izni kısıtlı.';
+                } else if (storageErr.code === 'storage/quota-exceeded') {
+                  errMsg = 'Storage kotası doldu.';
+                }
+                showToast(`Bulut depolama uyarısı: ${errMsg}. Görsel cihazınıza kaydedildi.`, 'info');
+              }
+            }
+
+            // 2. Storage yüklenemediyse veya kullanıcı yerel moddaysa IndexedDB'ye güvenle kaydet
+            if (!uploadedToStorage) {
+              imageMemoryCache.set(imgId, fileObj.dataUrl);
+              await dbSaveImage(imgId, fileObj.dataUrl);
+              newlyUploaded.push({
+                id: imgId,
+                name: fileObj.name || `screenshot_${imgId}.jpg`,
+                isLocal: true
+              });
+            }
           }
         }
 
@@ -3278,7 +3474,7 @@
           if (!AppState.user) showToast('İşlem yerel günlüğe kaydedildi.', 'success');
         }
 
-        window.cancelTradeEdit();
+        await window.cancelTradeEdit();
         setSyncState('synced', 'Senkronizasyon Tamamlandı');
       } finally {
         isSubmittingTrade = false;
@@ -3295,14 +3491,19 @@
       if (!confirm('Bu işlem kaydını ve bağlı görselleri silmek istediğinize emin misiniz?')) return;
 
       const trade = AppState.trades.find(t => t.id === id);
-      if (trade && trade.images && AppState.user) {
+      if (trade && trade.images) {
         for (const img of trade.images) {
-          if (img.storagePath) {
+          if (img.storagePath && AppState.user) {
             const sRef = ref(storage, img.storagePath);
             await deleteObject(sRef).catch(() => {});
           }
+          if (img.id) {
+            imageMemoryCache.delete(img.id);
+            await dbDeleteImage(img.id).catch(() => {});
+          }
         }
       }
+      await dbDeleteImage(id).catch(() => {});
 
       if (AppState.user) {
         try {
@@ -3314,7 +3515,6 @@
       }
 
       AppState.trades = AppState.trades.filter(t => t.id !== id);
-      await dbDeleteImage(id);
       saveTradesState();
       if (!AppState.user) showToast('İşlem yerel depolamadan silindi.', 'info');
     };
@@ -3329,26 +3529,30 @@
       const body = document.getElementById('detailModalBody');
       const pnlNum = parseFloat(trade.pnl) || 0;
 
-      let imagesHtml = '<div style="font-size: 0.8rem; color: var(--text-muted);">Görsel eklenmemiş.</div>';
+      // Asenkron olarak görselleri topla ve hazırla
+      let imagesList = [];
       if (trade.images && trade.images.length > 0) {
+        for (const img of trade.images) {
+          const url = await getImageDisplayUrl(img);
+          if (url) imagesList.push({ id: img.id, url, name: img.name || 'Grafik' });
+        }
+      }
+      if (imagesList.length === 0 && trade.hasScreenshot) {
+        const localImg = await dbGetImage(trade.id);
+        if (localImg) imagesList.push({ id: trade.id, url: localImg, name: 'Grafik' });
+      }
+
+      let imagesHtml = '<div style="font-size: 0.8rem; color: var(--text-muted);">Görsel eklenmemiş.</div>';
+      if (imagesList.length > 0) {
         imagesHtml = `
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            ${trade.images.map(img => `
-              <div style="width: 130px; height: 90px; border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; border: 1px solid var(--glass-border-highlight);" onclick="window.openLightbox('${img.url}')">
-                <img src="${img.url}" style="width: 100%; height: 100%; object-fit: cover;" alt="Grafik">
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="detailImagesContainer">
+            ${imagesList.map((img, i) => `
+              <div class="detail-img-thumb" data-idx="${i}" style="width: 130px; height: 90px; border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; border: 1px solid var(--glass-border-highlight); transition: transform var(--transition-fast);" title="Büyütmek için tıklayın">
+                <img src="${img.url}" style="width: 100%; height: 100%; object-fit: cover;" alt="${escapeHtml(img.name)}">
               </div>
             `).join('')}
           </div>
         `;
-      } else if (trade.hasScreenshot) {
-        const localImg = await dbGetImage(trade.id);
-        if (localImg) {
-          imagesHtml = `
-            <div style="width: 140px; height: 90px; border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; border: 1px solid var(--glass-border-highlight);" onclick="window.openLightbox('${localImg}')">
-              <img src="${localImg}" style="width: 100%; height: 100%; object-fit: cover;" alt="Grafik">
-            </div>
-          `;
-        }
       }
 
       body.innerHTML = `
@@ -3395,7 +3599,29 @@
         </div>
       `;
 
+      // Önizleme tıklama dinleyicilerini güvenle bağla
+      body.querySelectorAll('.detail-img-thumb').forEach(el => {
+        const idx = parseInt(el.getAttribute('data-idx'), 10);
+        if (imagesList[idx] && imagesList[idx].url) {
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.openLightbox(imagesList[idx].url);
+          });
+        }
+      });
+
       document.getElementById('tradeDetailModalBackdrop').classList.add('active');
+    };
+
+    window.quickPreviewTradePhoto = async function(tradeId) {
+      const trade = AppState.trades.find(t => t.id === tradeId);
+      if (!trade) return;
+      const url = await getImageDisplayUrl(trade);
+      if (url) {
+        window.openLightbox(url);
+      } else {
+        window.openTradeDetail(tradeId);
+      }
     };
 
     /* -------------------------------------------------------------
@@ -3500,16 +3726,18 @@
        LIGHTBOX MOTORU
        ------------------------------------------------------------- */
     window.openLightbox = function(src) {
+      if (!src) return;
       document.getElementById('lightboxImageElement').src = src;
       document.getElementById('globalLightbox').classList.add('active');
     };
 
-    document.getElementById('closeLightboxBtn').addEventListener('click', () => {
+    document.getElementById('closeLightboxBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
       document.getElementById('globalLightbox').classList.remove('active');
     });
 
     document.getElementById('globalLightbox').addEventListener('click', (e) => {
-      if (e.target === document.getElementById('globalLightbox')) {
+      if (e.target !== document.getElementById('lightboxImageElement')) {
         document.getElementById('globalLightbox').classList.remove('active');
       }
     });
