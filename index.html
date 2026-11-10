@@ -1723,6 +1723,8 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
     const storage = getStorage(app);
+    storage.maxUploadRetryTime = 10000;
+    storage.maxOperationRetryTime = 10000;
 
     isSupported().then(yes => {
       if (yes) getAnalytics(app);
@@ -2223,24 +2225,60 @@
         contentType: fileObj.blob.type || (ext === 'png' ? 'image/png' : (ext === 'webp' ? 'image/webp' : 'image/jpeg'))
       };
 
+      console.log(`[Storage Upload Başlatılıyor] Path: ${storagePath}, Bucket: ${storage.app.options.storageBucket}, UID: ${uid}, Boyut: ${fileObj.blob.size} bytes`);
+
       return new Promise((resolve, reject) => {
         const uploadTask = uploadBytesResumable(imgRef, fileObj.blob, metadata);
+
+        // 12 saniyelik zaman aşımı koruması (Sonsuz %0 kilitlenmesini engeller)
+        const timeoutId = setTimeout(() => {
+          try { uploadTask.cancel(); } catch (_) {}
+          const timeoutErr = new Error('Firebase Storage yanıt vermedi (12 sn zaman aşımı).');
+          timeoutErr.code = 'storage/timeout-exceeded';
+          timeoutErr.serverResponse = 'Upload session timed out after 12s without server response. Bucket may not exist or CORS blocked.';
+          console.error('[Storage Zaman Aşımı]:', {
+            code: timeoutErr.code,
+            bucket: storage.app.options.storageBucket,
+            path: storagePath,
+            uid: uid,
+            serverResponse: timeoutErr.serverResponse
+          });
+          setSyncState('error', 'Görsel Yükleme Zaman Aşımı (%0)');
+          reject(timeoutErr);
+        }, 12000);
 
         uploadTask.on(
           'state_changed',
           (snapshot) => {
-            if (snapshot.totalBytes > 0) {
-              const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-              setSyncState('syncing', `Görsel Yükleniyor (%${progress})...`);
-            }
+            const bytesTransferred = snapshot.bytesTransferred;
+            const totalBytes = snapshot.totalBytes;
+            const state = snapshot.state;
+            const progress = totalBytes > 0 ? Math.round((bytesTransferred / totalBytes) * 100) : 0;
+            
+            console.log(`[Storage Snapshot] Durum: ${state}, İlerleme: %${progress} (${bytesTransferred}/${totalBytes} bytes)`);
+            setSyncState('syncing', `Görsel Yükleniyor (%${progress})...`);
           },
           (error) => {
-            console.error('Firebase Storage Yükleme Hatası:', error);
+            clearTimeout(timeoutId);
+            const detailedLog = {
+              code: error.code || 'storage/unknown',
+              message: error.message || 'Bilinmeyen hata',
+              name: error.name || 'FirebaseError',
+              serverResponse: error.serverResponse || null,
+              customData: error.customData || null,
+              bucket: storage.app.options.storageBucket,
+              path: storagePath,
+              uid: uid
+            };
+            console.error('[Firebase Storage Hata Detayı]:', detailedLog);
+            setSyncState('error', `Yükleme Başarısız: ${error.code || 'Bilinmeyen'}`);
             reject(error);
           },
           async () => {
+            clearTimeout(timeoutId);
             try {
               const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+              console.log(`[Storage Upload Başarılı] URL: ${downloadUrl}`);
               resolve({
                 id: imgId,
                 url: downloadUrl,
@@ -2248,6 +2286,7 @@
                 name: fileObj.name || `screenshot_${imgId}.${ext}`
               });
             } catch (err) {
+              console.error('[Storage DownloadURL Hatası]:', err);
               reject(err);
             }
           }
@@ -3392,14 +3431,25 @@
                   uploadedToStorage = true;
                 }
               } catch (storageErr) {
-                console.warn('Firebase Storage yükleme uyarısı (yerel yedek devreye giriyor):', storageErr);
-                let errMsg = storageErr.code || storageErr.message || 'Storage uyarısı';
-                if (storageErr.code === 'storage/unauthorized') {
-                  errMsg = 'Firebase Storage yazma izni kısıtlı.';
+                console.error('[Storage Hatası Yakalandı]:', {
+                  code: storageErr.code,
+                  message: storageErr.message,
+                  serverResponse: storageErr.serverResponse,
+                  uid: AppState.user.uid,
+                  bucket: storage.app.options.storageBucket
+                });
+
+                let detailMsg = storageErr.code || storageErr.message || 'Bilinmeyen hata';
+                if (storageErr.code === 'storage/bucket-not-found' || (storageErr.serverResponse && storageErr.serverResponse.includes('does not exist'))) {
+                  detailMsg = 'Firebase Storage Bucket bulunamadı ("trade-d981b.firebasestorage.app" Firebase Console\'da henüz oluşturulmamış).';
+                } else if (storageErr.code === 'storage/unauthorized') {
+                  detailMsg = 'Yetkisiz erişim (Storage Security Rules yazma izni kısıtlı).';
+                } else if (storageErr.code === 'storage/timeout-exceeded' || storageErr.code === 'storage/retry-limit-exceeded') {
+                  detailMsg = 'Bağlantı zaman aşımı veya CORS engeli (Bucket mevcut değil veya erişim engellendi).';
                 } else if (storageErr.code === 'storage/quota-exceeded') {
-                  errMsg = 'Storage kotası doldu.';
+                  detailMsg = 'Storage kotası doldu.';
                 }
-                showToast(`Bulut depolama uyarısı: ${errMsg}. Görsel cihazınıza kaydedildi.`, 'info');
+                showToast(`Bulut depolama hatası: ${detailMsg} Görsel güvenle cihazınıza kaydedildi.`, 'warning');
               }
             }
 
