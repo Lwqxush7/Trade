@@ -1,0 +1,8 @@
+{
+  "name": "Prop Journal",
+  "description": "Trading journal with liquid glass UI, performance metrics, and trade analytics.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
