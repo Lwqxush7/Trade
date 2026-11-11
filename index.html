@@ -482,7 +482,8 @@ body::after {
   transform: translateX(calc(100% + 24px));
   visibility: hidden;
   pointer-events: none;
-  transition: transform var(--transition-smooth), left var(--transition-smooth), visibility var(--transition-smooth);
+  will-change: transform;
+  transition: transform var(--transition-smooth), visibility var(--transition-smooth), left var(--transition-smooth);
 }
 
 :root[data-theme="light"] .summary-panel,
@@ -498,6 +499,7 @@ html[data-theme="light"] .summary-panel {
   transform: translateX(0);
   visibility: visible;
   pointer-events: auto;
+  transition: transform var(--transition-smooth), visibility 0s 0s, left var(--transition-smooth);
   backdrop-filter: var(--blur-glass);
   -webkit-backdrop-filter: var(--blur-glass);
 }
