@@ -153,9 +153,9 @@ body::after {
   z-index: -1;
   pointer-events: none;
   background-image:
-    repeating-radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.02) 0, rgba(255, 255, 255, 0.02) 0.5px, transparent 0.5px, transparent 4px),
-    radial-gradient(circle 700px at 70% 45%, rgba(59, 108, 255, 0.22), transparent 70%),
-    radial-gradient(circle 500px at 30% 50%, rgba(124, 77, 255, 0.20), transparent 65%);
+    radial-gradient(circle 700px at 70% 45%, rgba(59, 108, 255, 0.28), transparent 70%),
+    radial-gradient(circle 500px at 30% 50%, rgba(124, 77, 255, 0.22), transparent 65%),
+    radial-gradient(circle 600px at 50% 80%, rgba(34, 211, 238, 0.18), transparent 65%);
   animation: auroraFlow2 38s ease-in-out infinite alternate;
 }
 
@@ -167,18 +167,20 @@ body::after {
     radial-gradient(circle 550px at 50% 85%, rgba(251, 146, 60, 0.16), transparent 65%);
 }
 :root[data-theme="light"] body::after {
-  background-image: repeating-radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.015) 0, rgba(15, 23, 42, 0.015) 0.5px, transparent 0.5px, transparent 4px);
+  background-image:
+    radial-gradient(circle 700px at 70% 45%, rgba(56, 189, 248, 0.22), transparent 70%),
+    radial-gradient(circle 500px at 30% 50%, rgba(167, 139, 250, 0.18), transparent 65%);
 }
 
 @keyframes auroraFlow1 {
-  0%   { transform: scale(1) translate(0, 0); }
-  50%  { transform: scale(1.12) translate(-30px, 40px); }
-  100% { transform: scale(1) translate(0, 0); }
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(-25px, 30px) scale(1.08); }
+  100% { transform: translate(0, 0) scale(1); }
 }
 @keyframes auroraFlow2 {
-  0%   { transform: scale(1.05) translate(20px, -20px) rotate(0deg); }
-  50%  { transform: scale(0.95) translate(-25px, 30px) rotate(180deg); }
-  100% { transform: scale(1.05) translate(20px, -20px) rotate(360deg); }
+  0%   { transform: translate(15px, -15px) scale(1.04); }
+  50%  { transform: translate(-20px, 25px) scale(0.96); }
+  100% { transform: translate(15px, -15px) scale(1.04); }
 }
 
 :focus-visible {
@@ -232,7 +234,7 @@ body::after {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(circle 240px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.18), transparent 70%);
+  background: radial-gradient(circle 260px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.22), transparent 70%);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.25s ease;
@@ -603,31 +605,15 @@ body::after {
 .main-content { flex-grow: 1; max-width: 1600px; margin: 0 auto; width: 100%; }
 
 .app-section { display: none; }
-.app-section.active { display: block; animation: sectionEnter 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
-
-@keyframes sectionEnter {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+.app-section.active { display: block; }
 
 /* ---------------------------------------------------------------------
    9. İSTATİSTİK KARTLARI (4 SÜTUN)
    --------------------------------------------------------------------- */
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 28px; }
 
-.stats-grid > * { animation: cardStagger 0.4s ease backwards; }
-.stats-grid > *:nth-child(1) { animation-delay: 0.02s; }
-.stats-grid > *:nth-child(2) { animation-delay: 0.05s; }
-.stats-grid > *:nth-child(3) { animation-delay: 0.08s; }
-.stats-grid > *:nth-child(4) { animation-delay: 0.11s; }
-.stats-grid > *:nth-child(5) { animation-delay: 0.14s; }
-.stats-grid > *:nth-child(6) { animation-delay: 0.17s; }
-.stats-grid > *:nth-child(7) { animation-delay: 0.20s; }
-.stats-grid > *:nth-child(8) { animation-delay: 0.23s; }
-
-@keyframes cardStagger {
-  from { opacity: 0; transform: translateY(14px); }
-  to   { opacity: 1; transform: translateY(0); }
+.stats-grid > * {
+  /* Anında tam renkli ve net render (sıfır opaklık veya gecikme kaynaklı parıldama yok) */
 }
 
 .stat-card { padding: 22px 20px; display: flex; flex-direction: column; gap: 10px; }
@@ -889,9 +875,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 .search-input-box input { padding-left: 38px; }
 .search-input-box svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted); pointer-events: none; }
 
-.data-table-responsive {
+.data-table-responsive,
+.data-table-wrapper {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-md);
   border: 1px solid var(--glass-border-subtle);
   background: var(--glass-inset);
@@ -1098,8 +1086,27 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   .form-grid-layout { grid-template-columns: 1fr; }
 }
 
+.sidebar-mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 30, 0.68);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 95;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+.sidebar-mobile-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
 @media (max-width: 900px) {
   :root { --blur-glass: blur(16px) saturate(160%); }
+
+  .sidebar-mobile-overlay { display: block; }
 
   .app-sidebar {
     left: 0;
@@ -1107,8 +1114,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     height: 100vh;
     border-radius: 0 32px 32px 0;
     transform: translateX(-110%);
+    z-index: 100;
   }
-  .app-sidebar.mobile-open { transform: translateX(0); width: 260px; }
+  .app-sidebar.mobile-open { transform: translateX(0); width: 270px; }
   .app-wrapper { margin-left: 0 !important; width: 100% !important; padding: 12px 14px 24px; }
   .app-header { top: 12px; padding: 0 16px; }
   .mobile-menu-toggle { display: block; }
@@ -1116,9 +1124,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   .glass-tilt { transform: none !important; }
   .glass-tilt::after { display: none; }
 
-  .stats-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .form-row,
-  .form-row.two-col { grid-template-columns: 1fr; }
+  .form-row.two-col,
+  .form-row.three-col { grid-template-columns: 1fr; }
   .storage-status-badge { display: none; }
 
   .calendar-nav-bar { flex-direction: column; align-items: flex-start; }
@@ -1129,10 +1138,24 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   .cell-trade-count { display: none; }
   .cell-bottom-pnl { font-size: 0.66rem; }
 
+  .dashboard-charts-grid,
+  .dashboard-secondary-grid { grid-template-columns: 1fr; }
+  .journal-layout { grid-template-columns: 1fr; }
   .lab-grid { grid-template-columns: 1fr; }
   .gallery-grid { grid-template-columns: 1fr; }
-  .modal-content-panel { padding: 22px; }
+  .modal-backdrop { padding: 12px; }
+  .modal-content-panel { padding: 22px; max-height: 94vh; }
   .search-input-box { min-width: 0; width: 100%; }
+}
+
+@media (max-width: 540px) {
+  .stats-grid { grid-template-columns: 1fr; gap: 10px; }
+  .app-header { padding: 0 12px; }
+  .page-title-box h2 { font-size: 1.15rem; }
+  .page-title-box p { display: none; }
+  .google-signin-btn { padding: 6px 12px; font-size: 0.78rem; gap: 6px; }
+  .user-profile-btn { padding: 4px 8px; }
+  #userProfileName { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1223,6 +1246,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       </button>
     </div>
   </aside>
+
+  <!-- Mobil Menü Karartma Katmanı (Backdrop) -->
+  <div class="sidebar-mobile-overlay" id="sidebarMobileOverlay"></div>
 
   <!-- =============================================================
        ANA SARMALAYICI (WRAPPER)
@@ -1375,7 +1401,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         </div>
 
         <div class="dashboard-charts-grid">
-          <div class="glass-surface chart-container-card">
+          <div class="glass-surface chart-container-card glass-tilt">
             <div class="chart-header">
               <h3 class="chart-title">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -1389,7 +1415,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             </div>
           </div>
 
-          <div class="glass-surface chart-container-card">
+          <div class="glass-surface chart-container-card glass-tilt">
             <div class="chart-header">
               <h3 class="chart-title">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -1406,21 +1432,21 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         </div>
 
         <div class="dashboard-secondary-grid">
-          <div class="glass-surface chart-container-card">
+          <div class="glass-surface chart-container-card glass-tilt">
             <h3 class="chart-title">Long vs Short Performansı</h3>
             <div class="chart-canvas-wrapper">
               <canvas id="chartLongVsShort"></canvas>
             </div>
           </div>
 
-          <div class="glass-surface chart-container-card">
+          <div class="glass-surface chart-container-card glass-tilt">
             <h3 class="chart-title">Aylık Performans</h3>
             <div class="chart-canvas-wrapper">
               <canvas id="chartMonthlyPerf"></canvas>
             </div>
           </div>
 
-          <div class="glass-surface chart-container-card">
+          <div class="glass-surface chart-container-card glass-tilt">
             <h3 class="chart-title">En İyi & En Kötü İşlem</h3>
             <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 20px;">
               <div style="padding: 16px; border-radius: var(--radius-sm); background: linear-gradient(135deg, rgba(85, 229, 177, 0.12) 0%, rgba(85, 229, 177, 0.03) 100%); border: 1px solid rgba(85, 229, 177, 0.28); backdrop-filter: blur(12px); box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.2);">
@@ -1682,22 +1708,22 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       <section class="app-section" id="sec-analytics">
         <div style="display: flex; flex-direction: column; gap: 24px;">
           <div class="stats-grid">
-            <div class="glass-surface stat-card">
+            <div class="glass-surface stat-card glass-tilt">
               <span class="stat-label">Max Drawdown</span>
               <div class="stat-value danger" id="kpi-max-dd">$0.00 (0.0%)</div>
               <span class="stat-subtext">Peak to Trough En Büyük Düşüş</span>
             </div>
-            <div class="glass-surface stat-card">
+            <div class="glass-surface stat-card glass-tilt">
               <span class="stat-label">Gross Profit</span>
               <div class="stat-value neon-green" id="kpi-gross-profit">$0.00</div>
               <span class="stat-subtext">Brüt Kazançlar Toplamı</span>
             </div>
-            <div class="glass-surface stat-card">
+            <div class="glass-surface stat-card glass-tilt">
               <span class="stat-label">Gross Loss</span>
               <div class="stat-value danger" id="kpi-gross-loss">$0.00</div>
               <span class="stat-subtext">Brüt Kayıplar Toplamı</span>
             </div>
-            <div class="glass-surface stat-card">
+            <div class="glass-surface stat-card glass-tilt">
               <span class="stat-label">Seri Kazanma / Kayıp</span>
               <div class="stat-value neon-cyan" id="kpi-streaks">0W / 0L</div>
               <span class="stat-subtext">Maksimum Ardışık Seri</span>
@@ -1705,13 +1731,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           </div>
 
           <div class="dashboard-charts-grid">
-            <div class="glass-surface chart-container-card">
+            <div class="glass-surface chart-container-card glass-tilt">
               <h3 class="chart-title">Günlük P/L Dağılımı</h3>
               <div class="chart-canvas-wrapper">
                 <canvas id="chartDailyPnl"></canvas>
               </div>
             </div>
-            <div class="glass-surface chart-container-card">
+            <div class="glass-surface chart-container-card glass-tilt">
               <h3 class="chart-title">Paritelere Göre Performans</h3>
               <div class="chart-canvas-wrapper">
                 <canvas id="chartPairPerf"></canvas>
@@ -1720,13 +1746,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           </div>
 
           <div class="dashboard-charts-grid">
-            <div class="glass-surface chart-container-card">
+            <div class="glass-surface chart-container-card glass-tilt">
               <h3 class="chart-title">Stratejilere Göre Performans</h3>
               <div class="chart-canvas-wrapper">
                 <canvas id="chartStrategyPerf"></canvas>
               </div>
             </div>
-            <div class="glass-surface chart-container-card">
+            <div class="glass-surface chart-container-card glass-tilt">
               <h3 class="chart-title">İşlem Seansları Dağılımı</h3>
               <div class="chart-canvas-wrapper">
                 <canvas id="chartSessionPerf"></canvas>
@@ -3539,6 +3565,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     function renderCharts() {
+      if (typeof Chart !== 'undefined') {
+        Chart.defaults.animation = false;
+      }
       const sorted = [...AppState.trades]
         .filter(t => t.result !== 'Open')
         .sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
@@ -4754,6 +4783,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         else s.classList.remove('active');
       });
 
+      const sidebar = document.getElementById('appSidebar');
+      if (sidebar) sidebar.classList.remove('mobile-open');
+      const mobileOverlay = document.getElementById('sidebarMobileOverlay');
+      if (mobileOverlay) mobileOverlay.classList.remove('active');
+
       const titles = {
         overview: 'Genel Bakış',
         journal: 'İşlem Günlüğü',
@@ -4764,9 +4798,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         backtest: 'Backtest',
         settings: 'Ayarlar'
       };
-      document.getElementById('currentSectionTitle').textContent = titles[tab] || 'Prop Journal';
+      const titleEl = document.getElementById('currentSectionTitle');
+      if (titleEl) titleEl.textContent = titles[tab] || 'Prop Journal';
+
       if (tab === 'backtest') {
         updateBacktestModules();
+      } else if (tab === 'analytics' || tab === 'overview') {
+        renderCharts();
+      } else if (tab === 'gallery') {
+        renderGallery();
+      } else if (tab === 'calendar') {
+        renderCalendar();
       }
     };
 
@@ -5675,24 +5717,33 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       item.addEventListener('click', () => {
         const tab = item.getAttribute('data-tab');
         window.switchTab(tab);
-        document.getElementById('appSidebar').classList.remove('mobile-open');
-
-        if (tab === 'analytics' || tab === 'overview') {
-          setTimeout(() => renderCharts(), 100);
-        }
-        if (tab === 'gallery') {
-          renderGallery();
-        }
       });
     });
 
-    document.getElementById('sidebarCollapseBtn').addEventListener('click', () => {
-      document.getElementById('appSidebar').classList.toggle('collapsed');
-    });
+    const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+    if (sidebarCollapseBtn) {
+      sidebarCollapseBtn.addEventListener('click', () => {
+        document.getElementById('appSidebar').classList.toggle('collapsed');
+      });
+    }
 
-    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
-      document.getElementById('appSidebar').classList.toggle('mobile-open');
-    });
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileOverlay = document.getElementById('sidebarMobileOverlay');
+    const appSidebar = document.getElementById('appSidebar');
+
+    if (mobileMenuBtn && appSidebar) {
+      mobileMenuBtn.addEventListener('click', () => {
+        const isOpen = appSidebar.classList.toggle('mobile-open');
+        if (mobileOverlay) mobileOverlay.classList.toggle('active', isOpen);
+      });
+    }
+
+    if (mobileOverlay && appSidebar) {
+      mobileOverlay.addEventListener('click', () => {
+        appSidebar.classList.remove('mobile-open');
+        mobileOverlay.classList.remove('active');
+      });
+    }
 
     document.getElementById('themeToggleBtn').addEventListener('click', () => {
       const nextTheme = AppState.settings.theme === 'dark' ? 'light' : 'dark';
@@ -5755,29 +5806,44 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     function init3DTilt() {
-      const tiltCards = document.querySelectorAll('.glass-tilt');
-      tiltCards.forEach(card => {
-        card.addEventListener('mousemove', (e) => {
-          if (window.innerWidth < 900) return;
-          const rect = card.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          const centerX = rect.width / 2;
-          const centerY = rect.height / 2;
+      // Dinamik ve tüm sekmelerdeki .glass-tilt kartları için küresel fare takibi
+      document.addEventListener('mousemove', (e) => {
+        if (window.innerWidth < 900) return;
+        const card = e.target.closest('.glass-tilt');
+        if (!card) return;
+        const rect = card.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
 
-          const rotateX = ((y - centerY) / centerY) * -5;
-          const rotateY = ((x - centerX) / centerX) * 5;
+        const rotateX = ((y - centerY) / centerY) * -5;
+        const rotateY = ((x - centerX) / centerX) * 5;
 
-          card.style.setProperty('--mouse-x', `${x}px`);
-          card.style.setProperty('--mouse-y', `${y}px`);
-          card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-2px)`;
-        });
+        card.style.setProperty('--mouse-x', `${x.toFixed(1)}px`);
+        card.style.setProperty('--mouse-y', `${y.toFixed(1)}px`);
+        card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-2px)`;
+      });
 
-        card.addEventListener('mouseleave', () => {
+      document.addEventListener('mouseover', (e) => {
+        if (window.innerWidth < 900) return;
+        const card = e.target.closest('.glass-tilt');
+        if (!card) return;
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        card.style.setProperty('--mouse-x', `${x.toFixed(1)}px`);
+        card.style.setProperty('--mouse-y', `${y.toFixed(1)}px`);
+      });
+
+      document.addEventListener('mouseout', (e) => {
+        const card = e.target.closest('.glass-tilt');
+        if (card && (!e.relatedTarget || !card.contains(e.relatedTarget))) {
           card.style.transform = '';
           card.style.removeProperty('--mouse-x');
           card.style.removeProperty('--mouse-y');
-        });
+        }
       });
     }
 
