@@ -1199,6 +1199,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           <span class="nav-text">Trade Galerisi</span>
         </button>
       </li>
+      <li class="nav-item" data-tab="backtest">
+        <button type="button">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+          <span class="nav-text">Backtest</span>
+        </button>
+      </li>
       <li class="nav-item" data-tab="settings">
         <button type="button">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -1767,7 +1773,284 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       </section>
 
       <!-- =========================================================
-           7. SETTINGS (AYARLAR & VERİ YÖNETİMİ)
+           7. BACKTEST (GEÇMİŞ İŞLEM & STRATEJİ TESTİ)
+           ========================================================= -->
+      <section class="app-section" id="sec-backtest">
+        <!-- Backtest KPI Kartları -->
+        <div class="stats-grid" style="margin-bottom: 24px;">
+          <div class="glass-surface stat-card glass-tilt">
+            <div class="stat-header">
+              <span class="stat-label">Total Backtest</span>
+              <div class="stat-icon-wrapper">#</div>
+            </div>
+            <div class="stat-value neon-cyan" id="bt-stat-total-trades">0</div>
+            <span class="stat-subtext">Kayıtlı Test İşlemi</span>
+          </div>
+
+          <div class="glass-surface stat-card glass-tilt">
+            <div class="stat-header">
+              <span class="stat-label">Win Rate</span>
+              <div class="stat-icon-wrapper">%</div>
+            </div>
+            <div class="stat-value neon-green" id="bt-stat-win-rate">0.0%</div>
+            <span class="stat-subtext">Kazanma Oranı</span>
+          </div>
+
+          <div class="glass-surface stat-card glass-tilt">
+            <div class="stat-header">
+              <span class="stat-label">Net P/L</span>
+              <div class="stat-icon-wrapper">$</div>
+            </div>
+            <div class="stat-value bright-blue" id="bt-stat-net-pnl">$0.00</div>
+            <span class="stat-subtext">Kümülatif Net Sonuç</span>
+          </div>
+
+          <div class="glass-surface stat-card glass-tilt">
+            <div class="stat-header">
+              <span class="stat-label">Profit Factor</span>
+              <div class="stat-icon-wrapper">PF</div>
+            </div>
+            <div class="stat-value neon-cyan" id="bt-stat-profit-factor">0.00</div>
+            <span class="stat-subtext">Kâr / Zarar Çarpanı</span>
+          </div>
+
+          <div class="glass-surface stat-card glass-tilt">
+            <div class="stat-header">
+              <span class="stat-label">Avg R:R</span>
+              <div class="stat-icon-wrapper">R</div>
+            </div>
+            <div class="stat-value bright-blue" id="bt-stat-avg-rr">0.00 R</div>
+            <span class="stat-subtext">Ortalama Risk Ödül</span>
+          </div>
+
+          <div class="glass-surface stat-card glass-tilt">
+            <div class="stat-header">
+              <span class="stat-label">Avg Win / Loss</span>
+              <div class="stat-icon-wrapper">⚖️</div>
+            </div>
+            <div class="stat-value" id="bt-stat-avg-win-loss" style="font-size: 1.15rem; color: var(--text-main);">
+              <span id="bt-stat-avg-win" style="color: var(--color-neon-green);">$0.00</span> / <span id="bt-stat-avg-loss" style="color: var(--color-danger);">$0.00</span>
+            </div>
+            <span class="stat-subtext">Ort. Kazanç / Ort. Kayıp</span>
+          </div>
+        </div>
+
+        <div class="journal-layout">
+          <!-- Backtest Formu -->
+          <div class="glass-surface form-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <h3 style="font-size: 1.15rem; font-weight: 800;" id="backtestFormHeading">Yeni Backtest İşlemi</h3>
+              <span style="font-size: 0.72rem; padding: 4px 10px; border-radius: 9999px; background: rgba(56, 189, 248, 0.15); color: var(--color-neon-cyan); border: 1px solid rgba(56, 189, 248, 0.3);">İzole Backtest Alanı</span>
+            </div>
+            
+            <form id="backtestTradeForm" class="form-grid-layout">
+              <div class="upload-box" id="backtestDropzone">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <div class="upload-title">Backtest Grafiği Yükleyin</div>
+                <div class="upload-subtitle">Görselleri sürükleyin veya seçin (Yalnızca bu sayfada görünür)</div>
+                
+                <div class="trade-images-strip" id="backtestImagesStrip"></div>
+                <input type="file" id="backtestFileInput" multiple accept="image/*" style="display: none;">
+              </div>
+
+              <div class="form-fields-container">
+                <input type="hidden" id="editBacktestTradeId" value="">
+
+                <div class="form-row">
+                  <div class="form-group" style="position: relative;">
+                    <label class="form-label" for="bt-pair">Parite / Enstrüman</label>
+                    <input type="text" id="bt-pair" class="input-glass" placeholder="örn. EURUSD, XAUUSD" required autocomplete="off">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="bt-direction">İşlem Yönü</label>
+                    <select id="bt-direction" class="input-glass">
+                      <option value="Long">Long (Alış)</option>
+                      <option value="Short">Short (Satış)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Hızlı Parite Butonları -->
+                <div class="fav-pills-bar" style="margin-top: -6px; margin-bottom: 6px;">
+                  <span class="fav-pill" onclick="document.getElementById('bt-pair').value='EURUSD'">EURUSD</span>
+                  <span class="fav-pill" onclick="document.getElementById('bt-pair').value='XAUUSD'">XAUUSD</span>
+                  <span class="fav-pill" onclick="document.getElementById('bt-pair').value='GBPUSD'">GBPUSD</span>
+                  <span class="fav-pill" onclick="document.getElementById('bt-pair').value='BTCUSD'">BTCUSD</span>
+                  <span class="fav-pill" onclick="document.getElementById('bt-pair').value='NAS100'">NAS100</span>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="bt-datetime">Test Tarihi & Saati</label>
+                    <input type="datetime-local" id="bt-datetime" class="input-glass" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="bt-timeframe">Zaman Dilimi</label>
+                    <select id="bt-timeframe" class="input-glass">
+                      <option value="M1">1 Dakika (M1)</option>
+                      <option value="M5">5 Dakika (M5)</option>
+                      <option value="M15" selected>15 Dakika (M15)</option>
+                      <option value="H1">1 Saat (H1)</option>
+                      <option value="H4">4 Saat (H4)</option>
+                      <option value="D1">Günlük (D1)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="bt-session">Piyasa Seansı</label>
+                    <select id="bt-session" class="input-glass">
+                      <option value="London">Londra (London)</option>
+                      <option value="New York" selected>New York</option>
+                      <option value="Asia">Asya (Asia)</option>
+                      <option value="Overlap">Overlap</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="bt-strategy">Strateji / Model</label>
+                    <select id="bt-strategy" class="input-glass">
+                      <option value="Varsayılan Setup">Varsayılan Setup</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row three-col">
+                  <div class="form-group">
+                    <label class="form-label" for="bt-entry">Giriş Fiyatı</label>
+                    <input type="number" step="any" id="bt-entry" class="input-glass" placeholder="0.00000">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="bt-exit">Çıkış Fiyatı</label>
+                    <input type="number" step="any" id="bt-exit" class="input-glass" placeholder="0.00000">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="bt-sl">Stop Loss</label>
+                    <input type="number" step="any" id="bt-sl" class="input-glass" placeholder="0.00000">
+                  </div>
+                </div>
+
+                <div class="form-row three-col">
+                  <div class="form-group">
+                    <label class="form-label" for="bt-risk">Risk (%)</label>
+                    <input type="number" step="0.1" id="bt-risk" class="input-glass" value="1.0">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="bt-pnl">Kâr / Zarar ($)</label>
+                    <input type="number" step="any" id="bt-pnl" class="input-glass" value="0" required>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="bt-result">Sonuç</label>
+                    <select id="bt-result" class="input-glass">
+                      <option value="Win">Win (Kazan)</option>
+                      <option value="Loss">Loss (Kayıp)</option>
+                      <option value="BE">BE (Başa Baş)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="bt-notes">Backtest Notları & Setup Kuralları</label>
+                  <textarea id="bt-notes" class="input-glass" rows="3" placeholder="Giriş gerekçesi, HTF bias, likidite seviyeleri, model teyitleri..."></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="bt-psychology">Test Gözlemleri & Çıkarılan Dersler</label>
+                  <input type="text" id="bt-psychology" class="input-glass" placeholder="Bu senaryodan ne öğrendim? Kural hatası yapıldı mı?">
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 10px;">
+                  <button type="submit" class="btn-primary neon-green" id="saveBacktestSubmitBtn" style="flex: 1;">
+                    <span id="saveBacktestBtnText">Backtest İşlemini Kaydet</span>
+                  </button>
+                  <button type="button" class="btn-primary" id="cancelEditBacktestBtn" style="display: none; background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2);">
+                    İptal
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Backtest Tablo ve Listesi -->
+          <div class="table-container-card">
+            <div class="table-filter-bar">
+              <input type="text" id="btSearchInput" class="input-glass filter-input-search" placeholder="Backtest ara (Parite, strateji, not...)" style="flex: 1; min-width: 180px;">
+              <select id="btFilterDirection" class="input-glass" style="max-width: 130px;">
+                <option value="ALL">Tüm Yönler</option>
+                <option value="Long">Long</option>
+                <option value="Short">Short</option>
+              </select>
+              <select id="btFilterResult" class="input-glass" style="max-width: 130px;">
+                <option value="ALL">Tüm Sonuçlar</option>
+                <option value="Win">Win</option>
+                <option value="Loss">Loss</option>
+                <option value="BE">BE</option>
+              </select>
+              <select id="btFilterStrategy" class="input-glass" style="max-width: 160px;">
+                <option value="ALL">Tüm Stratejiler</option>
+              </select>
+              <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; align-self: center;" id="btTableRecordCount">
+                0 işlem gösteriliyor
+              </div>
+            </div>
+
+            <div class="data-table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Tarih</th>
+                    <th>Parite</th>
+                    <th>Yön</th>
+                    <th>Zaman</th>
+                    <th>Strateji</th>
+                    <th>Sonuç</th>
+                    <th>Net P/L</th>
+                    <th>R Kazancı</th>
+                    <th>Görsel</th>
+                    <th style="text-align: right;">İşlemler</th>
+                  </tr>
+                </thead>
+                <tbody id="backtestTableBody">
+                  <tr>
+                    <td colspan="10" style="text-align: center; padding: 48px; color: var(--text-muted);">
+                      Henüz kayıtlı bir backtest işlemi bulunmuyor.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SADECE BACKTEST'E ÖZEL GÖRSEL GALERİSİ -->
+        <div class="glass-surface" style="padding: 24px; margin-top: 28px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+              <h3 style="font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                Backtest Grafik Galerisi
+              </h3>
+              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+                Yalnızca backtest işlemlerine eklenmiş grafikler burada toplanır; canlı işlem galerisine karışmaz.
+              </p>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;" id="backtestGalleryCountText">
+              0 Ekran Görüntüsü
+            </div>
+          </div>
+
+          <div class="gallery-grid" id="backtestGalleryGrid">
+            <p style="color: var(--text-muted); grid-column: 1/-1;">Backtest galerisinde henüz görsel bulunmuyor.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
+           8. SETTINGS (AYARLAR & VERİ YÖNETİMİ)
            ========================================================= -->
       <section class="app-section" id="sec-settings">
         <div style="max-width: 800px; display: flex; flex-direction: column; gap: 24px;">
@@ -2054,12 +2337,14 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     const STORE_NAME = 'screenshots';
 
     const STORAGE_KEY_TRADES = 'pj_trades_data';
+    const STORAGE_KEY_BACKTEST = 'pj_backtest_trades_data';
     const STORAGE_KEY_STRATEGIES = 'pj_strategies_data';
     const STORAGE_KEY_SETTINGS = 'pj_settings_data';
 
     const AppState = {
       user: null,
       trades: [],
+      backtestTrades: [],
       strategies: [],
       favorites: ["EURUSD", "XAUUSD", "GBPUSD", "BTCUSD", "NAS100"],
       settings: {
@@ -2073,11 +2358,14 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       charts: {},
       pendingNewImages: [],
       currentEditExistingImages: [],
+      pendingBacktestNewImages: [],
+      currentEditBacktestExistingImages: [],
       unsubTrades: null,
       unsubFavorites: null
     };
 
     let isSubmittingTrade = false;
+    let isSubmittingBacktest = false;
 
     /* -------------------------------------------------------------
        DEDUPLICATION & STATE SENKRONİZASYONU
@@ -2193,7 +2481,28 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           for (const t of parsed) {
             if (t && t.id && !seen.has(t.id)) {
               seen.add(t.id);
+              let p = parseFloat(t.pnl) || 0;
+              if (t.result === 'Loss' && p > 0) t.pnl = -p;
+              else if (t.result === 'Win' && p < 0) t.pnl = Math.abs(p);
+              else if (t.result === 'BE') t.pnl = 0;
               AppState.trades.push(t);
+            }
+          }
+        }
+
+        const btData = localStorage.getItem(STORAGE_KEY_BACKTEST);
+        if (btData) {
+          const parsedBt = JSON.parse(btData);
+          const seenBt = new Set();
+          AppState.backtestTrades = [];
+          for (const t of parsedBt) {
+            if (t && t.id && !seenBt.has(t.id)) {
+              seenBt.add(t.id);
+              let p = parseFloat(t.pnl) || 0;
+              if (t.result === 'Loss' && p > 0) t.pnl = -p;
+              else if (t.result === 'Win' && p < 0) t.pnl = Math.abs(p);
+              else if (t.result === 'BE') t.pnl = 0;
+              AppState.backtestTrades.push(t);
             }
           }
         }
@@ -2356,6 +2665,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         console.warn('LocalStorage kotası aşıldı veya yazma hatası (veriler bellekte korundu):', err);
       }
       updateAllModules();
+    }
+
+    function saveBacktestTradesState() {
+      try {
+        const safeTrades = sanitizeTradesForLocalStorage(AppState.backtestTrades);
+        localStorage.setItem(STORAGE_KEY_BACKTEST, JSON.stringify(safeTrades));
+      } catch (err) {
+        console.warn('Backtest LocalStorage kotası aşıldı veya yazma hatası:', err);
+      }
+      updateBacktestModules();
     }
 
     function saveStrategiesState() {
@@ -2843,9 +3162,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
       if (imageFiles.length > 0) {
         const journalSec = document.getElementById('sec-journal');
+        const backtestSec = document.getElementById('sec-backtest');
         if (journalSec && journalSec.classList.contains('active')) {
           await handleIncomingImages(imageFiles);
           showToast(`${imageFiles.length} ekran görüntüsü panodan eklendi.`, 'success');
+        } else if (backtestSec && backtestSec.classList.contains('active')) {
+          await handleIncomingBacktestImages(imageFiles);
+          showToast(`${imageFiles.length} ekran görüntüsü Backtest alanına eklendi.`, 'success');
         }
       }
     });
@@ -3014,7 +3337,18 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const sorted = [...closedTrades].sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
 
       sorted.forEach(t => {
-        const pnl = parseFloat(t.pnl) || 0;
+        let pnl = parseFloat(t.pnl) || 0;
+        const res = t.result || (pnl > 0 ? 'Win' : (pnl < 0 ? 'Loss' : 'BE'));
+
+        // Sonuç Loss ise kâr/zarar kesinlikle negatif olmalıdır
+        if (res === 'Loss') {
+          pnl = -Math.abs(pnl);
+        } else if (res === 'Win') {
+          pnl = Math.abs(pnl);
+        } else if (res === 'BE') {
+          pnl = 0;
+        }
+
         netPnl += pnl;
         runningPnl += pnl;
 
@@ -3022,13 +3356,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const dd = peak - runningPnl;
         if (dd > maxDrawdown) maxDrawdown = dd;
 
-        if (pnl > 0) {
+        if (res === 'Win') {
           winCount++;
           grossProfit += pnl;
           curConsecWins++;
           curConsecLoss = 0;
           if (curConsecWins > maxConsecWins) maxConsecWins = curConsecWins;
-        } else if (pnl < 0) {
+        } else if (res === 'Loss') {
           lossCount++;
           grossLoss += Math.abs(pnl);
           curConsecLoss++;
@@ -3042,34 +3376,33 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         totalR += (pnl / 100);
       });
 
-      // EN İYİ İŞLEM: Yalnızca pozitif kârla kapanmış (pnl > 0) işlemler arasından seçilir
-      // Açık ve başa baş işlemler (pnl === 0 veya result === 'BE') dahil edilmez
+      // EN İYİ İŞLEM: Yalnızca kârlı işlemler
       const profitTrades = closedTrades.filter(t => {
+        if (t.result === 'Loss' || t.result === 'BE' || t.result === 'Open' || t.status === 'OPEN') return false;
         const p = parseFloat(t.pnl) || 0;
-        return p > 0 && t.result !== 'BE' && t.result !== 'Open' && t.status !== 'OPEN';
+        return t.result === 'Win' || p > 0;
       });
 
-      // EN KÖTÜ İŞLEM: Yalnızca negatif P/L değerine sahip (pnl < 0) işlemler arasından seçilir
-      // Kârlı bir işlem hiçbir zaman en kötü işlem olarak gösterilmez
-      // Açık ve başa baş işlemler dahil edilmez
+      // EN KÖTÜ İŞLEM: Yalnızca zararlı işlemler
       const lossTrades = closedTrades.filter(t => {
+        if (t.result === 'Win' || t.result === 'BE' || t.result === 'Open' || t.status === 'OPEN') return false;
         const p = parseFloat(t.pnl) || 0;
-        return p < 0 && t.result !== 'BE' && t.result !== 'Open' && t.status !== 'OPEN';
+        return t.result === 'Loss' || p < 0;
       });
 
       let bestTradeVal = null;
       let bestInfo = 'Henüz kâr eden işlem yok';
       if (profitTrades.length > 0) {
-        profitTrades.sort((a, b) => (parseFloat(b.pnl) || 0) - (parseFloat(a.pnl) || 0));
-        bestTradeVal = parseFloat(profitTrades[0].pnl) || 0;
+        profitTrades.sort((a, b) => Math.abs(parseFloat(b.pnl) || 0) - Math.abs(parseFloat(a.pnl) || 0));
+        bestTradeVal = Math.abs(parseFloat(profitTrades[0].pnl) || 0);
         bestInfo = `${profitTrades[0].pair} (${profitTrades[0].direction})`;
       }
 
       let worstTradeVal = null;
       let worstInfo = 'Henüz zarar eden işlem yok';
       if (lossTrades.length > 0) {
-        lossTrades.sort((a, b) => (parseFloat(a.pnl) || 0) - (parseFloat(b.pnl) || 0));
-        worstTradeVal = parseFloat(lossTrades[0].pnl) || 0;
+        lossTrades.sort((a, b) => Math.abs(parseFloat(b.pnl) || 0) - Math.abs(parseFloat(a.pnl) || 0));
+        worstTradeVal = -Math.abs(parseFloat(lossTrades[0].pnl) || 0);
         worstInfo = `${lossTrades[0].pair} (${lossTrades[0].direction})`;
       }
 
@@ -3166,7 +3499,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       document.getElementById('stat-profit-factor').textContent = m.profitFactor;
       document.getElementById('stat-avg-rr').textContent = `${m.avgRR} R`;
       document.getElementById('stat-avg-win').textContent = formatCurrency(m.avgWin);
-      document.getElementById('stat-avg-loss').textContent = formatCurrency(m.avgLoss);
+      document.getElementById('stat-avg-loss').textContent = formatCurrency(m.avgLoss > 0 ? -m.avgLoss : 0);
 
       const expEl = document.getElementById('stat-expectancy');
       expEl.textContent = formatCurrency(m.expectancy);
@@ -3496,7 +3829,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
 
       tbody.innerHTML = filtered.map(t => {
-        const pnlNum = parseFloat(t.pnl) || 0;
+        let pnlNum = parseFloat(t.pnl) || 0;
+        if (t.result === 'Loss' && pnlNum > 0) pnlNum = -pnlNum;
+        if (t.result === 'Win' && pnlNum < 0) pnlNum = Math.abs(pnlNum);
+        if (t.result === 'BE') pnlNum = 0;
+
         const pnlClass = pnlNum > 0 ? 'color: var(--color-neon-green); font-weight: 800;' : (pnlNum < 0 ? 'color: var(--color-danger); font-weight: 800;' : 'color: var(--text-secondary);');
         const rVal = (pnlNum / 100).toFixed(2);
 
@@ -3642,6 +3979,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function populateStrategySelects() {
       const fStrat = document.getElementById('f-strategy');
       const filterStrat = document.getElementById('filterStrategy');
+      const btStrat = document.getElementById('bt-strategy');
+      const btFilterStrat = document.getElementById('btFilterStrategy');
 
       const optionsHtml = AppState.strategies.map(s => `
         <option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>
@@ -3649,6 +3988,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       if (fStrat) fStrat.innerHTML = optionsHtml;
       if (filterStrat) filterStrat.innerHTML = `<option value="ALL">Tüm Stratejiler</option>` + optionsHtml;
+      if (btStrat) btStrat.innerHTML = optionsHtml;
+      if (btFilterStrat) btFilterStrat.innerHTML = `<option value="ALL">Tüm Stratejiler</option>` + optionsHtml;
     }
 
     function renderStrategyCards() {
@@ -3777,6 +4118,624 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     /* -------------------------------------------------------------
+       BACKTEST MODÜLÜ (TAMAMEN İZOLE SAYFA, İŞLEMLER VE GÖRSELLER)
+       ------------------------------------------------------------- */
+    function renderBacktestKPIs() {
+      const m = computeMetrics(AppState.backtestTrades);
+
+      const totEl = document.getElementById('bt-stat-total-trades');
+      if (totEl) totEl.textContent = m.totalTrades;
+
+      const wrEl = document.getElementById('bt-stat-win-rate');
+      if (wrEl) wrEl.textContent = `${m.winRate}%`;
+
+      const pnlEl = document.getElementById('bt-stat-net-pnl');
+      if (pnlEl) {
+        pnlEl.textContent = formatCurrency(m.netPnl);
+        pnlEl.className = `stat-value ${m.netPnl >= 0 ? 'neon-green' : 'danger'}`;
+      }
+
+      const pfEl = document.getElementById('bt-stat-profit-factor');
+      if (pfEl) pfEl.textContent = m.profitFactor;
+
+      const rrEl = document.getElementById('bt-stat-avg-rr');
+      if (rrEl) rrEl.textContent = `${m.avgRR} R`;
+
+      const winEl = document.getElementById('bt-stat-avg-win');
+      if (winEl) winEl.textContent = formatCurrency(m.avgWin);
+
+      const lossEl = document.getElementById('bt-stat-avg-loss');
+      if (lossEl) lossEl.textContent = formatCurrency(m.avgLoss > 0 ? -m.avgLoss : 0);
+    }
+
+    function renderBacktestTable() {
+      const tbody = document.getElementById('backtestTableBody');
+      if (!tbody) return;
+
+      const searchInput = document.getElementById('btSearchInput');
+      const search = searchInput ? searchInput.value.trim().toLowerCase() : '';
+      const dirFilter = document.getElementById('btFilterDirection')?.value || 'ALL';
+      const resFilter = document.getElementById('btFilterResult')?.value || 'ALL';
+      const stratFilter = document.getElementById('btFilterStrategy')?.value || 'ALL';
+
+      let filtered = [...AppState.backtestTrades].filter(t => {
+        if (dirFilter !== 'ALL' && t.direction !== dirFilter) return false;
+        if (resFilter !== 'ALL' && t.result !== resFilter) return false;
+        if (stratFilter !== 'ALL' && t.strategy !== stratFilter) return false;
+        if (search) {
+          const matchString = `${t.pair} ${t.strategy} ${t.notes} ${t.session}`.toLowerCase();
+          if (!matchString.includes(search)) return false;
+        }
+        return true;
+      });
+
+      filtered.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+      const countEl = document.getElementById('btTableRecordCount');
+      if (countEl) countEl.textContent = `${filtered.length} işlem gösteriliyor`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="10" style="text-align: center; padding: 48px; color: var(--text-muted);">
+              Kayıtlı backtest işlemi bulunamadı veya filtrelerle eşleşen sonuç yok.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(t => {
+        let pnlNum = parseFloat(t.pnl) || 0;
+        if (t.result === 'Loss' && pnlNum > 0) pnlNum = -pnlNum;
+        if (t.result === 'Win' && pnlNum < 0) pnlNum = Math.abs(pnlNum);
+        if (t.result === 'BE') pnlNum = 0;
+
+        const pnlClass = pnlNum > 0 ? 'color: var(--color-neon-green); font-weight: 800;' : (pnlNum < 0 ? 'color: var(--color-danger); font-weight: 800;' : 'color: var(--text-secondary);');
+        const rVal = (pnlNum / 100).toFixed(2);
+
+        let badgeClass = 'be';
+        if (t.result === 'Win') badgeClass = 'win';
+        if (t.result === 'Loss') badgeClass = 'loss';
+
+        const imgCount = (t.images && t.images.length) ? t.images.length : (t.hasScreenshot ? 1 : 0);
+
+        return `
+          <tr>
+            <td>${formatShortDate(t.datetime)}</td>
+            <td style="font-weight: 800; letter-spacing: 0.3px;">${escapeHtml(t.pair)}</td>
+            <td><span class="badge-direction ${t.direction.toLowerCase()}">${t.direction}</span></td>
+            <td><span style="font-size: 0.75rem; color: var(--text-muted);">${t.timeframe || 'M15'}</span></td>
+            <td>${escapeHtml(t.strategy || 'Varsayılan Setup')}</td>
+            <td><span class="badge-pill ${badgeClass}">${t.result}</span></td>
+            <td style="${pnlClass}">${formatCurrency(pnlNum)}</td>
+            <td style="font-weight: 700;">${rVal} R</td>
+            <td>${imgCount > 0 ? `<span class="photo-preview-pill" onclick="window.quickPreviewTradePhoto('${t.id}')" title="Görseli Önizle">📷 ${imgCount}</span>` : '-'}</td>
+            <td style="text-align: right;">
+              <div class="table-actions" style="justify-content: flex-end;">
+                <button type="button" class="action-icon-btn" onclick="window.openTradeDetail('${t.id}')" title="Detay">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+                <button type="button" class="action-icon-btn" onclick="window.startEditBacktestTrade('${t.id}')" title="Düzenle">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+                <button type="button" class="action-icon-btn delete" onclick="window.confirmDeleteTrade('${t.id}')" title="Sil">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function renderBacktestGallery() {
+      const grid = document.getElementById('backtestGalleryGrid');
+      const countEl = document.getElementById('backtestGalleryCountText');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const btWithScreenshots = AppState.backtestTrades.filter(t => (t.images && t.images.length > 0) || t.hasScreenshot);
+      if (countEl) countEl.textContent = `${btWithScreenshots.length} Ekran Görüntüsü`;
+
+      if (btWithScreenshots.length === 0) {
+        grid.innerHTML = `<p style="color: var(--text-muted); grid-column: 1/-1;">Backtest galerisinde henüz görsel bulunmuyor.</p>`;
+        return;
+      }
+
+      for (const t of btWithScreenshots) {
+        const card = document.createElement('div');
+        card.className = 'glass-surface gallery-item-card';
+
+        const pnlNum = parseFloat(t.pnl) || 0;
+        card.innerHTML = `
+          <div class="gallery-thumb-box" id="bt_thumb_box_${t.id}">
+            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000; color: #475569; font-size: 0.8rem;">
+              Yükleniyor...
+            </div>
+          </div>
+          <div class="gallery-content">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-weight: 800; font-size: 1rem;">${escapeHtml(t.pair)}</span>
+              <span class="badge-pill ${t.result === 'Win' ? 'win' : (t.result === 'Loss' ? 'loss' : 'be')}">${t.result}</span>
+            </div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">
+              ${escapeHtml(t.strategy || 'Genel')} • ${t.timeframe || 'M15'} • ${formatShortDate(t.datetime)}
+            </div>
+            <div style="font-weight: 800; font-size: 0.95rem; color: ${pnlNum >= 0 ? 'var(--color-neon-green)' : 'var(--color-danger)'};">
+              ${formatCurrency(pnlNum)}
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(card);
+
+        const displayUrl = await getImageDisplayUrl(t, t.id);
+        const firstImg = (t.images && t.images.length > 0) ? t.images[0] : null;
+        const isCloud = firstImg ? (firstImg.isCloudSynced === true || (!firstImg.isLocal && !firstImg.dataUrl)) : false;
+
+        const thumbBox = document.getElementById(`bt_thumb_box_${t.id}`);
+        if (thumbBox && displayUrl) {
+          thumbBox.style.position = 'relative';
+          thumbBox.innerHTML = `
+            <img src="${displayUrl}" alt="${escapeHtml(t.pair)}">
+            <span class="img-sync-badge ${isCloud ? 'cloud' : 'local'}">${isCloud ? '☁️ Bulut' : '📱 Cihazda'}</span>
+          `;
+          thumbBox.onclick = () => window.openLightbox(displayUrl);
+        } else if (thumbBox) {
+          thumbBox.innerHTML = `<div style="padding: 20px; font-size: 0.75rem; color: var(--text-muted);">Resim verisi bulunamadı</div>`;
+        }
+      }
+    }
+
+    function updateBacktestModules() {
+      renderBacktestKPIs();
+      renderBacktestTable();
+      renderBacktestGallery();
+    }
+
+    const backtestImagesStrip = document.getElementById('backtestImagesStrip');
+    const backtestDropzone = document.getElementById('backtestDropzone');
+    const backtestFileInput = document.getElementById('backtestFileInput');
+
+    if (backtestDropzone) {
+      backtestDropzone.addEventListener('click', (e) => {
+        if (e.target.closest('#backtestImagesStrip')) return;
+        backtestFileInput?.click();
+      });
+
+      ['dragenter', 'dragover'].forEach(n => {
+        backtestDropzone.addEventListener(n, (e) => {
+          e.preventDefault();
+          backtestDropzone.classList.add('dragover');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(n => {
+        backtestDropzone.addEventListener(n, (e) => {
+          e.preventDefault();
+          backtestDropzone.classList.remove('dragover');
+        });
+      });
+
+      backtestDropzone.addEventListener('drop', async (e) => {
+        if (e.dataTransfer && e.dataTransfer.files) {
+          await handleIncomingBacktestImages(e.dataTransfer.files);
+        }
+      });
+    }
+
+    if (backtestFileInput) {
+      backtestFileInput.addEventListener('change', async (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          await handleIncomingBacktestImages(e.target.files);
+        }
+        backtestFileInput.value = '';
+      });
+    }
+
+    async function handleIncomingBacktestImages(files) {
+      if (!files || files.length === 0) return;
+      for (const file of files) {
+        if (!file.type || !file.type.startsWith('image/')) continue;
+        if (file.size > 25 * 1024 * 1024) {
+          showToast(`${file.name} 25MB'dan büyük olduğu için eklenemedi.`, 'error');
+          continue;
+        }
+
+        const comp = await compressImageFileToWebP(file);
+        if (comp) {
+          const imgId = 'bt_img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+          AppState.pendingBacktestNewImages.push({
+            id: imgId,
+            blob: comp.blob,
+            uint8Array: comp.uint8Array,
+            displayUrl: comp.objectUrl,
+            name: comp.name,
+            size: comp.size,
+            contentType: comp.contentType,
+            isCloudSynced: false
+          });
+        }
+      }
+      await renderBacktestImagesStrip();
+    }
+
+    async function renderBacktestImagesStrip() {
+      if (!backtestImagesStrip) return;
+      backtestImagesStrip.innerHTML = '';
+      const currentTradeId = document.getElementById('editBacktestTradeId')?.value || null;
+
+      for (let idx = 0; idx < AppState.currentEditBacktestExistingImages.length; idx++) {
+        const img = AppState.currentEditBacktestExistingImages[idx];
+        const displayUrl = await getImageDisplayUrl(img, currentTradeId);
+        const isCloud = img.isCloudSynced === true || (!img.isLocal && !img.dataUrl);
+
+        const div = document.createElement('div');
+        div.className = 'image-chip-preview';
+        div.title = 'Önizlemek için tıklayın';
+
+        const imgEl = document.createElement('img');
+        imgEl.src = displayUrl || '';
+        imgEl.alt = img.name || 'Backtest Görseli';
+        div.appendChild(imgEl);
+
+        const badge = document.createElement('span');
+        badge.className = `img-sync-badge ${isCloud ? 'cloud' : 'local'}`;
+        badge.textContent = isCloud ? '☁️ Bulut' : '📱 Cihazda';
+        div.appendChild(badge);
+
+        div.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (displayUrl) window.openLightbox(displayUrl);
+        });
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'remove-chip-btn';
+        delBtn.title = 'Görseli Kaldır';
+        delBtn.innerHTML = '&times;';
+        delBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          AppState.currentEditBacktestExistingImages.splice(idx, 1);
+          renderBacktestImagesStrip();
+        });
+        div.appendChild(delBtn);
+
+        backtestImagesStrip.appendChild(div);
+      }
+
+      for (let idx = 0; idx < AppState.pendingBacktestNewImages.length; idx++) {
+        const img = AppState.pendingBacktestNewImages[idx];
+
+        const div = document.createElement('div');
+        div.className = 'image-chip-preview';
+        div.title = 'Önizlemek için tıklayın';
+
+        const imgEl = document.createElement('img');
+        imgEl.src = img.displayUrl;
+        imgEl.alt = img.name;
+        div.appendChild(imgEl);
+
+        const badge = document.createElement('span');
+        badge.className = 'img-sync-badge local';
+        badge.textContent = 'Yeni';
+        div.appendChild(badge);
+
+        div.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          window.openLightbox(img.displayUrl);
+        });
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'remove-chip-btn';
+        delBtn.title = 'Kaldır';
+        delBtn.innerHTML = '&times;';
+        delBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (img.displayUrl) revokeTrackedBlobUrl(img.displayUrl);
+          AppState.pendingBacktestNewImages.splice(idx, 1);
+          renderBacktestImagesStrip();
+        });
+        div.appendChild(delBtn);
+
+        backtestImagesStrip.appendChild(div);
+      }
+    }
+
+    window.startEditBacktestTrade = async function(id) {
+      const trade = AppState.backtestTrades.find(t => t.id === id);
+      if (!trade) {
+        showToast('Backtest işlemi bulunamadı!', 'error');
+        return;
+      }
+
+      window.switchTab('backtest');
+
+      document.getElementById('backtestFormHeading').textContent = 'Backtest İşlemini Düzenle';
+      document.getElementById('editBacktestTradeId').value = trade.id;
+
+      document.getElementById('bt-pair').value = trade.pair || '';
+      document.getElementById('bt-direction').value = trade.direction || 'Long';
+      document.getElementById('bt-datetime').value = trade.datetime || '';
+      document.getElementById('bt-timeframe').value = trade.timeframe || 'M15';
+      document.getElementById('bt-session').value = trade.session || 'New York';
+      document.getElementById('bt-strategy').value = trade.strategy || 'Varsayılan Setup';
+      document.getElementById('bt-entry').value = trade.entryPrice !== null && trade.entryPrice !== undefined ? trade.entryPrice : '';
+      document.getElementById('bt-exit').value = trade.exitPrice !== null && trade.exitPrice !== undefined ? trade.exitPrice : '';
+      document.getElementById('bt-sl').value = trade.stopLoss !== null && trade.stopLoss !== undefined ? trade.stopLoss : '';
+      document.getElementById('bt-risk').value = trade.risk !== null && trade.risk !== undefined ? trade.risk : 1.0;
+      document.getElementById('bt-pnl').value = trade.pnl !== null && trade.pnl !== undefined ? trade.pnl : 0;
+      document.getElementById('bt-result').value = trade.result || 'Win';
+      document.getElementById('bt-notes').value = trade.notes || '';
+      document.getElementById('bt-psychology').value = trade.psychology || '';
+
+      AppState.currentEditBacktestExistingImages = trade.images ? [...trade.images] : [];
+      if (AppState.currentEditBacktestExistingImages.length === 0 && trade.hasScreenshot) {
+        const localImg = await dbGetImage(trade.id);
+        if (localImg) {
+          AppState.currentEditBacktestExistingImages.push({ id: 'local_' + trade.id, url: localImg, isCloudSynced: false });
+        }
+      }
+      AppState.pendingBacktestNewImages = [];
+      await renderBacktestImagesStrip();
+
+      document.getElementById('saveBacktestBtnText').textContent = 'Değişiklikleri Kaydet';
+      document.getElementById('cancelEditBacktestBtn').style.display = 'inline-flex';
+      document.getElementById('backtestTradeForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    window.cancelBacktestTradeEdit = async function() {
+      for (const img of AppState.pendingBacktestNewImages) {
+        if (img.displayUrl) revokeTrackedBlobUrl(img.displayUrl);
+      }
+      const btForm = document.getElementById('backtestTradeForm');
+      if (btForm) btForm.reset();
+      document.getElementById('editBacktestTradeId').value = '';
+      document.getElementById('backtestFormHeading').textContent = 'Yeni Backtest İşlemi';
+      document.getElementById('saveBacktestBtnText').textContent = 'Backtest İşlemini Kaydet';
+      document.getElementById('cancelEditBacktestBtn').style.display = 'none';
+      AppState.currentEditBacktestExistingImages = [];
+      AppState.pendingBacktestNewImages = [];
+      await renderBacktestImagesStrip();
+      const dtInput = document.getElementById('bt-datetime');
+      if (dtInput) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        dtInput.value = now.toISOString().slice(0, 16);
+      }
+    };
+
+    const backtestTradeForm = document.getElementById('backtestTradeForm');
+    const cancelEditBacktestBtn = document.getElementById('cancelEditBacktestBtn');
+    const saveBacktestSubmitBtn = document.getElementById('saveBacktestSubmitBtn');
+    const saveBacktestBtnText = document.getElementById('saveBacktestBtnText');
+
+    if (cancelEditBacktestBtn) {
+      cancelEditBacktestBtn.addEventListener('click', window.cancelBacktestTradeEdit);
+    }
+
+    if (backtestTradeForm) {
+      backtestTradeForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (isSubmittingBacktest) return;
+        isSubmittingBacktest = true;
+
+        if (saveBacktestSubmitBtn) saveBacktestSubmitBtn.disabled = true;
+        if (saveBacktestBtnText) saveBacktestBtnText.textContent = 'Kaydediliyor...';
+
+        try {
+          const editId = document.getElementById('editBacktestTradeId').value;
+          const pair = document.getElementById('bt-pair').value.trim().toUpperCase();
+          const direction = document.getElementById('bt-direction').value;
+          const datetime = document.getElementById('bt-datetime').value;
+          const timeframe = document.getElementById('bt-timeframe').value;
+          const session = document.getElementById('bt-session').value;
+          const strategy = document.getElementById('bt-strategy').value;
+
+          const entryPrice = parseFloat(document.getElementById('bt-entry').value) || null;
+          const exitPrice = parseFloat(document.getElementById('bt-exit').value) || null;
+          const stopLoss = parseFloat(document.getElementById('bt-sl').value) || null;
+          const risk = parseFloat(document.getElementById('bt-risk').value) || 1.0;
+          let pnl = parseFloat(document.getElementById('bt-pnl').value) || 0;
+          const result = document.getElementById('bt-result').value;
+
+          if (result === 'Loss') {
+            pnl = -Math.abs(pnl);
+          } else if (result === 'Win') {
+            pnl = Math.abs(pnl);
+          } else if (result === 'BE') {
+            pnl = 0;
+          }
+
+          const notes = document.getElementById('bt-notes').value.trim();
+          const psychology = document.getElementById('bt-psychology').value.trim();
+
+          const tradeId = editId || `bt_trade_${Date.now()}`;
+
+          const newlyUploaded = [];
+          if (AppState.pendingBacktestNewImages.length > 0) {
+            for (const imgObj of AppState.pendingBacktestNewImages) {
+              const imgId = imgObj.id || ('bt_img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
+              let isCloudSynced = false;
+
+              if (imgObj.uint8Array) {
+                await dbSaveImage(imgId, imgObj.uint8Array, {
+                  tradeId,
+                  name: imgObj.name,
+                  contentType: imgObj.contentType,
+                  isBacktest: true
+                });
+              }
+
+              if (AppState.user && imgObj.uint8Array) {
+                try {
+                  const uploadedMeta = await saveTradeImageToFirestore(AppState.user.uid, tradeId, {
+                    id: imgId,
+                    uint8Array: imgObj.uint8Array,
+                    name: imgObj.name,
+                    contentType: imgObj.contentType
+                  });
+                  if (uploadedMeta) isCloudSynced = true;
+                } catch (fsErr) {
+                  console.warn('Backtest bulut görsel yükleme hatası:', fsErr);
+                }
+              }
+
+              newlyUploaded.push({
+                id: imgId,
+                tradeId: tradeId,
+                name: imgObj.name || `bt_${imgId}.webp`,
+                size: imgObj.size || (imgObj.uint8Array ? imgObj.uint8Array.byteLength : 0),
+                contentType: imgObj.contentType || 'image/webp',
+                isCloudSynced: isCloudSynced
+              });
+            }
+          }
+
+          const finalImages = [...AppState.currentEditBacktestExistingImages, ...newlyUploaded];
+
+          const tradePayload = {
+            id: tradeId,
+            pair,
+            direction,
+            datetime,
+            timeframe,
+            session,
+            strategy,
+            entryPrice,
+            exitPrice,
+            stopLoss,
+            risk,
+            pnl,
+            result,
+            notes,
+            psychology,
+            isBacktest: true,
+            images: finalImages,
+            hasScreenshot: finalImages.length > 0,
+            updatedAt: new Date().toISOString()
+          };
+
+          if (editId) {
+            if (AppState.user) {
+              try {
+                await updateDoc(doc(db, 'users', AppState.user.uid, 'backtestTrades', editId), tradePayload).catch(() => {});
+              } catch (_) {}
+            }
+            const idx = AppState.backtestTrades.findIndex(t => t.id === editId);
+            if (idx !== -1) AppState.backtestTrades[idx] = { ...AppState.backtestTrades[idx], ...tradePayload };
+            saveBacktestTradesState();
+            showToast('Backtest işlemi güncellendi.', 'success');
+          } else {
+            tradePayload.createdAt = new Date().toISOString();
+            if (AppState.user) {
+              try {
+                await setDoc(doc(db, 'users', AppState.user.uid, 'backtestTrades', tradeId), tradePayload).catch(() => {});
+              } catch (_) {}
+            }
+            AppState.backtestTrades.unshift(tradePayload);
+            saveBacktestTradesState();
+            showToast('Yeni backtest işlemi kaydedildi.', 'success');
+          }
+
+          await window.cancelBacktestTradeEdit();
+        } catch (err) {
+          console.error('Backtest kayıt hatası:', err);
+          showToast('Kayıt hatası: ' + err.message, 'error');
+        } finally {
+          isSubmittingBacktest = false;
+          if (saveBacktestSubmitBtn) saveBacktestSubmitBtn.disabled = false;
+          const currentEditId = document.getElementById('editBacktestTradeId')?.value;
+          if (saveBacktestBtnText) saveBacktestBtnText.textContent = currentEditId ? 'Değişiklikleri Kaydet' : 'Backtest İşlemini Kaydet';
+        }
+      });
+    }
+
+    ['btSearchInput', 'btFilterDirection', 'btFilterResult', 'btFilterStrategy'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', () => {
+          renderBacktestTable();
+        });
+      }
+    });
+
+    // Form içi P/L ve Sonuç (Win / Loss / BE) otomatik senkronizasyonu
+    function syncPnlAndResult(resultInputId, pnlInputId, entryInputId, exitInputId, dirInputId) {
+      const resultEl = document.getElementById(resultInputId);
+      const pnlEl = document.getElementById(pnlInputId);
+      const entryEl = document.getElementById(entryInputId);
+      const exitEl = document.getElementById(exitInputId);
+      const dirEl = document.getElementById(dirInputId);
+
+      if (resultEl && pnlEl) {
+        resultEl.addEventListener('change', () => {
+          const res = resultEl.value;
+          let val = parseFloat(pnlEl.value);
+          if (!isNaN(val)) {
+            if (res === 'Loss' && val > 0) pnlEl.value = -val;
+            else if (res === 'Win' && val < 0) pnlEl.value = Math.abs(val);
+            else if (res === 'BE') pnlEl.value = 0;
+          } else if (res === 'BE') {
+            pnlEl.value = 0;
+          }
+        });
+
+        pnlEl.addEventListener('blur', () => {
+          let val = parseFloat(pnlEl.value);
+          if (!isNaN(val)) {
+            if (resultEl.value === 'Loss' && val > 0) pnlEl.value = -val;
+            else if (resultEl.value === 'Win' && val < 0) pnlEl.value = Math.abs(val);
+            else if (resultEl.value === 'BE') pnlEl.value = 0;
+          }
+        });
+      }
+
+      if (entryEl && exitEl && dirEl && resultEl && pnlEl) {
+        const checkFromPrices = () => {
+          const entry = parseFloat(entryEl.value);
+          const exit = parseFloat(exitEl.value);
+          const dir = dirEl.value;
+          if (!isNaN(entry) && !isNaN(exit) && entry > 0 && exit > 0) {
+            if (exit === entry) {
+              resultEl.value = 'BE';
+              pnlEl.value = 0;
+            } else {
+              const isWin = dir === 'Long' ? (exit > entry) : (exit < entry);
+              resultEl.value = isWin ? 'Win' : 'Loss';
+              let curPnl = parseFloat(pnlEl.value);
+              if (!isNaN(curPnl) && curPnl !== 0) {
+                pnlEl.value = isWin ? Math.abs(curPnl) : -Math.abs(curPnl);
+              }
+            }
+          }
+        };
+
+        entryEl.addEventListener('input', checkFromPrices);
+        exitEl.addEventListener('input', checkFromPrices);
+        dirEl.addEventListener('change', checkFromPrices);
+      }
+    }
+
+    syncPnlAndResult('bt-result', 'bt-pnl', 'bt-entry', 'bt-exit', 'bt-direction');
+    syncPnlAndResult('f-result', 'f-pnl', 'f-entry', 'f-exit', 'f-direction');
+
+    /* -------------------------------------------------------------
        İŞLEM DÜZENLEME (BUG FIX) VE FORMU YÖNETME
        ------------------------------------------------------------- */
     const tradeForm = document.getElementById('tradeForm');
@@ -3802,9 +4761,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         analytics: 'Performans Analizi',
         strategy: 'Strateji Merkezi',
         gallery: 'Trade Galerisi',
+        backtest: 'Backtest',
         settings: 'Ayarlar'
       };
       document.getElementById('currentSectionTitle').textContent = titles[tab] || 'Prop Journal';
+      if (tab === 'backtest') {
+        updateBacktestModules();
+      }
     };
 
     window.startEditTrade = async function(id) {
@@ -3895,8 +4858,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const exitPrice = parseFloat(document.getElementById('f-exit').value) || null;
         const stopLoss = parseFloat(document.getElementById('f-sl').value) || null;
         const risk = parseFloat(document.getElementById('f-risk').value) || 1.0;
-        const pnl = parseFloat(document.getElementById('f-pnl').value) || 0;
+        let pnl = parseFloat(document.getElementById('f-pnl').value) || 0;
         const result = document.getElementById('f-result').value;
+
+        if (result === 'Loss') {
+          pnl = -Math.abs(pnl);
+        } else if (result === 'Win') {
+          pnl = Math.abs(pnl);
+        } else if (result === 'BE') {
+          pnl = 0;
+        }
 
         const notes = document.getElementById('f-notes').value.trim();
         const psychology = document.getElementById('f-psychology').value.trim();
@@ -4030,13 +5001,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     let pendingDeleteTradeId = null;
 
     async function executeDeleteTrade(id) {
-      const trade = AppState.trades.find(t => t.id === id);
+      const isBacktest = AppState.backtestTrades.some(t => t.id === id);
+      const trade = AppState.trades.find(t => t.id === id) || AppState.backtestTrades.find(t => t.id === id);
       
       // 1. Firestore Bulut alt koleksiyonunu ve ana belgeyi temizle
       if (AppState.user) {
         try {
+          const colName = isBacktest ? 'backtestTrades' : 'trades';
           // Alt koleksiyondaki resim belgelerini sil
-          const imagesColRef = collection(db, 'users', AppState.user.uid, 'trades', id, 'images');
+          const imagesColRef = collection(db, 'users', AppState.user.uid, colName, id, 'images');
           const snap = await getDocs(imagesColRef).catch(() => null);
           if (snap && !snap.empty) {
             for (const imgDoc of snap.docs) {
@@ -4045,8 +5018,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           }
 
           // Ana trade belgesini sil
-          await deleteDoc(doc(db, 'users', AppState.user.uid, 'trades', id));
-          showToast('İşlem ve görselleri buluttan silindi.', 'info');
+          await deleteDoc(doc(db, 'users', AppState.user.uid, colName, id));
+          showToast(isBacktest ? 'Backtest işlemi buluttan silindi.' : 'İşlem ve görselleri buluttan silindi.', 'info');
         } catch (err) {
           console.error('Bulut silme hatası:', err);
           showToast('Silme hatası: ' + err.message, 'error');
@@ -4067,8 +5040,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
       await dbDeleteImage(id).catch(() => {});
 
-      AppState.trades = AppState.trades.filter(t => t.id !== id);
-      saveTradesState();
+      if (isBacktest) {
+        AppState.backtestTrades = AppState.backtestTrades.filter(t => t.id !== id);
+        saveBacktestTradesState();
+      } else {
+        AppState.trades = AppState.trades.filter(t => t.id !== id);
+        saveTradesState();
+      }
       if (!AppState.user) showToast('İşlem yerel depolamadan silindi.', 'info');
     }
 
@@ -4110,7 +5088,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
        İŞLEM DETAY MODALI
        ------------------------------------------------------------- */
     window.openTradeDetail = async function(id) {
-      const trade = AppState.trades.find(t => t.id === id);
+      const trade = AppState.trades.find(t => t.id === id) || AppState.backtestTrades.find(t => t.id === id);
       if (!trade) return;
 
       const body = document.getElementById('detailModalBody');
@@ -4226,7 +5204,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     };
 
     window.quickPreviewTradePhoto = async function(tradeId) {
-      const trade = AppState.trades.find(t => t.id === tradeId);
+      const trade = AppState.trades.find(t => t.id === tradeId) || AppState.backtestTrades.find(t => t.id === tradeId);
       if (!trade) return;
       const url = await getImageDisplayUrl(trade, tradeId);
       if (url) {
@@ -4769,7 +5747,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function setDefaultDatetime() {
       const now = new Date();
       now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      document.getElementById('f-datetime').value = now.toISOString().slice(0, 16);
+      const isoStr = now.toISOString().slice(0, 16);
+      const fDt = document.getElementById('f-datetime');
+      if (fDt) fDt.value = isoStr;
+      const btDt = document.getElementById('bt-datetime');
+      if (btDt) btDt.value = isoStr;
     }
 
     function init3DTilt() {
@@ -4805,6 +5787,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       renderFavoritePills();
       populateStrategySelects();
       updateAllModules();
+      updateBacktestModules();
       init3DTilt();
 
       document.getElementById('currentHeaderDate').textContent = new Date().toLocaleDateString('tr-TR', {
