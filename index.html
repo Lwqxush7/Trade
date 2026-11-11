@@ -454,6 +454,133 @@ body::after {
 }
 .collapse-btn:hover { color: var(--text-main); background: var(--glass-hover-fill-strong); }
 
+#summaryPanelToggleBtn {
+  display: none;
+}
+#headerSummaryBtn {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------
+   6b. BACKTEST ÖZETLER PANELİ (SAĞDAN KAYAN CAM PANEL)
+   --------------------------------------------------------------------- */
+.summary-panel {
+  position: fixed;
+  top: calc(16px + var(--header-height) + 16px);
+  bottom: 16px;
+  right: 24px;
+  left: calc(var(--sidebar-width) + 32px);
+  z-index: 80;                       /* header(90) ve sidebar(100) altında, modal(200) üstünde değil */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border-radius: var(--radius-xl);
+  background: var(--glass-bg), rgba(10, 16, 48, 0.55);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--glass-border-highlight);
+  box-shadow: var(--neu-shadow-extruded);
+  transform: translateX(calc(100% + 24px));
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform var(--transition-smooth), left var(--transition-smooth), visibility var(--transition-smooth);
+  will-change: transform;
+}
+
+:root[data-theme="light"] .summary-panel,
+html[data-theme="light"] .summary-panel {
+  background: var(--glass-bg), rgba(241, 245, 249, 0.6);
+}
+
+.app-sidebar.collapsed ~ .summary-panel {
+  left: calc(var(--sidebar-width-collapsed) + 32px);
+}
+
+.summary-panel.open {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.summary-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--glass-border-subtle);
+  flex-shrink: 0;
+}
+
+.summary-panel-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.summary-panel-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.summary-panel-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--glass-hover-fill);
+  border: 1px solid var(--glass-border-subtle);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.summary-panel-close-btn:hover {
+  color: var(--text-main);
+  background: var(--glass-hover-fill-strong);
+  border-color: var(--glass-border);
+}
+
+.summary-panel-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px;
+}
+
+.summary-panel-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.summary-panel-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.summary-panel-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+}
+
+.summary-panel-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+:root[data-theme="light"] .summary-panel-scroll::-webkit-scrollbar-thumb,
+html[data-theme="light"] .summary-panel-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+}
+
+:root[data-theme="light"] .summary-panel-scroll::-webkit-scrollbar-thumb:hover,
+html[data-theme="light"] .summary-panel-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.32);
+}
+
 /* ---------------------------------------------------------------------
    7. ANA SARMALAYICI + HEADER
    --------------------------------------------------------------------- */
@@ -602,7 +729,20 @@ body::after {
 /* ---------------------------------------------------------------------
    8. İÇERİK + BÖLÜM GEÇİŞLERİ
    --------------------------------------------------------------------- */
-.main-content { flex-grow: 1; max-width: 1600px; margin: 0 auto; width: 100%; }
+.main-content {
+  flex-grow: 1;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--transition-smooth), visibility var(--transition-smooth);
+}
+body.summary-open .main-content {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
 
 .app-section { display: none; }
 .app-section.active { display: block; }
@@ -1143,6 +1283,29 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   .journal-layout { grid-template-columns: 1fr; }
   .lab-grid { grid-template-columns: 1fr; }
   .gallery-grid { grid-template-columns: 1fr; }
+  body.summary-open {
+    overflow: hidden;
+  }
+  .summary-panel {
+    left: 0 !important;
+    right: 0;
+    top: calc(12px + var(--header-height) + 12px);
+    bottom: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    transform: translateY(110%);
+  }
+  .summary-panel.open {
+    transform: translateY(0);
+  }
+  .summary-panel-header {
+    padding: 16px 18px;
+  }
+  .summary-panel-scroll {
+    padding: 16px 14px 28px;
+  }
+  body[data-active-tab="backtest"] #headerSummaryBtn {
+    display: flex;
+  }
   .modal-backdrop { padding: 12px; }
   .modal-content-panel { padding: 22px; max-height: 94vh; }
   .search-input-box { min-width: 0; width: 100%; }
@@ -1237,6 +1400,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     </ul>
 
     <div class="sidebar-footer">
+      <button type="button" class="collapse-btn" id="summaryPanelToggleBtn" title="Özetler">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="15" y1="3" x2="15" y2="21"></line>
+        </svg>
+        <span class="nav-text" id="summaryPanelToggleLabel">Özetler</span>
+      </button>
       <button type="button" class="collapse-btn" id="sidebarCollapseBtn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <polyline points="11 17 6 12 11 7"></polyline>
@@ -1246,6 +1416,87 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       </button>
     </div>
   </aside>
+
+  <!-- =============================================================
+       BACKTEST ÖZETLER PANELİ (SLIDEOUT DRAWER)
+       ============================================================= -->
+  <div class="summary-panel" id="summaryPanel" aria-hidden="true">
+    <div class="summary-panel-header">
+      <div>
+        <h3 class="summary-panel-title">Backtest Özetleri</h3>
+        <p class="summary-panel-subtitle">Backtest işlem takvimi ve kaydedilen grafiklerin genel görünümü.</p>
+      </div>
+      <button type="button" class="summary-panel-close-btn" id="summaryPanelCloseBtn" aria-label="Kapat" title="Kapat">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <div class="summary-panel-scroll">
+      <!-- 1. Backtest İşlem Takvimi (üstte) -->
+      <div class="calendar-card" style="background: var(--glass-inset); border: 1px solid var(--glass-border-subtle); border-radius: var(--radius-lg); margin-bottom: 24px;">
+        <div class="calendar-nav-bar">
+          <div class="calendar-month-controls">
+            <button type="button" class="header-action-btn" id="btCalPrevMonthBtn">&lt;</button>
+            <h3 class="calendar-current-month" id="btCalendarMonthHeading">Ocak 2026</h3>
+            <button type="button" class="header-action-btn" id="btCalNextMonthBtn">&gt;</button>
+            <button type="button" class="btn-primary" id="btCalTodayBtn" style="padding: 6px 14px; font-size: 0.78rem;">Bugün</button>
+          </div>
+
+          <div class="calendar-summary-metrics">
+            <div class="cal-summary-item">
+              <span class="cal-summary-label">Aylık Test</span>
+              <span class="cal-summary-value" id="btCalMonthTrades">0</span>
+            </div>
+            <div class="cal-summary-item">
+              <span class="cal-summary-label">Aylık Win Rate</span>
+              <span class="cal-summary-value neon-green" id="btCalMonthWinRate">0%</span>
+            </div>
+            <div class="cal-summary-item">
+              <span class="cal-summary-label">Aylık Net P/L</span>
+              <span class="cal-summary-value bright-blue" id="btCalMonthNetPnl">$0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="calendar-weekdays">
+          <div>Pzt</div>
+          <div>Sal</div>
+          <div>Çar</div>
+          <div>Per</div>
+          <div>Cum</div>
+          <div>Cmt</div>
+          <div>Paz</div>
+        </div>
+
+        <div class="calendar-days-grid" id="btCalendarDaysGrid"></div>
+      </div>
+
+      <!-- 2. Backtest Grafik Galerisi (altta) -->
+      <div style="background: var(--glass-inset); border: 1px solid var(--glass-border-subtle); border-radius: var(--radius-lg); padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <div>
+            <h3 style="font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              Backtest Grafik Galerisi
+            </h3>
+            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+              Yalnızca backtest işlemlerine eklenmiş grafikler burada toplanır; canlı işlem galerisine karışmaz.
+            </p>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;" id="backtestGalleryCountText">
+            0 Ekran Görüntüsü
+          </div>
+        </div>
+
+        <div class="gallery-grid" id="backtestGalleryGrid">
+          <p style="color: var(--text-muted); grid-column: 1/-1;">Backtest galerisinde henüz görsel bulunmuyor.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Mobil Menü Karartma Katmanı (Backdrop) -->
   <div class="sidebar-mobile-overlay" id="sidebarMobileOverlay"></div>
@@ -1274,6 +1525,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           <span class="storage-status-dot offline" id="syncStatusDot"></span>
           <span id="storageStatusText">Bağlantı Bekleniyor</span>
         </div>
+
+        <button type="button" class="header-action-btn" id="headerSummaryBtn" title="Özetler">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="15" y1="3" x2="15" y2="21"></line>
+          </svg>
+        </button>
 
         <button type="button" class="header-action-btn" id="themeToggleBtn" title="Tema Değiştir">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -2051,28 +2309,6 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             </div>
           </div>
         </div>
-
-        <!-- SADECE BACKTEST'E ÖZEL GÖRSEL GALERİSİ -->
-        <div class="glass-surface" style="padding: 24px; margin-top: 28px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div>
-              <h3 style="font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                Backtest Grafik Galerisi
-              </h3>
-              <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
-                Yalnızca backtest işlemlerine eklenmiş grafikler burada toplanır; canlı işlem galerisine karışmaz.
-              </p>
-            </div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700;" id="backtestGalleryCountText">
-              0 Ekran Görüntüsü
-            </div>
-          </div>
-
-          <div class="gallery-grid" id="backtestGalleryGrid">
-            <p style="color: var(--text-muted); grid-column: 1/-1;">Backtest galerisinde henüz görsel bulunmuyor.</p>
-          </div>
-        </div>
       </section>
 
       <!-- =========================================================
@@ -2381,6 +2617,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         theme: 'dark'
       },
       currentCalendarDate: new Date(),
+      currentBacktestCalendarDate: new Date(),
       charts: {},
       pendingNewImages: [],
       currentEditExistingImages: [],
@@ -4325,10 +4562,217 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
     }
 
+    /* -------------------------------------------------------------
+       BACKTEST İŞLEM TAKVİMİ
+       ------------------------------------------------------------- */
+    function renderBacktestCalendar() {
+      const headingEl = document.getElementById('btCalendarMonthHeading');
+      const grid = document.getElementById('btCalendarDaysGrid');
+      if (!headingEl || !grid) return;
+
+      if (!AppState.currentBacktestCalendarDate) {
+        AppState.currentBacktestCalendarDate = new Date();
+      }
+
+      const year = AppState.currentBacktestCalendarDate.getFullYear();
+      const month = AppState.currentBacktestCalendarDate.getMonth();
+
+      const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+      headingEl.textContent = `${monthNames[month]} ${year}`;
+      grid.innerHTML = '';
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+
+      let startingIndex = firstDay.getDay() - 1;
+      if (startingIndex === -1) startingIndex = 6;
+
+      const totalDays = lastDay.getDate();
+
+      let monthTradesCount = 0;
+      let monthWinCount = 0;
+      let monthLossCount = 0;
+      let monthNetPnl = 0;
+
+      const prevLastDay = new Date(year, month, 0).getDate();
+      for (let i = startingIndex - 1; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'calendar-cell other-month';
+        cell.innerHTML = `<span class="cell-day-number">${prevLastDay - i}</span>`;
+        grid.appendChild(cell);
+      }
+
+      const today = new Date();
+      for (let d = 1; d <= totalDays; d++) {
+        const currentDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        
+        const dayTrades = AppState.backtestTrades.filter(t => {
+          if (!t.datetime) return false;
+          return t.datetime.startsWith(currentDateStr);
+        });
+
+        const cell = document.createElement('div');
+        cell.className = 'calendar-cell';
+
+        const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+        if (isToday) cell.classList.add('today');
+
+        let cellPnl = 0;
+        if (dayTrades.length > 0) {
+          dayTrades.forEach(t => {
+            let p = parseFloat(t.pnl) || 0;
+            if (t.result === 'Loss' && p > 0) p = -p;
+            else if (t.result === 'Win' && p < 0) p = Math.abs(p);
+            else if (t.result === 'BE') p = 0;
+
+            cellPnl += p;
+            monthNetPnl += p;
+            monthTradesCount++;
+            if (t.result === 'Win') monthWinCount++;
+            if (t.result === 'Loss') monthLossCount++;
+          });
+
+          if (cellPnl > 0) cell.classList.add('positive');
+          else if (cellPnl < 0) cell.classList.add('negative');
+        }
+
+        cell.innerHTML = `
+          <div class="cell-top">
+            <span class="cell-day-number">${d}</span>
+            ${dayTrades.length > 0 ? `<span class="cell-trade-count">${dayTrades.length} Tr</span>` : ''}
+          </div>
+          ${dayTrades.length > 0 ? `
+            <div class="cell-bottom-pnl" style="color: ${cellPnl >= 0 ? 'var(--color-neon-green)' : 'var(--color-danger)'};">
+              ${cellPnl >= 0 ? '+' : ''}${formatCurrency(cellPnl)}
+            </div>
+          ` : ''}
+        `;
+
+        if (dayTrades.length > 0) {
+          cell.addEventListener('click', () => openDayTradesModal(currentDateStr, dayTrades));
+        }
+
+        grid.appendChild(cell);
+      }
+
+      const tradesEl = document.getElementById('btCalMonthTrades');
+      if (tradesEl) tradesEl.textContent = monthTradesCount;
+
+      const decidable = monthWinCount + monthLossCount;
+      const winRate = decidable > 0 ? ((monthWinCount / decidable) * 100).toFixed(0) : 0;
+      const wrEl = document.getElementById('btCalMonthWinRate');
+      if (wrEl) wrEl.textContent = `${winRate}%`;
+
+      const netEl = document.getElementById('btCalMonthNetPnl');
+      if (netEl) {
+        netEl.textContent = formatCurrency(monthNetPnl);
+        netEl.className = `cal-summary-value ${monthNetPnl >= 0 ? 'neon-green' : 'danger'}`;
+      }
+    }
+
     function updateBacktestModules() {
       renderBacktestKPIs();
       renderBacktestTable();
+      renderBacktestCalendar();
       renderBacktestGallery();
+    }
+
+    /* -------------------------------------------------------------
+       BACKTEST ÖZETLER PANELİ VE TAKVİM KONTROLLERİ
+       ------------------------------------------------------------- */
+    window.toggleSummaryPanel = function() {
+      const panel = document.getElementById('summaryPanel');
+      if (!panel) return;
+      const willOpen = !panel.classList.contains('open');
+      if (willOpen) {
+        panel.classList.add('open');
+        panel.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('summary-open');
+        const label = document.getElementById('summaryPanelToggleLabel');
+        if (label) label.textContent = 'Daralt';
+        const toggleBtn = document.getElementById('summaryPanelToggleBtn');
+        if (toggleBtn) {
+          toggleBtn.setAttribute('title', 'Daralt');
+          toggleBtn.classList.add('active');
+        }
+        const headerBtn = document.getElementById('headerSummaryBtn');
+        if (headerBtn) {
+          headerBtn.setAttribute('title', 'Daralt');
+          headerBtn.classList.add('active');
+        }
+        renderBacktestCalendar();
+        renderBacktestGallery();
+      } else {
+        window.closeSummaryPanel();
+      }
+    };
+
+    window.closeSummaryPanel = function() {
+      const panel = document.getElementById('summaryPanel');
+      if (panel) {
+        panel.classList.remove('open');
+        panel.setAttribute('aria-hidden', 'true');
+      }
+      document.body.classList.remove('summary-open');
+      const label = document.getElementById('summaryPanelToggleLabel');
+      if (label) label.textContent = 'Özetler';
+      const toggleBtn = document.getElementById('summaryPanelToggleBtn');
+      if (toggleBtn) {
+        toggleBtn.setAttribute('title', 'Özetler');
+        toggleBtn.classList.remove('active');
+      }
+      const headerBtn = document.getElementById('headerSummaryBtn');
+      if (headerBtn) {
+        headerBtn.setAttribute('title', 'Özetler');
+        headerBtn.classList.remove('active');
+      }
+    };
+
+    const summaryToggleBtn = document.getElementById('summaryPanelToggleBtn');
+    if (summaryToggleBtn) {
+      summaryToggleBtn.addEventListener('click', () => {
+        window.toggleSummaryPanel();
+      });
+    }
+
+    const headerSummaryBtn = document.getElementById('headerSummaryBtn');
+    if (headerSummaryBtn) {
+      headerSummaryBtn.addEventListener('click', () => {
+        window.toggleSummaryPanel();
+      });
+    }
+
+    const summaryCloseBtn = document.getElementById('summaryPanelCloseBtn');
+    if (summaryCloseBtn) {
+      summaryCloseBtn.addEventListener('click', () => {
+        window.closeSummaryPanel();
+      });
+    }
+
+    const btCalPrevBtn = document.getElementById('btCalPrevMonthBtn');
+    if (btCalPrevBtn) {
+      btCalPrevBtn.addEventListener('click', () => {
+        if (!AppState.currentBacktestCalendarDate) AppState.currentBacktestCalendarDate = new Date();
+        AppState.currentBacktestCalendarDate.setMonth(AppState.currentBacktestCalendarDate.getMonth() - 1);
+        renderBacktestCalendar();
+      });
+    }
+
+    const btCalNextBtn = document.getElementById('btCalNextMonthBtn');
+    if (btCalNextBtn) {
+      btCalNextBtn.addEventListener('click', () => {
+        if (!AppState.currentBacktestCalendarDate) AppState.currentBacktestCalendarDate = new Date();
+        AppState.currentBacktestCalendarDate.setMonth(AppState.currentBacktestCalendarDate.getMonth() + 1);
+        renderBacktestCalendar();
+      });
+    }
+
+    const btCalTodayBtn = document.getElementById('btCalTodayBtn');
+    if (btCalTodayBtn) {
+      btCalTodayBtn.addEventListener('click', () => {
+        AppState.currentBacktestCalendarDate = new Date();
+        renderBacktestCalendar();
+      });
     }
 
     const backtestImagesStrip = document.getElementById('backtestImagesStrip');
@@ -4800,6 +5244,21 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       };
       const titleEl = document.getElementById('currentSectionTitle');
       if (titleEl) titleEl.textContent = titles[tab] || 'Prop Journal';
+
+      document.body.setAttribute('data-active-tab', tab);
+
+      const summaryBtn = document.getElementById('summaryPanelToggleBtn');
+      if (summaryBtn) {
+        if (tab === 'backtest') {
+          summaryBtn.style.display = 'flex';
+        } else {
+          summaryBtn.style.display = 'none';
+        }
+      }
+
+      if (tab !== 'backtest' && typeof window.closeSummaryPanel === 'function') {
+        window.closeSummaryPanel();
+      }
 
       if (tab === 'backtest') {
         updateBacktestModules();
@@ -5865,6 +6324,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           document.querySelectorAll('.modal-backdrop, .lightbox-wrapper').forEach(el => el.classList.remove('active'));
         }
       });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const hasActiveModal = document.querySelector('.modal-backdrop.active, .lightbox-wrapper.active');
+          if (!hasActiveModal && typeof window.closeSummaryPanel === 'function') {
+            window.closeSummaryPanel();
+          }
+        }
+      }, true);
     });
   </script>
 </body>
