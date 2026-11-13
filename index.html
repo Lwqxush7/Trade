@@ -1775,6 +1775,40 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   font-weight: 800;
 }
 
+.rp-export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(59, 130, 246, 0.38);
+  background: rgba(59, 130, 246, 0.14);
+  color: var(--color-bright-blue);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.rp-export-btn:hover {
+  background: rgba(59, 130, 246, 0.24);
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+.rp-export-btn:active {
+  transform: scale(0.98);
+}
+
+:root[data-theme="light"] .rp-export-btn {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+:root[data-theme="light"] .rp-export-btn:hover {
+  background: rgba(37, 99, 235, 0.18);
+}
+
 @media (max-width: 900px) {
   .rp-chart-card {
     padding: 12px;
@@ -2897,11 +2931,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                   <th>Sonuç</th>
                   <th>P/L</th>
                   <th>R</th>
+                  <th>İşlem</th>
                 </tr>
               </thead>
               <tbody id="rp-trades-tbody">
                 <tr>
-                  <td colspan="8" class="rp-empty-row">Henüz kapanan sanal işlem yok.</td>
+                  <td colspan="9" class="rp-empty-row">Henüz kapanan sanal işlem yok.</td>
                 </tr>
               </tbody>
             </table>
@@ -7074,6 +7109,70 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       return `${sign}${val.toFixed(2)} R`;
     }
 
+    function formatRpTimeToDatetimeLocal(unixSec) {
+      if (unixSec === null || unixSec === undefined || !Number.isFinite(unixSec)) return '';
+      const d = new Date(unixSec * 1000);
+      if (Number.isNaN(d.getTime())) return '';
+      const yyyy = String(d.getUTCFullYear()).padStart(4, '0');
+      const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const dd = String(d.getUTCDate()).padStart(2, '0');
+      const hh = String(d.getUTCHours()).padStart(2, '0');
+      const min = String(d.getUTCMinutes()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+    }
+
+    function resolveRpBacktestTimeframe(tfValue) {
+      const btTfEl = document.getElementById('bt-timeframe');
+      const raw = String(tfValue || '').trim();
+      if (!btTfEl) return raw || 'M15';
+      const available = Array.from(btTfEl.options).map(opt => opt.value);
+      if (available.includes(raw)) return raw;
+      const fallbackMap = {
+        M3: 'M5',
+        M30: 'M15',
+        H2: 'H1',
+        W1: 'D1',
+        MN1: 'D1'
+      };
+      const mapped = fallbackMap[raw];
+      if (mapped && available.includes(mapped)) return mapped;
+      return btTfEl.value || 'M15';
+    }
+
+    function exportRpTradeToBacktest(index) {
+      const trade = rpClosedTrades[index];
+      if (!trade) return;
+
+      const pairVal = (document.getElementById('rp-pair-input')?.value || '').trim();
+      const tfVal = document.getElementById('rp-tf-select')?.value || 'M15';
+
+      if (typeof window.switchTab === 'function') {
+        window.switchTab('backtest');
+      }
+
+      const btPairEl = document.getElementById('bt-pair');
+      const btDirEl = document.getElementById('bt-direction');
+      const btDtEl = document.getElementById('bt-datetime');
+      const btTfEl = document.getElementById('bt-timeframe');
+      const btEntryEl = document.getElementById('bt-entry');
+      const btExitEl = document.getElementById('bt-exit');
+      const btSlEl = document.getElementById('bt-sl');
+      const btPnlEl = document.getElementById('bt-pnl');
+      const btResultEl = document.getElementById('bt-result');
+
+      if (btPairEl) btPairEl.value = pairVal;
+      if (btDirEl) btDirEl.value = trade.direction === 'Buy' ? 'Long' : 'Short';
+      if (btDtEl) btDtEl.value = formatRpTimeToDatetimeLocal(trade.entryTime);
+      if (btTfEl) btTfEl.value = resolveRpBacktestTimeframe(tfVal);
+      if (btEntryEl) btEntryEl.value = trade.entryPrice !== null && trade.entryPrice !== undefined ? trade.entryPrice : '';
+      if (btExitEl) btExitEl.value = trade.exitPrice !== null && trade.exitPrice !== undefined ? trade.exitPrice : '';
+      if (btSlEl) btSlEl.value = trade.sl !== null && trade.sl !== undefined ? trade.sl : '';
+      if (btPnlEl) btPnlEl.value = trade.pnl !== null && trade.pnl !== undefined && Number.isFinite(trade.pnl) ? Number(trade.pnl.toFixed(2)) : 0;
+      if (btResultEl) btResultEl.value = trade.result || 'Win';
+
+      showToast('İşlem Backtest formuna aktarıldı.', 'success');
+    }
+
     function renderRpClosedTradesTable() {
       const tbody = document.getElementById('rp-trades-tbody');
       const countEl = document.getElementById('rp-trades-count');
@@ -7083,11 +7182,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (!tbody) return;
 
       if (rpClosedTrades.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="rp-empty-row">Henüz kapanan sanal işlem yok.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="rp-empty-row">Henüz kapanan sanal işlem yok.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = rpClosedTrades.map(t => {
+      tbody.innerHTML = rpClosedTrades.map((t, idx) => {
         const dirClass = t.direction === 'Buy' ? 'rp-dir-buy' : 'rp-dir-sell';
         const badgeClass = t.result === 'Win' ? 'rp-badge-win' : (t.result === 'Loss' ? 'rp-badge-loss' : 'rp-badge-be');
         const pnlClass = t.pnl === null ? '' : (t.pnl > 0 ? 'rp-pnl-pos' : (t.pnl < 0 ? 'rp-pnl-neg' : ''));
@@ -7101,6 +7200,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             <td><span class="rp-badge ${badgeClass}">${t.result}</span></td>
             <td class="${pnlClass}">${formatRpPnl(t.pnl)}</td>
             <td class="${pnlClass}">${formatRpR(t.rMultiple)}</td>
+            <td><button type="button" class="rp-export-btn" data-rp-trade-idx="${idx}">Backtest'e Aktar</button></td>
           </tr>
         `;
       }).join('');
@@ -7176,6 +7276,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         direction,
         entryPrice,
         entryIndex: rpReplayIndex,
+        entryTime: currentCandle.time,
         sl,
         tp,
         balance,
@@ -7217,6 +7318,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       rpClosedTrades.unshift({
         direction: t.direction,
         entryPrice: t.entryPrice,
+        entryTime: t.entryTime,
         exitPrice,
         sl: t.sl,
         tp: t.tp,
@@ -7773,6 +7875,18 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           if (!rpOpenTrade || !rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) return;
           const currentCandle = rpLoadedCandles[rpReplayIndex];
           closeRpOpenTrade(currentCandle.close, 'Manuel');
+        });
+      }
+
+      const tradesTbody = document.getElementById('rp-trades-tbody');
+      if (tradesTbody) {
+        tradesTbody.addEventListener('click', (e) => {
+          const btn = e.target.closest('.rp-export-btn');
+          if (!btn) return;
+          const idx = Number(btn.getAttribute('data-rp-trade-idx'));
+          if (Number.isInteger(idx) && idx >= 0) {
+            exportRpTradeToBacktest(idx);
+          }
         });
       }
     }
