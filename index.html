@@ -10,6 +10,8 @@
   
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Lightweight Charts v4.2.0 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
 
 <style>
 /* =====================================================================
@@ -1323,6 +1325,485 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     transition: none !important;
   }
 }
+
+/* ===== CHART ===== */
+.rp-chart-card {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.rp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 140px;
+}
+
+.rp-field-file {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-width: auto;
+}
+
+.rp-file-input {
+  display: none;
+}
+
+.rp-file-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(59, 108, 255, 0.9), rgba(34, 211, 238, 0.78));
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 22px rgba(59, 108, 255, 0.32), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.rp-file-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(59, 108, 255, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+}
+
+.rp-file-btn:active {
+  transform: scale(0.97);
+}
+
+.rp-file-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rp-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.rp-input,
+.rp-select {
+  height: 42px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-subtle);
+  box-shadow: var(--neu-shadow-inset);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+}
+
+.rp-input {
+  width: 180px;
+}
+
+.rp-select {
+  width: 130px;
+  cursor: pointer;
+}
+
+.rp-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.rp-input:focus,
+.rp-select:focus {
+  border-color: var(--glass-border-focus);
+  box-shadow: 0 0 0 3px rgba(59, 108, 255, 0.25);
+}
+
+.rp-select option {
+  background: #0B1228;
+  color: #FFFFFF;
+}
+
+:root[data-theme="light"] .rp-input,
+:root[data-theme="light"] .rp-select {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: var(--glass-border);
+}
+
+:root[data-theme="light"] .rp-input:focus,
+:root[data-theme="light"] .rp-select:focus {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 3px rgba(59, 108, 255, 0.22);
+}
+
+:root[data-theme="light"] .rp-select option {
+  background: #FFFFFF;
+  color: #0F172A;
+}
+
+.rp-chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 560px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--glass-inset);
+  box-shadow: var(--neu-shadow-inset);
+}
+
+.rp-chart-wrap.rp-picking {
+  cursor: crosshair;
+  outline: 2px solid rgba(34, 211, 238, 0.7);
+}
+
+.rp-replay-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--glass-border-subtle);
+}
+
+.rp-replay-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--glass-hover-fill);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.16);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.rp-replay-btn:hover:not(:disabled) {
+  background: var(--glass-hover-fill-strong);
+  border-color: var(--glass-border-highlight);
+  transform: translateY(-1px);
+}
+
+.rp-replay-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.rp-replay-btn.active {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.28), rgba(59, 108, 255, 0.35));
+  border-color: var(--color-neon-cyan);
+  color: var(--color-neon-cyan);
+}
+
+.rp-replay-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.rp-replay-speed {
+  height: 38px;
+  width: auto;
+  min-width: 82px;
+}
+
+.rp-replay-status {
+  margin-left: auto;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+:root[data-theme="light"] .rp-replay-btn {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: var(--glass-border);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+:root[data-theme="light"] .rp-replay-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.96);
+}
+
+:root[data-theme="light"] .rp-replay-btn.active {
+  background: rgba(2, 132, 199, 0.14);
+  border-color: var(--color-neon-cyan);
+  color: var(--color-neon-cyan);
+}
+
+.rp-chart-container {
+  width: 100%;
+  height: 100%;
+}
+
+:root[data-theme="light"] .rp-chart-wrap {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.rp-trade-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--glass-border-subtle);
+}
+
+.rp-field-sm {
+  min-width: 112px;
+}
+
+.rp-input-sm {
+  width: 125px;
+  height: 38px;
+  padding: 0 12px;
+  font-size: 0.82rem;
+}
+
+.rp-trade-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.rp-trade-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast), background var(--transition-fast);
+}
+
+.rp-trade-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.rp-trade-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.rp-trade-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.rp-buy-btn {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.9));
+  color: #FFFFFF;
+  border-color: rgba(85, 229, 177, 0.55);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.3);
+}
+
+.rp-sell-btn {
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.9), rgba(225, 29, 72, 0.9));
+  color: #FFFFFF;
+  border-color: rgba(255, 130, 157, 0.55);
+  box-shadow: 0 6px 18px rgba(244, 63, 94, 0.3);
+}
+
+.rp-close-btn {
+  background: var(--glass-hover-fill);
+  color: var(--text-main);
+  border-color: var(--glass-border);
+}
+
+:root[data-theme="light"] .rp-close-btn {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: var(--glass-border);
+}
+
+.rp-trades-card {
+  margin-top: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rp-trades-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.rp-trades-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.rp-trades-count {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.rp-trades-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-subtle);
+}
+
+:root[data-theme="light"] .rp-trades-table-wrap {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: var(--glass-border);
+}
+
+.rp-trades-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-trades-table th {
+  padding: 12px 14px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--glass-border-subtle);
+  white-space: nowrap;
+}
+
+.rp-trades-table td {
+  padding: 11px 14px;
+  color: var(--text-main);
+  border-bottom: 1px solid var(--glass-border-subtle);
+  white-space: nowrap;
+}
+
+.rp-trades-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.rp-empty-row {
+  text-align: center;
+  color: var(--text-muted) !important;
+  padding: 28px 14px !important;
+}
+
+.rp-dir-buy {
+  color: var(--color-neon-green);
+  font-weight: 800;
+}
+
+.rp-dir-sell {
+  color: var(--color-danger);
+  font-weight: 800;
+}
+
+.rp-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.rp-badge-win {
+  background: rgba(85, 229, 177, 0.16);
+  color: var(--color-neon-green);
+  border: 1px solid rgba(85, 229, 177, 0.35);
+}
+
+.rp-badge-loss {
+  background: rgba(255, 130, 157, 0.16);
+  color: var(--color-danger);
+  border: 1px solid rgba(255, 130, 157, 0.35);
+}
+
+.rp-badge-be {
+  background: rgba(145, 168, 214, 0.16);
+  color: var(--text-secondary);
+  border: 1px solid var(--glass-border);
+}
+
+.rp-pnl-pos {
+  color: var(--color-neon-green);
+  font-weight: 800;
+}
+
+.rp-pnl-neg {
+  color: var(--color-danger);
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .rp-chart-card {
+    padding: 12px;
+  }
+  .rp-toolbar {
+    gap: 10px;
+  }
+  .rp-field-file {
+    width: 100%;
+  }
+  .rp-field {
+    flex: 1 1 130px;
+  }
+  .rp-input,
+  .rp-select,
+  .rp-input-sm {
+    width: 100%;
+  }
+  .rp-trade-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+  .rp-trade-btn {
+    flex: 1;
+  }
+  .rp-trades-card {
+    padding: 14px;
+  }
+}
   </style>
 </head>
 <body>
@@ -1385,6 +1866,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         <button type="button">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
           <span class="nav-text">Backtest</span>
+        </button>
+      </li>
+      <li class="nav-item" data-tab="chart">
+        <button type="button">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 4v16"></path><rect x="7" y="8" width="4" height="8" rx="1"></rect><path d="M17 3v18"></path><rect x="15" y="6" width="4" height="9" rx="1"></rect></svg>
+          <span class="nav-text">Chart</span>
         </button>
       </li>
       <li class="nav-item" data-tab="settings">
@@ -2307,6 +2794,122 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       </section>
 
       <!-- =========================================================
+           7b. CHART (MUM GRAFİĞİ)
+           ========================================================= -->
+      <section class="app-section" id="sec-chart">
+        <div class="glass-surface rp-chart-card" id="rp-chart-card">
+          <div class="rp-toolbar" id="rp-toolbar">
+            <div class="rp-field rp-field-file">
+              <input type="file" id="rp-file-input" class="rp-file-input" accept=".csv,.txt,text/csv,text/plain">
+              <button type="button" class="rp-file-btn" id="rp-file-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span>CSV Yükle</span>
+              </button>
+              <span class="rp-file-name" id="rp-file-name">Dosya seçilmedi</span>
+            </div>
+
+            <div class="rp-field">
+              <label class="rp-label" for="rp-pair-input">Parite</label>
+              <input type="text" id="rp-pair-input" class="rp-input" placeholder="örn. EURUSD, XAUUSD" autocomplete="off">
+            </div>
+
+            <div class="rp-field">
+              <label class="rp-label" for="rp-tf-select">Timeframe</label>
+              <select id="rp-tf-select" class="rp-select">
+                <option value="M1">M1</option>
+                <option value="M3">M3</option>
+                <option value="M5">M5</option>
+                <option value="M15" selected>M15</option>
+                <option value="M30">M30</option>
+                <option value="H1">H1</option>
+                <option value="H2">H2</option>
+                <option value="H4">H4</option>
+                <option value="D1">D1</option>
+                <option value="W1">W1</option>
+                <option value="MN1">MN1</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="rp-replay-bar" id="rp-replay-bar">
+            <button type="button" class="rp-replay-btn" id="rp-pick-btn" disabled>Başlangıç Seç</button>
+            <button type="button" class="rp-replay-btn" id="rp-step-back-btn" disabled title="Bir mum geri">⏮</button>
+            <button type="button" class="rp-replay-btn" id="rp-play-btn" disabled title="Oynat">▶ Oynat</button>
+            <button type="button" class="rp-replay-btn" id="rp-pause-btn" disabled title="Durdur">⏸ Durdur</button>
+            <button type="button" class="rp-replay-btn" id="rp-step-fwd-btn" disabled title="Bir mum ileri">⏭</button>
+            <select id="rp-speed-select" class="rp-select rp-replay-speed" aria-label="Replay Hızı">
+              <option value="1" selected>1x</option>
+              <option value="2">2x</option>
+              <option value="5">5x</option>
+              <option value="10">10x</option>
+            </select>
+            <span class="rp-replay-status" id="rp-replay-status">Replay hazır değil</span>
+          </div>
+
+          <div class="rp-trade-bar" id="rp-trade-bar">
+            <div class="rp-field rp-field-sm">
+              <label class="rp-label" for="rp-balance-input">Bakiye ($)</label>
+              <input type="number" step="any" min="0" id="rp-balance-input" class="rp-input rp-input-sm" value="10000">
+            </div>
+            <div class="rp-field rp-field-sm">
+              <label class="rp-label" for="rp-risk-input">Risk (%)</label>
+              <input type="number" step="any" min="0" id="rp-risk-input" class="rp-input rp-input-sm" value="1">
+            </div>
+            <div class="rp-field rp-field-sm">
+              <label class="rp-label" for="rp-sl-input">Stop Loss</label>
+              <input type="number" step="any" id="rp-sl-input" class="rp-input rp-input-sm" placeholder="SL Fiyat">
+            </div>
+            <div class="rp-field rp-field-sm">
+              <label class="rp-label" for="rp-tp-input">Take Profit</label>
+              <input type="number" step="any" id="rp-tp-input" class="rp-input rp-input-sm" placeholder="TP Fiyat">
+            </div>
+
+            <div class="rp-trade-actions" id="rp-trade-actions">
+              <button type="button" class="rp-trade-btn rp-buy-btn" id="rp-buy-btn" disabled>Buy</button>
+              <button type="button" class="rp-trade-btn rp-sell-btn" id="rp-sell-btn" disabled>Sell</button>
+              <button type="button" class="rp-trade-btn rp-close-btn" id="rp-close-trade-btn" disabled>Manuel Kapat</button>
+            </div>
+          </div>
+
+          <div class="rp-chart-wrap" id="rp-chart-wrap">
+            <div class="rp-chart-container" id="rp-chart-container"></div>
+          </div>
+        </div>
+
+        <div class="glass-surface rp-trades-card" id="rp-trades-card">
+          <div class="rp-trades-header" id="rp-trades-header">
+            <h3 class="rp-trades-title">Kapanan Sanal İşlemler</h3>
+            <span class="rp-trades-count" id="rp-trades-count">0 işlem</span>
+          </div>
+          <div class="rp-trades-table-wrap" id="rp-trades-table-wrap">
+            <table class="rp-trades-table" id="rp-trades-table">
+              <thead>
+                <tr>
+                  <th>Yön</th>
+                  <th>Giriş</th>
+                  <th>Çıkış</th>
+                  <th>SL</th>
+                  <th>TP</th>
+                  <th>Sonuç</th>
+                  <th>P/L</th>
+                  <th>R</th>
+                </tr>
+              </thead>
+              <tbody id="rp-trades-tbody">
+                <tr>
+                  <td colspan="8" class="rp-empty-row">Henüz kapanan sanal işlem yok.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- =========================================================
            8. SETTINGS (AYARLAR & VERİ YÖNETİMİ)
            ========================================================= -->
       <section class="app-section" id="sec-settings">
@@ -2950,6 +3553,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function applyTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
       AppState.settings.theme = theme;
+      if (typeof updateRpChartTheme === 'function') {
+        updateRpChartTheme(theme);
+      }
     }
 
     /* -------------------------------------------------------------
@@ -5235,6 +5841,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         strategy: 'Strateji Merkezi',
         gallery: 'Trade Galerisi',
         backtest: 'Backtest',
+        chart: 'Chart',
         settings: 'Ayarlar'
       };
       const titleEl = document.getElementById('currentSectionTitle');
@@ -5255,8 +5862,14 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         window.closeSummaryPanel();
       }
 
+      if (tab !== 'chart' && typeof stopRpReplayOnLeave === 'function') {
+        stopRpReplayOnLeave();
+      }
+
       if (tab === 'backtest') {
         updateBacktestModules();
+      } else if (tab === 'chart') {
+        requestAnimationFrame(() => initOrResizeRpChart());
       } else if (tab === 'analytics' || tab === 'overview') {
         renderCharts();
       } else if (tab === 'gallery') {
@@ -6299,6 +6912,932 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           card.style.removeProperty('--mouse-y');
         }
       });
+    }
+
+    // ===== CHART =====
+    let rpChartInstance = null;
+    let rpCandlestickSeries = null;
+    let rpChartResizeObserver = null;
+    let rpChartListenersBound = false;
+    let rpChartErrorNotified = false;
+    let rpLoadedCandles = [];
+    let rpIsPickingStart = false;
+    let rpReplayActive = false;
+    let rpReplayIndex = -1;
+    let rpReplayTimer = null;
+    let rpChartClickHandler = null;
+    let rpCurrentPrecision = 2;
+    let rpOpenTrade = null;
+    let rpClosedTrades = [];
+    let rpTradePriceLines = { entry: null, sl: null, tp: null };
+
+    function getRpChartThemeOptions(theme) {
+      const isLight = (theme || document.documentElement.getAttribute('data-theme')) === 'light';
+      return {
+        layout: {
+          background: {
+            type: window.LightweightCharts ? window.LightweightCharts.ColorType.Solid : 'solid',
+            color: 'transparent'
+          },
+          textColor: isLight ? '#334155' : '#C5D5F5',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif'
+        },
+        grid: {
+          vertLines: { color: isLight ? 'rgba(15, 23, 42, 0.07)' : 'rgba(255, 255, 255, 0.06)' },
+          horzLines: { color: isLight ? 'rgba(15, 23, 42, 0.07)' : 'rgba(255, 255, 255, 0.06)' }
+        },
+        crosshair: {
+          vertLine: {
+            color: isLight ? 'rgba(37, 99, 235, 0.45)' : 'rgba(56, 189, 248, 0.45)',
+            labelBackgroundColor: isLight ? '#0F172A' : '#1E293B'
+          },
+          horzLine: {
+            color: isLight ? 'rgba(37, 99, 235, 0.45)' : 'rgba(56, 189, 248, 0.45)',
+            labelBackgroundColor: isLight ? '#0F172A' : '#1E293B'
+          }
+        },
+        rightPriceScale: {
+          borderColor: isLight ? 'rgba(15, 23, 42, 0.14)' : 'rgba(255, 255, 255, 0.16)'
+        },
+        timeScale: {
+          borderColor: isLight ? 'rgba(15, 23, 42, 0.14)' : 'rgba(255, 255, 255, 0.16)',
+          timeVisible: true,
+          secondsVisible: false
+        }
+      };
+    }
+
+    function getRpCandlestickThemeOptions(theme) {
+      const isLight = (theme || document.documentElement.getAttribute('data-theme')) === 'light';
+      return {
+        upColor: isLight ? '#059669' : '#55E5B1',
+        downColor: isLight ? '#E11D48' : '#FF829D',
+        borderVisible: false,
+        wickUpColor: isLight ? '#059669' : '#55E5B1',
+        wickDownColor: isLight ? '#E11D48' : '#FF829D'
+      };
+    }
+
+    function updateRpChartTheme(theme) {
+      if (!rpChartInstance) return;
+      rpChartInstance.applyOptions(getRpChartThemeOptions(theme));
+      if (rpCandlestickSeries) {
+        rpCandlestickSeries.applyOptions(getRpCandlestickThemeOptions(theme));
+      }
+    }
+
+    function resizeRpChart() {
+      if (!rpChartInstance) return;
+      const section = document.getElementById('sec-chart');
+      const container = document.getElementById('rp-chart-container');
+      if (!section || !container || !section.classList.contains('active')) return;
+      const width = container.clientWidth;
+      const height = container.clientHeight || 560;
+      if (width > 0 && height > 0) {
+        rpChartInstance.resize(width, height);
+      }
+    }
+
+    function clearRpTradePriceLines() {
+      if (rpCandlestickSeries) {
+        if (rpTradePriceLines.entry) {
+          rpCandlestickSeries.removePriceLine(rpTradePriceLines.entry);
+        }
+        if (rpTradePriceLines.sl) {
+          rpCandlestickSeries.removePriceLine(rpTradePriceLines.sl);
+        }
+        if (rpTradePriceLines.tp) {
+          rpCandlestickSeries.removePriceLine(rpTradePriceLines.tp);
+        }
+      }
+      rpTradePriceLines = { entry: null, sl: null, tp: null };
+    }
+
+    function drawRpTradePriceLines(trade) {
+      clearRpTradePriceLines();
+      if (!trade || !rpCandlestickSeries) return;
+      const lineStyleDashed = window.LightweightCharts ? window.LightweightCharts.LineStyle.Dashed : 2;
+      const lineStyleSolid = window.LightweightCharts ? window.LightweightCharts.LineStyle.Solid : 0;
+
+      rpTradePriceLines.entry = rpCandlestickSeries.createPriceLine({
+        price: trade.entryPrice,
+        color: '#3B82F6',
+        lineWidth: 2,
+        lineStyle: lineStyleSolid,
+        axisLabelVisible: true,
+        title: `${trade.direction} Giriş`
+      });
+
+      if (trade.sl !== null) {
+        rpTradePriceLines.sl = rpCandlestickSeries.createPriceLine({
+          price: trade.sl,
+          color: '#EF4444',
+          lineWidth: 2,
+          lineStyle: lineStyleDashed,
+          axisLabelVisible: true,
+          title: 'SL'
+        });
+      }
+
+      if (trade.tp !== null) {
+        rpTradePriceLines.tp = rpCandlestickSeries.createPriceLine({
+          price: trade.tp,
+          color: '#10B981',
+          lineWidth: 2,
+          lineStyle: lineStyleDashed,
+          axisLabelVisible: true,
+          title: 'TP'
+        });
+      }
+    }
+
+    function clearRpOpenTrade() {
+      clearRpTradePriceLines();
+      rpOpenTrade = null;
+      updateRpTradeControls();
+    }
+
+    function formatRpPrice(val) {
+      if (val === null || val === undefined || !Number.isFinite(val)) return '—';
+      return val.toFixed(rpCurrentPrecision);
+    }
+
+    function formatRpPnl(val) {
+      if (val === null || val === undefined || !Number.isFinite(val)) return '—';
+      const sign = val > 0 ? '+' : (val < 0 ? '-' : '');
+      return `${sign}$${Math.abs(val).toFixed(2)}`;
+    }
+
+    function formatRpR(val) {
+      if (val === null || val === undefined || !Number.isFinite(val)) return '—';
+      const sign = val > 0 ? '+' : '';
+      return `${sign}${val.toFixed(2)} R`;
+    }
+
+    function renderRpClosedTradesTable() {
+      const tbody = document.getElementById('rp-trades-tbody');
+      const countEl = document.getElementById('rp-trades-count');
+      if (countEl) {
+        countEl.textContent = `${rpClosedTrades.length} işlem`;
+      }
+      if (!tbody) return;
+
+      if (rpClosedTrades.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="rp-empty-row">Henüz kapanan sanal işlem yok.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rpClosedTrades.map(t => {
+        const dirClass = t.direction === 'Buy' ? 'rp-dir-buy' : 'rp-dir-sell';
+        const badgeClass = t.result === 'Win' ? 'rp-badge-win' : (t.result === 'Loss' ? 'rp-badge-loss' : 'rp-badge-be');
+        const pnlClass = t.pnl === null ? '' : (t.pnl > 0 ? 'rp-pnl-pos' : (t.pnl < 0 ? 'rp-pnl-neg' : ''));
+        return `
+          <tr>
+            <td class="${dirClass}">${t.direction}</td>
+            <td>${formatRpPrice(t.entryPrice)}</td>
+            <td>${formatRpPrice(t.exitPrice)}</td>
+            <td>${formatRpPrice(t.sl)}</td>
+            <td>${formatRpPrice(t.tp)}</td>
+            <td><span class="rp-badge ${badgeClass}">${t.result}</span></td>
+            <td class="${pnlClass}">${formatRpPnl(t.pnl)}</td>
+            <td class="${pnlClass}">${formatRpR(t.rMultiple)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateRpTradeControls() {
+      const buyBtn = document.getElementById('rp-buy-btn');
+      const sellBtn = document.getElementById('rp-sell-btn');
+      const closeBtn = document.getElementById('rp-close-trade-btn');
+
+      const canTrade = rpReplayActive && rpReplayIndex >= 0 && rpReplayIndex < rpLoadedCandles.length;
+      const hasOpen = rpOpenTrade !== null;
+
+      if (buyBtn) buyBtn.disabled = !canTrade || hasOpen || rpIsPickingStart;
+      if (sellBtn) sellBtn.disabled = !canTrade || hasOpen || rpIsPickingStart;
+      if (closeBtn) closeBtn.disabled = !canTrade || !hasOpen;
+    }
+
+    function parseOptionalRpInputNumber(id) {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      const raw = String(el.value || '').trim();
+      if (!raw) return null;
+      const num = Number(raw);
+      return Number.isFinite(num) ? num : NaN;
+    }
+
+    function openRpVirtualTrade(direction) {
+      if (!rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) return;
+      if (rpOpenTrade !== null) {
+        showToast('Aynı anda yalnızca bir açık işlem bulunabilir.', 'error');
+        return;
+      }
+
+      const currentCandle = rpLoadedCandles[rpReplayIndex];
+      const entryPrice = currentCandle.close;
+      const sl = parseOptionalRpInputNumber('rp-sl-input');
+      const tp = parseOptionalRpInputNumber('rp-tp-input');
+      const balanceVal = parseOptionalRpInputNumber('rp-balance-input');
+      const riskVal = parseOptionalRpInputNumber('rp-risk-input');
+
+      if (Number.isNaN(sl) || Number.isNaN(tp)) {
+        showToast('Stop Loss veya Take Profit değeri geçersiz.', 'error');
+        return;
+      }
+
+      if (sl !== null) {
+        if (direction === 'Buy' && sl >= entryPrice) {
+          showToast('Buy işleminde Stop Loss giriş fiyatının altında olmalıdır.', 'error');
+          return;
+        }
+        if (direction === 'Sell' && sl <= entryPrice) {
+          showToast('Sell işleminde Stop Loss giriş fiyatının üstünde olmalıdır.', 'error');
+          return;
+        }
+      }
+
+      if (tp !== null) {
+        if (direction === 'Buy' && tp <= entryPrice) {
+          showToast('Buy işleminde Take Profit giriş fiyatının üstünde olmalıdır.', 'error');
+          return;
+        }
+        if (direction === 'Sell' && tp >= entryPrice) {
+          showToast('Sell işleminde Take Profit giriş fiyatının altında olmalıdır.', 'error');
+          return;
+        }
+      }
+
+      const balance = (balanceVal !== null && !Number.isNaN(balanceVal) && balanceVal > 0) ? balanceVal : 0;
+      const riskPct = (riskVal !== null && !Number.isNaN(riskVal) && riskVal > 0) ? riskVal : 0;
+
+      rpOpenTrade = {
+        direction,
+        entryPrice,
+        entryIndex: rpReplayIndex,
+        sl,
+        tp,
+        balance,
+        riskPct
+      };
+
+      drawRpTradePriceLines(rpOpenTrade);
+      updateRpTradeControls();
+
+      if (sl === null) {
+        showToast(`${direction} işlemi açıldı (${formatRpPrice(entryPrice)}). Uyarı: SL girilmediği için R ve P/L hesaplanmayacak.`, 'info');
+      } else {
+        showToast(`${direction} işlemi açıldı (${formatRpPrice(entryPrice)}).`, 'success');
+      }
+    }
+
+    function closeRpOpenTrade(exitPrice, reason) {
+      if (!rpOpenTrade) return;
+      const t = rpOpenTrade;
+      const priceDiff = t.direction === 'Buy' ? (exitPrice - t.entryPrice) : (t.entryPrice - exitPrice);
+
+      let result = 'BE';
+      if (Math.abs(priceDiff) > 1e-10) {
+        result = priceDiff > 0 ? 'Win' : 'Loss';
+      }
+
+      let rMultiple = null;
+      let pnl = null;
+
+      if (t.sl !== null) {
+        const slDistance = Math.abs(t.entryPrice - t.sl);
+        if (slDistance > 0) {
+          rMultiple = priceDiff / slDistance;
+          const riskAmount = t.balance * (t.riskPct / 100);
+          pnl = rMultiple * riskAmount;
+        }
+      }
+
+      rpClosedTrades.unshift({
+        direction: t.direction,
+        entryPrice: t.entryPrice,
+        exitPrice,
+        sl: t.sl,
+        tp: t.tp,
+        result,
+        pnl,
+        rMultiple
+      });
+
+      clearRpOpenTrade();
+      renderRpClosedTradesTable();
+
+      if (t.sl === null) {
+        showToast(`İşlem ${reason} ile kapandı (${result}). SL girilmediği için R hesaplanmadı.`, 'info');
+      } else {
+        showToast(`İşlem ${reason} ile kapandı: ${result} (${formatRpPnl(pnl)}, ${formatRpR(rMultiple)})`, result === 'Win' ? 'success' : (result === 'Loss' ? 'error' : 'info'));
+      }
+    }
+
+    function checkRpOpenTradeOnCandle(candle) {
+      if (!rpOpenTrade || !candle) return;
+      const t = rpOpenTrade;
+      let slHit = false;
+      let tpHit = false;
+
+      if (t.direction === 'Buy') {
+        if (t.sl !== null && candle.low <= t.sl) slHit = true;
+        if (t.tp !== null && candle.high >= t.tp) tpHit = true;
+      } else {
+        if (t.sl !== null && candle.high >= t.sl) slHit = true;
+        if (t.tp !== null && candle.low <= t.tp) tpHit = true;
+      }
+
+      // Aynı mumda hem SL hem TP değerse SL önceliklidir
+      if (slHit) {
+        closeRpOpenTrade(t.sl, 'SL');
+      } else if (tpHit) {
+        closeRpOpenTrade(t.tp, 'TP');
+      }
+    }
+
+    function pauseRpReplay() {
+      if (rpReplayTimer !== null) {
+        clearInterval(rpReplayTimer);
+        rpReplayTimer = null;
+      }
+      updateRpReplayControls();
+    }
+
+    function stopRpReplayOnLeave() {
+      pauseRpReplay();
+      if (rpIsPickingStart) {
+        rpIsPickingStart = false;
+        updateRpReplayControls();
+      }
+    }
+
+    function resetRpReplayState() {
+      pauseRpReplay();
+      clearRpOpenTrade();
+      rpIsPickingStart = false;
+      rpReplayActive = false;
+      rpReplayIndex = -1;
+      updateRpReplayControls();
+    }
+
+    function updateRpReplayControls() {
+      const pickBtn = document.getElementById('rp-pick-btn');
+      const playBtn = document.getElementById('rp-play-btn');
+      const pauseBtn = document.getElementById('rp-pause-btn');
+      const fwdBtn = document.getElementById('rp-step-fwd-btn');
+      const backBtn = document.getElementById('rp-step-back-btn');
+      const statusEl = document.getElementById('rp-replay-status');
+      const chartWrap = document.getElementById('rp-chart-wrap');
+
+      const hasData = rpLoadedCandles.length > 0;
+      const isPlaying = rpReplayTimer !== null;
+      const total = rpLoadedCandles.length;
+
+      if (pickBtn) {
+        pickBtn.disabled = !hasData;
+        pickBtn.classList.toggle('active', rpIsPickingStart);
+      }
+      if (chartWrap) {
+        chartWrap.classList.toggle('rp-picking', rpIsPickingStart);
+      }
+
+      if (!rpReplayActive || !hasData) {
+        if (playBtn) playBtn.disabled = true;
+        if (pauseBtn) pauseBtn.disabled = true;
+        if (fwdBtn) fwdBtn.disabled = true;
+        if (backBtn) backBtn.disabled = true;
+        if (statusEl) {
+          statusEl.textContent = rpIsPickingStart
+            ? 'Grafikte başlangıç mumuna tıklayın'
+            : (hasData ? 'Başlangıç mumu seçin' : 'Replay hazır değil');
+        }
+        updateRpTradeControls();
+        return;
+      }
+
+      if (playBtn) playBtn.disabled = isPlaying || rpReplayIndex >= total - 1;
+      if (pauseBtn) pauseBtn.disabled = !isPlaying;
+      if (fwdBtn) fwdBtn.disabled = rpReplayIndex >= total - 1;
+      if (backBtn) backBtn.disabled = rpReplayIndex <= 0;
+
+      if (statusEl) {
+        statusEl.textContent = rpIsPickingStart
+          ? 'Grafikte başlangıç mumuna tıklayın'
+          : `${rpReplayIndex + 1} / ${total} mum`;
+      }
+      updateRpTradeControls();
+    }
+
+    function getRpReplayIntervalMs() {
+      const speedEl = document.getElementById('rp-speed-select');
+      const speed = speedEl ? (Number(speedEl.value) || 1) : 1;
+      return Math.max(50, Math.round(1000 / speed));
+    }
+
+    function stepRpReplayForward() {
+      if (!rpReplayActive || !rpCandlestickSeries || rpLoadedCandles.length === 0) return false;
+      if (rpReplayIndex >= rpLoadedCandles.length - 1) {
+        pauseRpReplay();
+        return false;
+      }
+      rpReplayIndex += 1;
+      const nextCandle = rpLoadedCandles[rpReplayIndex];
+      rpCandlestickSeries.update(nextCandle);
+      checkRpOpenTradeOnCandle(nextCandle);
+      if (rpReplayIndex >= rpLoadedCandles.length - 1) {
+        pauseRpReplay();
+        showToast('Replay tamamlandı.', 'info');
+        return false;
+      }
+      updateRpReplayControls();
+      return true;
+    }
+
+    function stepRpReplayBackward() {
+      if (!rpReplayActive || !rpCandlestickSeries || rpLoadedCandles.length === 0) return;
+      pauseRpReplay();
+      if (rpReplayIndex <= 0) return;
+      rpReplayIndex -= 1;
+      if (rpOpenTrade && rpReplayIndex < rpOpenTrade.entryIndex) {
+        clearRpOpenTrade();
+      }
+      rpCandlestickSeries.setData(rpLoadedCandles.slice(0, rpReplayIndex + 1));
+      updateRpReplayControls();
+    }
+
+    function startRpReplay() {
+      if (!rpReplayActive || !rpCandlestickSeries || rpLoadedCandles.length === 0) return;
+      if (rpReplayIndex >= rpLoadedCandles.length - 1) {
+        pauseRpReplay();
+        return;
+      }
+      if (rpReplayTimer !== null) {
+        clearInterval(rpReplayTimer);
+        rpReplayTimer = null;
+      }
+      rpIsPickingStart = false;
+      rpReplayTimer = setInterval(() => {
+        stepRpReplayForward();
+      }, getRpReplayIntervalMs());
+      updateRpReplayControls();
+    }
+
+    function getVisibleRpCandles() {
+      if (rpReplayActive && rpReplayIndex >= 0 && rpLoadedCandles.length > 0) {
+        return rpLoadedCandles.slice(0, rpReplayIndex + 1);
+      }
+      return rpLoadedCandles;
+    }
+
+    function handleRpChartClick(param) {
+      if (!rpIsPickingStart || rpLoadedCandles.length === 0 || !rpChartInstance || !rpCandlestickSeries) return;
+
+      let pickedIndex = -1;
+      if (param && param.time !== undefined && param.time !== null) {
+        pickedIndex = rpLoadedCandles.findIndex(c => c.time === param.time);
+      }
+      if (pickedIndex === -1 && param && param.point) {
+        const logical = rpChartInstance.timeScale().coordinateToLogical(param.point.x);
+        if (logical !== null && Number.isFinite(logical)) {
+          const maxVisible = rpReplayActive && rpReplayIndex >= 0 ? rpReplayIndex : rpLoadedCandles.length - 1;
+          pickedIndex = Math.max(0, Math.min(maxVisible, Math.round(logical)));
+        }
+      }
+
+      if (pickedIndex === -1) return;
+
+      pauseRpReplay();
+      clearRpOpenTrade();
+      rpIsPickingStart = false;
+      rpReplayActive = true;
+      rpReplayIndex = pickedIndex;
+      rpCandlestickSeries.setData(rpLoadedCandles.slice(0, rpReplayIndex + 1));
+      updateRpReplayControls();
+      showToast(`Replay ${rpReplayIndex + 1}. mumdan başlatıldı.`, 'info');
+    }
+
+    function destroyRpChart() {
+      pauseRpReplay();
+      clearRpTradePriceLines();
+      if (rpChartResizeObserver) {
+        rpChartResizeObserver.disconnect();
+        rpChartResizeObserver = null;
+      }
+      if (rpChartInstance) {
+        if (rpChartClickHandler && typeof rpChartInstance.unsubscribeClick === 'function') {
+          rpChartInstance.unsubscribeClick(rpChartClickHandler);
+        }
+        rpChartClickHandler = null;
+        rpChartInstance.remove();
+        rpChartInstance = null;
+        rpCandlestickSeries = null;
+      }
+    }
+
+    function detectRpCsvDelimiter(lines) {
+      const candidates = ['\t', ';', ','];
+      const sample = lines.slice(0, 10);
+      let bestDelim = ',';
+      let bestScore = -1;
+
+      for (const delim of candidates) {
+        const counts = sample.map(line => line.split(delim).length);
+        const validCount = counts.filter(c => c >= 5).length;
+        if (validCount > 0) {
+          const avgCols = counts.reduce((sum, c) => sum + c, 0) / counts.length;
+          const score = validCount * 100 + avgCols;
+          if (score > bestScore) {
+            bestScore = score;
+            bestDelim = delim;
+          }
+        }
+      }
+
+      if (bestScore >= 0) return bestDelim;
+
+      const first = sample[0] || '';
+      for (const delim of candidates) {
+        if (first.includes(delim)) return delim;
+      }
+      return ',';
+    }
+
+    function parseRpNumber(raw, delimiter) {
+      if (raw === undefined || raw === null) return NaN;
+      let str = String(raw).trim().replace(/^["']|["']$/g, '');
+      if (!str) return NaN;
+      if ((delimiter === ';' || delimiter === '\t') && str.includes(',') && !str.includes('.')) {
+        str = str.replace(',', '.');
+      }
+      const val = Number(str);
+      return Number.isFinite(val) ? val : NaN;
+    }
+
+    function parseRpTimeValue(raw) {
+      if (raw === undefined || raw === null) return null;
+      const str = String(raw).trim().replace(/^["']|["']$/g, '');
+      if (!str) return null;
+
+      // Unix saniye veya Unix milisaniye
+      if (/^\d+(?:\.\d+)?$/.test(str)) {
+        const num = Number(str);
+        if (!Number.isFinite(num) || num <= 0) return null;
+        // 1e11 ve üzeri değerler milisaniye kabul edilir (1973 sonrası ms)
+        return num >= 1e11 ? Math.floor(num / 1000) : Math.floor(num);
+      }
+
+      // YYYY-MM-DD[ HH:mm[:ss[.sss]]] veya MT5 YYYY.MM.DD[ HH:mm[:ss]]
+      let m = str.match(/^(\d{4})[-./](\d{1,2})[-./](\d{1,2})(?:[T\s]+(\d{1,2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?(Z|[+-]\d{2}:?\d{2})?)?$/i);
+      if (m) {
+        const year = Number(m[1]);
+        const month = Number(m[2]);
+        const day = Number(m[3]);
+        const hour = m[4] !== undefined ? Number(m[4]) : 0;
+        const min = m[5] !== undefined ? Number(m[5]) : 0;
+        const sec = m[6] !== undefined ? Number(m[6]) : 0;
+        const tz = m[8];
+        if (month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || min > 59 || sec > 59) return null;
+        if (tz) {
+          const iso = `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}${tz}`;
+          const parsed = Date.parse(iso);
+          return Number.isFinite(parsed) ? Math.floor(parsed / 1000) : null;
+        }
+        return Math.floor(Date.UTC(year, month - 1, day, hour, min, sec) / 1000);
+      }
+
+      // Dukascopy DD.MM.YYYY HH:mm:ss[.sss] veya DD/MM/YYYY
+      m = str.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})(?:[T\s]+(\d{1,2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?)?$/);
+      if (m) {
+        let day = Number(m[1]);
+        let month = Number(m[2]);
+        const year = Number(m[3]);
+        const hour = m[4] !== undefined ? Number(m[4]) : 0;
+        const min = m[5] !== undefined ? Number(m[5]) : 0;
+        const sec = m[6] !== undefined ? Number(m[6]) : 0;
+        if (month > 12 && day <= 12) {
+          const tmp = month;
+          month = day;
+          day = tmp;
+        }
+        if (month < 1 || month > 12 || day < 1 || day > 31 || hour > 23 || min > 59 || sec > 59) return null;
+        return Math.floor(Date.UTC(year, month - 1, day, hour, min, sec) / 1000);
+      }
+
+      const fallbackMs = Date.parse(str);
+      if (Number.isFinite(fallbackMs)) {
+        return Math.floor(fallbackMs / 1000);
+      }
+      return null;
+    }
+
+    function parseRpCsvCandles(text) {
+      if (!text || typeof text !== 'string') return [];
+      const cleanText = text.replace(/^\uFEFF/, '');
+      const lines = cleanText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length === 0) return [];
+
+      const delimiter = detectRpCsvDelimiter(lines);
+      const firstCells = lines[0].split(delimiter).map(c => c.trim());
+      const normHeader = firstCells.map(c => c.replace(/^["'<]+|["'>]+$/g, '').toLowerCase());
+
+      let dateIdx = -1;
+      let timeIdx = -1;
+      let openIdx = -1;
+      let highIdx = -1;
+      let lowIdx = -1;
+      let closeIdx = -1;
+      let startRow = 0;
+
+      const hasHeaderKeywords = normHeader.some(h =>
+        /^(time|date|datetime|timestamp|gmt time|time \(utc\)|open|high|low|close)$/.test(h) ||
+        h.includes('gmt time') ||
+        h.includes('time (utc)') ||
+        h === 'o' || h === 'h' || h === 'l' || h === 'c'
+      );
+
+      if (hasHeaderKeywords) {
+        startRow = 1;
+        normHeader.forEach((h, idx) => {
+          if (h === 'date' && dateIdx === -1) dateIdx = idx;
+          else if ((h === 'time' || h === 'datetime' || h === 'timestamp' || h.includes('gmt time') || h.includes('time (utc)')) && timeIdx === -1) timeIdx = idx;
+          else if ((h === 'open' || h === 'o') && openIdx === -1) openIdx = idx;
+          else if ((h === 'high' || h === 'h') && highIdx === -1) highIdx = idx;
+          else if ((h === 'low' || h === 'l') && lowIdx === -1) lowIdx = idx;
+          else if ((h === 'close' || h === 'c') && closeIdx === -1) closeIdx = idx;
+        });
+
+        if (timeIdx === -1 && dateIdx !== -1) {
+          timeIdx = dateIdx;
+          dateIdx = -1;
+        }
+      }
+
+      // Başlıksız veya eksik eşleşmeli MT5 (Date + Time ayrı sütun) kontrolü
+      if (openIdx === -1 || highIdx === -1 || lowIdx === -1 || closeIdx === -1) {
+        const sampleRow = (lines[startRow] || '').split(delimiter).map(c => c.trim());
+        const isSplitDateTime = sampleRow.length >= 6 &&
+          /^\d{4}[./-]\d{1,2}[./-]\d{1,2}$/.test(sampleRow[0].replace(/^["']|["']$/g, '')) &&
+          /^\d{1,2}:\d{2}(?::\d{2})?$/.test(sampleRow[1].replace(/^["']|["']$/g, ''));
+
+        if (isSplitDateTime) {
+          dateIdx = 0;
+          timeIdx = 1;
+          openIdx = 2;
+          highIdx = 3;
+          lowIdx = 4;
+          closeIdx = 5;
+        } else {
+          dateIdx = -1;
+          timeIdx = 0;
+          openIdx = 1;
+          highIdx = 2;
+          lowIdx = 3;
+          closeIdx = 4;
+        }
+      }
+
+      const rawCandles = [];
+      for (let i = startRow; i < lines.length; i++) {
+        const cols = lines[i].split(delimiter);
+        const maxIdx = Math.max(dateIdx, timeIdx, openIdx, highIdx, lowIdx, closeIdx);
+        if (cols.length <= maxIdx) continue;
+
+        const timeStr = dateIdx !== -1
+          ? `${(cols[dateIdx] || '').trim()} ${(cols[timeIdx] || '').trim()}`.trim()
+          : (cols[timeIdx] || '').trim();
+
+        const time = parseRpTimeValue(timeStr);
+        const open = parseRpNumber(cols[openIdx], delimiter);
+        const high = parseRpNumber(cols[highIdx], delimiter);
+        const low = parseRpNumber(cols[lowIdx], delimiter);
+        const close = parseRpNumber(cols[closeIdx], delimiter);
+
+        if (time === null || !Number.isFinite(time)) continue;
+        if (!Number.isFinite(open) || !Number.isFinite(high) || !Number.isFinite(low) || !Number.isFinite(close)) continue;
+        if (high < low) continue;
+
+        rawCandles.push({ time, open, high, low, close });
+      }
+
+      if (rawCandles.length === 0) return [];
+
+      rawCandles.sort((a, b) => a.time - b.time);
+
+      const dedupedMap = new Map();
+      for (const candle of rawCandles) {
+        dedupedMap.set(candle.time, candle);
+      }
+
+      return Array.from(dedupedMap.values());
+    }
+
+    function getRpPriceFormatForCandles(candles) {
+      let maxDecimals = 2;
+      const sample = candles.slice(0, 100);
+      for (const c of sample) {
+        const vals = [c.open, c.high, c.low, c.close];
+        for (const v of vals) {
+          const s = String(v);
+          const dotIdx = s.indexOf('.');
+          if (dotIdx !== -1) {
+            const dec = Math.min(6, s.length - dotIdx - 1);
+            if (dec > maxDecimals) maxDecimals = dec;
+          }
+        }
+      }
+      rpCurrentPrecision = maxDecimals;
+      const minMove = Number((1 / Math.pow(10, maxDecimals)).toFixed(maxDecimals));
+      return {
+        type: 'price',
+        precision: maxDecimals,
+        minMove
+      };
+    }
+
+    async function handleRpCsvFile(file) {
+      if (!file) return;
+      let text = '';
+      try {
+        text = await file.text();
+      } catch (err) {
+        showToast('CSV dosyası okunamadı.', 'error');
+        return;
+      }
+
+      const candles = parseRpCsvCandles(text);
+      if (candles.length === 0) {
+        showToast('CSV dosyasında geçerli mum verisi bulunamadı.', 'error');
+        return;
+      }
+
+      resetRpReplayState();
+      rpLoadedCandles = candles;
+      const fileNameEl = document.getElementById('rp-file-name');
+      if (fileNameEl) {
+        fileNameEl.textContent = `${file.name} (${candles.length} mum)`;
+      }
+
+      initOrResizeRpChart();
+      if (rpCandlestickSeries && rpChartInstance) {
+        rpCandlestickSeries.applyOptions({ priceFormat: getRpPriceFormatForCandles(rpLoadedCandles) });
+        rpCandlestickSeries.setData(rpLoadedCandles);
+        rpChartInstance.timeScale().fitContent();
+      }
+
+      updateRpReplayControls();
+      showToast(`${candles.length} mum grafiğe yüklendi.`, 'success');
+    }
+
+    function bindRpChartListeners() {
+      if (rpChartListenersBound) return;
+      rpChartListenersBound = true;
+      window.addEventListener('resize', resizeRpChart);
+      window.addEventListener('beforeunload', destroyRpChart);
+
+      const fileBtn = document.getElementById('rp-file-btn');
+      const fileInput = document.getElementById('rp-file-input');
+      if (fileBtn && fileInput) {
+        fileBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', async (e) => {
+          const file = e.target.files && e.target.files[0];
+          e.target.value = '';
+          if (file) {
+            await handleRpCsvFile(file);
+          }
+        });
+      }
+
+      const pickBtn = document.getElementById('rp-pick-btn');
+      const playBtn = document.getElementById('rp-play-btn');
+      const pauseBtn = document.getElementById('rp-pause-btn');
+      const fwdBtn = document.getElementById('rp-step-fwd-btn');
+      const backBtn = document.getElementById('rp-step-back-btn');
+      const speedSelect = document.getElementById('rp-speed-select');
+
+      if (pickBtn) {
+        pickBtn.addEventListener('click', () => {
+          if (rpLoadedCandles.length === 0) return;
+          pauseRpReplay();
+          rpIsPickingStart = !rpIsPickingStart;
+          if (rpIsPickingStart && rpReplayActive && rpCandlestickSeries) {
+            // Yeni başlangıç noktası seçerken tüm mumları geçici olarak göster ki ileriden/geriden seçilebilsin
+            rpCandlestickSeries.setData(rpLoadedCandles);
+          } else if (!rpIsPickingStart && rpReplayActive && rpCandlestickSeries) {
+            rpCandlestickSeries.setData(getVisibleRpCandles());
+          }
+          updateRpReplayControls();
+        });
+      }
+
+      if (playBtn) {
+        playBtn.addEventListener('click', startRpReplay);
+      }
+
+      if (pauseBtn) {
+        pauseBtn.addEventListener('click', pauseRpReplay);
+      }
+
+      if (fwdBtn) {
+        fwdBtn.addEventListener('click', () => {
+          pauseRpReplay();
+          stepRpReplayForward();
+        });
+      }
+
+      if (backBtn) {
+        backBtn.addEventListener('click', stepRpReplayBackward);
+      }
+
+      if (speedSelect) {
+        speedSelect.addEventListener('change', () => {
+          if (rpReplayTimer !== null) {
+            startRpReplay();
+          }
+        });
+      }
+
+      const buyBtn = document.getElementById('rp-buy-btn');
+      const sellBtn = document.getElementById('rp-sell-btn');
+      const closeTradeBtn = document.getElementById('rp-close-trade-btn');
+
+      if (buyBtn) {
+        buyBtn.addEventListener('click', () => openRpVirtualTrade('Buy'));
+      }
+      if (sellBtn) {
+        sellBtn.addEventListener('click', () => openRpVirtualTrade('Sell'));
+      }
+      if (closeTradeBtn) {
+        closeTradeBtn.addEventListener('click', () => {
+          if (!rpOpenTrade || !rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) return;
+          const currentCandle = rpLoadedCandles[rpReplayIndex];
+          closeRpOpenTrade(currentCandle.close, 'Manuel');
+        });
+      }
+    }
+
+    function initOrResizeRpChart() {
+      bindRpChartListeners();
+      updateRpReplayControls();
+
+      const section = document.getElementById('sec-chart');
+      const container = document.getElementById('rp-chart-container');
+      if (!section || !container || !section.classList.contains('active')) return;
+
+      if (!window.LightweightCharts || typeof window.LightweightCharts.createChart !== 'function') {
+        if (!rpChartErrorNotified) {
+          rpChartErrorNotified = true;
+          showToast('Grafik kütüphanesi (Lightweight Charts) yüklenemedi.', 'error');
+        }
+        return;
+      }
+
+      const width = container.clientWidth;
+      const height = container.clientHeight || 560;
+      if (width <= 0) return;
+
+      if (!rpChartInstance) {
+        const theme = AppState.settings.theme || document.documentElement.getAttribute('data-theme') || 'dark';
+        const themeOpts = getRpChartThemeOptions(theme);
+        rpChartInstance = window.LightweightCharts.createChart(container, {
+          width,
+          height,
+          layout: themeOpts.layout,
+          grid: themeOpts.grid,
+          crosshair: {
+            mode: window.LightweightCharts.CrosshairMode.Normal,
+            ...themeOpts.crosshair
+          },
+          rightPriceScale: themeOpts.rightPriceScale,
+          timeScale: themeOpts.timeScale
+        });
+        rpCandlestickSeries = rpChartInstance.addCandlestickSeries(getRpCandlestickThemeOptions(theme));
+        const visible = getVisibleRpCandles();
+        if (visible.length > 0) {
+          rpCandlestickSeries.applyOptions({ priceFormat: getRpPriceFormatForCandles(rpLoadedCandles) });
+        }
+        rpCandlestickSeries.setData(visible);
+        if (visible.length > 0) {
+          rpChartInstance.timeScale().fitContent();
+        }
+        if (rpOpenTrade) {
+          drawRpTradePriceLines(rpOpenTrade);
+        }
+
+        rpChartClickHandler = handleRpChartClick;
+        rpChartInstance.subscribeClick(rpChartClickHandler);
+
+        if (typeof ResizeObserver === 'function') {
+          rpChartResizeObserver = new ResizeObserver(() => {
+            resizeRpChart();
+          });
+          rpChartResizeObserver.observe(container);
+        }
+      } else {
+        updateRpChartTheme(AppState.settings.theme);
+        resizeRpChart();
+      }
     }
 
     window.addEventListener('DOMContentLoaded', () => {
