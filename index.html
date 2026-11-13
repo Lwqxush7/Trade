@@ -1478,6 +1478,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   outline: 2px solid rgba(34, 211, 238, 0.7);
 }
 
+.rp-chart-wrap.rp-line-hover,
+.rp-chart-wrap.rp-line-hover * {
+  cursor: ns-resize !important;
+}
+
 .rp-replay-bar {
   display: flex;
   flex-wrap: wrap;
@@ -1567,24 +1572,202 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   background: rgba(255, 255, 255, 0.55);
 }
 
+.rp-chart-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+  overflow: hidden;
+}
+
+.rp-pos-tag {
+  position: absolute;
+  left: 14px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(11, 18, 40, 0.88);
+  border: 1px solid rgba(59, 130, 246, 0.55);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  color: #F8FAFC;
+  font-size: 0.74rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: auto;
+  transform: translateY(-100%);
+}
+
+.rp-pos-tag.visible {
+  display: inline-flex;
+}
+
+.rp-pos-tag.pending {
+  border-style: dashed;
+  border-color: rgba(56, 189, 248, 0.7);
+}
+
+:root[data-theme="light"] .rp-pos-tag {
+  background: rgba(255, 255, 255, 0.94);
+  color: #0F172A;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
+}
+
+.rp-pos-side {
+  color: #60A5FA;
+}
+
+.rp-live-pnl {
+  font-weight: 800;
+}
+
+.rp-live-pnl.pos {
+  color: var(--color-neon-green);
+}
+
+.rp-live-pnl.neg {
+  color: var(--color-danger);
+}
+
+.rp-overlay-x-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(244, 63, 94, 0.22);
+  color: #FCA5A5;
+  font-size: 0.7rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.rp-overlay-x-btn:hover {
+  background: rgba(244, 63, 94, 0.85);
+  color: #FFFFFF;
+  transform: scale(1.08);
+}
+
+:root[data-theme="light"] .rp-overlay-x-btn {
+  border-color: rgba(225, 29, 72, 0.3);
+  color: #E11D48;
+  background: rgba(225, 29, 72, 0.1);
+}
+
+:root[data-theme="light"] .rp-overlay-x-btn:hover {
+  background: #E11D48;
+  color: #FFFFFF;
+}
+
 .rp-trade-bar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 10px;
+  flex-direction: column;
+  gap: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--glass-border-subtle);
 }
 
+.rp-trade-params {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.rp-trade-exec-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--glass-border-subtle);
+}
+
+.rp-fx-order-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+
 .rp-field-sm {
-  min-width: 112px;
+  min-width: 104px;
+}
+
+.rp-field-order-price {
+  display: none;
+}
+
+.rp-field-order-price.visible {
+  display: flex;
 }
 
 .rp-input-sm {
-  width: 125px;
+  width: 118px;
   height: 38px;
-  padding: 0 12px;
+  padding: 0 11px;
   font-size: 0.82rem;
+}
+
+.rp-select-sm {
+  width: 112px;
+  height: 38px;
+  padding: 0 10px;
+  font-size: 0.82rem;
+}
+
+.rp-input-lot {
+  width: 96px;
+  height: 44px;
+  padding: 0 10px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.rp-calc-lot-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(56, 189, 248, 0.38);
+  background: rgba(56, 189, 248, 0.14);
+  color: var(--color-neon-cyan);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.rp-calc-lot-btn:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.24);
+  border-color: rgba(56, 189, 248, 0.65);
+  transform: translateY(-1px);
+}
+
+.rp-calc-lot-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.rp-calc-lot-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+:root[data-theme="light"] .rp-calc-lot-btn {
+  background: rgba(2, 132, 199, 0.1);
+  border-color: rgba(2, 132, 199, 0.35);
 }
 
 .rp-trade-actions {
@@ -1610,6 +1793,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast), background var(--transition-fast);
 }
 
+.rp-fx-btn {
+  height: 44px;
+  min-width: 118px;
+  padding: 0 22px;
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+}
+
 .rp-trade-btn:hover:not(:disabled) {
   transform: translateY(-1px);
 }
@@ -1626,17 +1818,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 }
 
 .rp-buy-btn {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.9));
+  background: linear-gradient(135deg, #2563EB, #3B82F6);
   color: #FFFFFF;
-  border-color: rgba(85, 229, 177, 0.55);
-  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.3);
+  border-color: rgba(147, 197, 253, 0.55);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.36);
 }
 
 .rp-sell-btn {
-  background: linear-gradient(135deg, rgba(244, 63, 94, 0.9), rgba(225, 29, 72, 0.9));
+  background: linear-gradient(135deg, #DC2626, #EF4444);
   color: #FFFFFF;
-  border-color: rgba(255, 130, 157, 0.55);
-  box-shadow: 0 6px 18px rgba(244, 63, 94, 0.3);
+  border-color: rgba(252, 165, 165, 0.55);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.36);
 }
 
 .rp-close-btn {
@@ -1650,163 +1842,206 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   border-color: var(--glass-border);
 }
 
-.rp-trades-card {
-  margin-top: 20px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.rp-result-panel {
+  max-width: 720px;
 }
 
-.rp-trades-header {
+.rp-res-header-badge-wrap {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-.rp-trades-title {
-  font-size: 1rem;
+.rp-res-title {
+  font-size: 1.15rem;
   font-weight: 800;
   color: var(--text-main);
   margin: 0;
 }
 
-.rp-trades-count {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text-muted);
+.rp-res-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.rp-trades-table-wrap {
-  width: 100%;
-  overflow-x: auto;
+.rp-res-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 18px;
   border-radius: var(--radius-md);
   background: var(--glass-inset);
   border: 1px solid var(--glass-border-subtle);
+  box-shadow: var(--neu-shadow-inset);
 }
 
-:root[data-theme="light"] .rp-trades-table-wrap {
-  background: rgba(255, 255, 255, 0.65);
+:root[data-theme="light"] .rp-res-hero {
+  background: rgba(255, 255, 255, 0.75);
   border-color: var(--glass-border);
 }
 
-.rp-trades-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.83rem;
-  text-align: left;
-  font-variant-numeric: tabular-nums;
-}
-
-.rp-trades-table th {
-  padding: 12px 14px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--glass-border-subtle);
-  white-space: nowrap;
-}
-
-.rp-trades-table td {
-  padding: 11px 14px;
-  color: var(--text-main);
-  border-bottom: 1px solid var(--glass-border-subtle);
-  white-space: nowrap;
-}
-
-.rp-trades-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.rp-empty-row {
-  text-align: center;
-  color: var(--text-muted) !important;
-  padding: 28px 14px !important;
-}
-
-.rp-dir-buy {
-  color: var(--color-neon-green);
-  font-weight: 800;
-}
-
-.rp-dir-sell {
-  color: var(--color-danger);
-  font-weight: 800;
-}
-
-.rp-badge {
+.rp-res-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 10px;
+  padding: 6px 16px;
   border-radius: 999px;
-  font-size: 0.74rem;
-  font-weight: 800;
+  font-size: 0.92rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
-.rp-badge-win {
-  background: rgba(85, 229, 177, 0.16);
+.rp-res-badge.win {
+  background: rgba(85, 229, 177, 0.18);
   color: var(--color-neon-green);
-  border: 1px solid rgba(85, 229, 177, 0.35);
+  border: 1px solid rgba(85, 229, 177, 0.45);
 }
 
-.rp-badge-loss {
-  background: rgba(255, 130, 157, 0.16);
+.rp-res-badge.loss {
+  background: rgba(255, 130, 157, 0.18);
   color: var(--color-danger);
-  border: 1px solid rgba(255, 130, 157, 0.35);
+  border: 1px solid rgba(255, 130, 157, 0.45);
 }
 
-.rp-badge-be {
-  background: rgba(145, 168, 214, 0.16);
+.rp-res-badge.be {
+  background: rgba(145, 168, 214, 0.18);
   color: var(--text-secondary);
   border: 1px solid var(--glass-border);
 }
 
-.rp-pnl-pos {
+.rp-res-metrics {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rp-res-pnl {
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: var(--text-main);
+}
+
+.rp-res-pnl.pos {
   color: var(--color-neon-green);
-  font-weight: 800;
 }
 
-.rp-pnl-neg {
+.rp-res-pnl.neg {
   color: var(--color-danger);
+}
+
+.rp-res-r {
+  font-size: 1rem;
   font-weight: 800;
+  color: var(--color-neon-cyan);
 }
 
-.rp-export-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px 11px;
+.rp-res-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.rp-res-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(59, 130, 246, 0.38);
-  background: rgba(59, 130, 246, 0.14);
-  color: var(--color-bright-blue);
-  font-size: 0.75rem;
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-subtle);
+}
+
+:root[data-theme="light"] .rp-res-stat {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: var(--glass-border);
+}
+
+.rp-res-stat-label {
+  font-size: 0.68rem;
   font-weight: 700;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
 }
 
-.rp-export-btn:hover {
-  background: rgba(59, 130, 246, 0.24);
-  border-color: rgba(59, 130, 246, 0.6);
+.rp-res-stat-val {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
 }
 
-.rp-export-btn:active {
-  transform: scale(0.98);
+.rp-res-shot-box {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-subtle);
 }
 
-:root[data-theme="light"] .rp-export-btn {
-  background: rgba(37, 99, 235, 0.1);
-  border-color: rgba(37, 99, 235, 0.35);
+:root[data-theme="light"] .rp-res-shot-box {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: var(--glass-border);
 }
 
-:root[data-theme="light"] .rp-export-btn:hover {
-  background: rgba(37, 99, 235, 0.18);
+.rp-res-shot-img {
+  display: block;
+  width: 100%;
+  max-height: 185px;
+  object-fit: cover;
+  cursor: zoom-in;
+  transition: transform var(--transition-fast);
+}
+
+.rp-res-shot-img:hover {
+  transform: scale(1.01);
+}
+
+.rp-res-shot-empty {
+  display: none;
+  padding: 16px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.rp-res-shot-empty.visible {
+  display: block;
+}
+
+.rp-res-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rp-res-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rp-res-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.rp-res-discard-btn {
+  background: var(--glass-hover-fill);
+  color: var(--text-main);
+  border-color: var(--glass-border);
+}
+
+:root[data-theme="light"] .rp-res-discard-btn {
+  background: rgba(255, 255, 255, 0.82);
 }
 
 @media (max-width: 900px) {
@@ -1824,7 +2059,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   }
   .rp-input,
   .rp-select,
-  .rp-input-sm {
+  .rp-input-sm,
+  .rp-select-sm,
+  .rp-input-lot,
+  .rp-calc-lot-btn {
+    width: 100%;
+  }
+  .rp-trade-params,
+  .rp-trade-exec-row,
+  .rp-fx-order-box {
+    flex-direction: column;
+    align-items: stretch;
     width: 100%;
   }
   .rp-trade-actions {
@@ -1833,9 +2078,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   }
   .rp-trade-btn {
     flex: 1;
+    width: 100%;
   }
-  .rp-trades-card {
-    padding: 14px;
+  .rp-res-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .rp-res-form-row {
+    grid-template-columns: 1fr;
+  }
+  .rp-res-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
   }
 }
   </style>
@@ -2885,61 +3138,67 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           </div>
 
           <div class="rp-trade-bar" id="rp-trade-bar">
-            <div class="rp-field rp-field-sm">
-              <label class="rp-label" for="rp-balance-input">Bakiye ($)</label>
-              <input type="number" step="any" min="0" id="rp-balance-input" class="rp-input rp-input-sm" value="10000">
-            </div>
-            <div class="rp-field rp-field-sm">
-              <label class="rp-label" for="rp-risk-input">Risk (%)</label>
-              <input type="number" step="any" min="0" id="rp-risk-input" class="rp-input rp-input-sm" value="1">
-            </div>
-            <div class="rp-field rp-field-sm">
-              <label class="rp-label" for="rp-sl-input">Stop Loss</label>
-              <input type="number" step="any" id="rp-sl-input" class="rp-input rp-input-sm" placeholder="SL Fiyat">
-            </div>
-            <div class="rp-field rp-field-sm">
-              <label class="rp-label" for="rp-tp-input">Take Profit</label>
-              <input type="number" step="any" id="rp-tp-input" class="rp-input rp-input-sm" placeholder="TP Fiyat">
+            <div class="rp-trade-params" id="rp-trade-params">
+              <div class="rp-field rp-field-sm">
+                <label class="rp-label" for="rp-balance-input">Bakiye ($)</label>
+                <input type="number" step="any" min="0" id="rp-balance-input" class="rp-input rp-input-sm" value="10000">
+              </div>
+              <div class="rp-field rp-field-sm">
+                <label class="rp-label" for="rp-risk-input">Risk (%)</label>
+                <input type="number" step="any" min="0" id="rp-risk-input" class="rp-input rp-input-sm" value="1">
+              </div>
+              <div class="rp-field rp-field-sm">
+                <label class="rp-label" for="rp-contract-size-input">Kontrat</label>
+                <input type="number" step="any" min="0.0001" id="rp-contract-size-input" class="rp-input rp-input-sm" value="1">
+              </div>
+              <div class="rp-field rp-field-sm">
+                <label class="rp-label" for="rp-order-type-select">Emir Tipi</label>
+                <select id="rp-order-type-select" class="rp-select rp-select-sm">
+                  <option value="Market" selected>Market</option>
+                  <option value="Limit">Limit</option>
+                  <option value="Stop">Stop</option>
+                </select>
+              </div>
+              <div class="rp-field rp-field-sm rp-field-order-price" id="rp-order-price-field">
+                <label class="rp-label" for="rp-order-price-input">Emir Fiyatı</label>
+                <input type="number" step="any" id="rp-order-price-input" class="rp-input rp-input-sm" placeholder="Emir Fiyat">
+              </div>
+              <div class="rp-field rp-field-sm">
+                <label class="rp-label" for="rp-sl-input">Stop Loss</label>
+                <input type="number" step="any" id="rp-sl-input" class="rp-input rp-input-sm" placeholder="SL Fiyat">
+              </div>
+              <div class="rp-field rp-field-sm">
+                <label class="rp-label" for="rp-tp-input">Take Profit</label>
+                <input type="number" step="any" id="rp-tp-input" class="rp-input rp-input-sm" placeholder="TP Fiyat">
+              </div>
+              <button type="button" class="rp-calc-lot-btn" id="rp-calc-lot-btn">Riske göre lot hesapla</button>
             </div>
 
-            <div class="rp-trade-actions" id="rp-trade-actions">
-              <button type="button" class="rp-trade-btn rp-buy-btn" id="rp-buy-btn" disabled>Buy</button>
-              <button type="button" class="rp-trade-btn rp-sell-btn" id="rp-sell-btn" disabled>Sell</button>
-              <button type="button" class="rp-trade-btn rp-close-btn" id="rp-close-trade-btn" disabled>Manuel Kapat</button>
+            <div class="rp-trade-exec-row" id="rp-trade-exec-row">
+              <div class="rp-fx-order-box" id="rp-fx-order-box">
+                <button type="button" class="rp-trade-btn rp-fx-btn rp-buy-btn" id="rp-buy-btn" disabled>Buy</button>
+                <div class="rp-field rp-field-sm">
+                  <label class="rp-label" for="rp-lot-input">Lot</label>
+                  <input type="number" step="0.01" min="0.01" id="rp-lot-input" class="rp-input rp-input-lot" value="1.00">
+                </div>
+                <button type="button" class="rp-trade-btn rp-fx-btn rp-sell-btn" id="rp-sell-btn" disabled>Sell</button>
+              </div>
+
+              <div class="rp-trade-actions" id="rp-trade-actions">
+                <button type="button" class="rp-trade-btn rp-close-btn" id="rp-close-trade-btn" disabled>Manuel Kapat</button>
+              </div>
             </div>
           </div>
 
           <div class="rp-chart-wrap" id="rp-chart-wrap">
             <div class="rp-chart-container" id="rp-chart-container"></div>
-          </div>
-        </div>
-
-        <div class="glass-surface rp-trades-card" id="rp-trades-card">
-          <div class="rp-trades-header" id="rp-trades-header">
-            <h3 class="rp-trades-title">Kapanan Sanal İşlemler</h3>
-            <span class="rp-trades-count" id="rp-trades-count">0 işlem</span>
-          </div>
-          <div class="rp-trades-table-wrap" id="rp-trades-table-wrap">
-            <table class="rp-trades-table" id="rp-trades-table">
-              <thead>
-                <tr>
-                  <th>Yön</th>
-                  <th>Giriş</th>
-                  <th>Çıkış</th>
-                  <th>SL</th>
-                  <th>TP</th>
-                  <th>Sonuç</th>
-                  <th>P/L</th>
-                  <th>R</th>
-                  <th>İşlem</th>
-                </tr>
-              </thead>
-              <tbody id="rp-trades-tbody">
-                <tr>
-                  <td colspan="9" class="rp-empty-row">Henüz kapanan sanal işlem yok.</td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="rp-chart-overlay" id="rp-chart-overlay">
+              <div class="rp-pos-tag" id="rp-pos-tag">
+                <span class="rp-pos-side" id="rp-pos-side">Buy 1.00</span>
+                <span class="rp-live-pnl" id="rp-live-pnl">0.00 USD</span>
+                <button type="button" class="rp-overlay-x-btn" id="rp-overlay-x-btn" title="Kapat / İptal">✕</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -3162,6 +3421,105 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         <button type="button" class="btn-primary" id="confirmDeleteTradeModalBtn" style="background: linear-gradient(135deg, #EF4444, #DC2626); border-color: rgba(239, 68, 68, 0.6); box-shadow: 0 8px 24px -4px rgba(239, 68, 68, 0.5);">
           Evet, Sil
         </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="rp-result-modal-backdrop">
+    <div class="glass-surface modal-content-panel rp-result-panel">
+      <div class="modal-header">
+        <div class="rp-res-header-badge-wrap">
+          <h3 class="rp-res-title">İşlem Sonucu</h3>
+        </div>
+        <button type="button" class="modal-close-btn" id="rp-res-close-x">&times;</button>
+      </div>
+      <div class="rp-res-body">
+        <div class="rp-res-hero" id="rp-res-hero">
+          <span class="rp-res-badge" id="rp-res-badge">Win</span>
+          <div class="rp-res-metrics">
+            <span class="rp-res-pnl" id="rp-res-pnl">$0.00</span>
+            <span class="rp-res-r" id="rp-res-r">—</span>
+          </div>
+        </div>
+
+        <div class="rp-res-summary-grid" id="rp-res-summary-grid">
+          <div class="rp-res-stat">
+            <span class="rp-res-stat-label">Parite</span>
+            <span class="rp-res-stat-val" id="rp-res-pair">—</span>
+          </div>
+          <div class="rp-res-stat">
+            <span class="rp-res-stat-label">Yön</span>
+            <span class="rp-res-stat-val" id="rp-res-direction">—</span>
+          </div>
+          <div class="rp-res-stat">
+            <span class="rp-res-stat-label">Giriş</span>
+            <span class="rp-res-stat-val" id="rp-res-entry">—</span>
+          </div>
+          <div class="rp-res-stat">
+            <span class="rp-res-stat-label">Çıkış</span>
+            <span class="rp-res-stat-val" id="rp-res-exit">—</span>
+          </div>
+          <div class="rp-res-stat">
+            <span class="rp-res-stat-label">Stop Loss</span>
+            <span class="rp-res-stat-val" id="rp-res-sl">—</span>
+          </div>
+          <div class="rp-res-stat">
+            <span class="rp-res-stat-label">Take Profit</span>
+            <span class="rp-res-stat-val" id="rp-res-tp">—</span>
+          </div>
+          <div class="rp-res-stat">
+            <span class="rp-res-stat-label">Lot</span>
+            <span class="rp-res-stat-val" id="rp-res-lot">—</span>
+          </div>
+          <div class="rp-res-stat">
+            <span class="rp-res-stat-label">Süre</span>
+            <span class="rp-res-stat-val" id="rp-res-duration">—</span>
+          </div>
+          <div class="rp-res-stat">
+            <span class="rp-res-stat-label">Kapanış Nedeni</span>
+            <span class="rp-res-stat-val" id="rp-res-reason">—</span>
+          </div>
+        </div>
+
+        <div class="rp-res-shot-box" id="rp-res-shot-box">
+          <img id="rp-res-shot-img" class="rp-res-shot-img" src="" alt="İşlem Grafik Görüntüsü">
+          <div id="rp-res-shot-empty" class="rp-res-shot-empty">Grafik ekran görüntüsü alınamadı. Kayıt görselsiz yapılabilir.</div>
+        </div>
+
+        <div class="rp-res-form-grid">
+          <div class="rp-res-form-row">
+            <div class="form-group">
+              <label class="form-label" for="rp-res-strategy">Strateji / Model</label>
+              <select id="rp-res-strategy" class="input-glass">
+                <option value="Varsayılan Setup">Varsayılan Setup</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rp-res-session">Piyasa Seansı</label>
+              <select id="rp-res-session" class="input-glass">
+                <option value="London">Londra (London)</option>
+                <option value="New York">New York</option>
+                <option value="Asia">Asya (Asia)</option>
+                <option value="Overlap">Overlap</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="rp-res-notes">Trade Notları</label>
+            <textarea id="rp-res-notes" class="input-glass" rows="3" placeholder="Setup gerekçesi, piyasa yapısı, giriş/çıkış notları..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="rp-res-psychology">Psikoloji / Gözlem</label>
+            <textarea id="rp-res-psychology" class="input-glass" rows="2" placeholder="Duygusal durum, kural uyumu, çıkarılan dersler..."></textarea>
+          </div>
+        </div>
+
+        <div class="rp-res-actions">
+          <button type="button" class="btn-primary rp-res-discard-btn" id="rp-res-discard-btn">Kaydetmeden Kapat</button>
+          <button type="button" class="btn-primary neon-green" id="rp-res-save-btn">Backtest'e Kaydet</button>
+        </div>
       </div>
     </div>
   </div>
@@ -4883,6 +5241,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const filterStrat = document.getElementById('filterStrategy');
       const btStrat = document.getElementById('bt-strategy');
       const btFilterStrat = document.getElementById('btFilterStrategy');
+      const rpResStrat = document.getElementById('rp-res-strategy');
 
       const optionsHtml = AppState.strategies.map(s => `
         <option value="${escapeHtml(s.name)}">${escapeHtml(s.name)}</option>
@@ -4892,6 +5251,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (filterStrat) filterStrat.innerHTML = `<option value="ALL">Tüm Stratejiler</option>` + optionsHtml;
       if (btStrat) btStrat.innerHTML = optionsHtml;
       if (btFilterStrat) btFilterStrat.innerHTML = `<option value="ALL">Tüm Stratejiler</option>` + optionsHtml;
+      if (rpResStrat) rpResStrat.innerHTML = optionsHtml;
     }
 
     function renderStrategyCards() {
@@ -6963,8 +7323,14 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     let rpChartClickHandler = null;
     let rpCurrentPrecision = 2;
     let rpOpenTrade = null;
+    let rpPendingOrder = null;
     let rpClosedTrades = [];
     let rpTradePriceLines = { entry: null, sl: null, tp: null };
+    let rpDraggingLine = null;
+    let rpLastWarnedUnknownPair = '';
+    let rpIsClosingTrade = false;
+    let rpPendingResultData = null;
+    let isSubmittingRpBacktest = false;
 
     function getRpChartThemeOptions(theme) {
       const isLight = (theme || document.documentElement.getAttribute('data-theme')) === 'light';
@@ -7048,24 +7414,29 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       rpTradePriceLines = { entry: null, sl: null, tp: null };
     }
 
-    function drawRpTradePriceLines(trade) {
+    function drawRpTradePriceLines(tradeOrOrder, isPending = false) {
       clearRpTradePriceLines();
-      if (!trade || !rpCandlestickSeries) return;
+      if (!tradeOrOrder || !rpCandlestickSeries) return;
       const lineStyleDashed = window.LightweightCharts ? window.LightweightCharts.LineStyle.Dashed : 2;
       const lineStyleSolid = window.LightweightCharts ? window.LightweightCharts.LineStyle.Solid : 0;
 
+      const entryPrice = isPending ? tradeOrOrder.orderPrice : tradeOrOrder.entryPrice;
+      const entryTitle = isPending
+        ? `${tradeOrOrder.orderType} ${tradeOrOrder.direction}`
+        : `${tradeOrOrder.direction} Giriş`;
+
       rpTradePriceLines.entry = rpCandlestickSeries.createPriceLine({
-        price: trade.entryPrice,
+        price: entryPrice,
         color: '#3B82F6',
         lineWidth: 2,
-        lineStyle: lineStyleSolid,
+        lineStyle: isPending ? lineStyleDashed : lineStyleSolid,
         axisLabelVisible: true,
-        title: `${trade.direction} Giriş`
+        title: entryTitle
       });
 
-      if (trade.sl !== null) {
+      if (tradeOrOrder.sl !== null && tradeOrOrder.sl !== undefined) {
         rpTradePriceLines.sl = rpCandlestickSeries.createPriceLine({
-          price: trade.sl,
+          price: tradeOrOrder.sl,
           color: '#EF4444',
           lineWidth: 2,
           lineStyle: lineStyleDashed,
@@ -7074,9 +7445,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         });
       }
 
-      if (trade.tp !== null) {
+      if (tradeOrOrder.tp !== null && tradeOrOrder.tp !== undefined) {
         rpTradePriceLines.tp = rpCandlestickSeries.createPriceLine({
-          price: trade.tp,
+          price: tradeOrOrder.tp,
           color: '#10B981',
           lineWidth: 2,
           lineStyle: lineStyleDashed,
@@ -7084,12 +7455,94 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           title: 'TP'
         });
       }
+      updateRpChartOverlay();
+    }
+
+    function updateRpChartOverlay() {
+      const tagEl = document.getElementById('rp-pos-tag');
+      const sideEl = document.getElementById('rp-pos-side');
+      const pnlEl = document.getElementById('rp-live-pnl');
+      const wrapEl = document.getElementById('rp-chart-wrap');
+      if (!tagEl || !sideEl || !pnlEl || !wrapEl) return;
+
+      const activeItem = rpOpenTrade || rpPendingOrder;
+      if (!activeItem || !rpCandlestickSeries || !rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) {
+        tagEl.classList.remove('visible', 'pending');
+        return;
+      }
+
+      const isPending = !rpOpenTrade && !!rpPendingOrder;
+      const refPrice = isPending ? activeItem.orderPrice : activeItem.entryPrice;
+      const yCoord = rpCandlestickSeries.priceToCoordinate(refPrice);
+
+      if (yCoord === null || !Number.isFinite(yCoord)) {
+        tagEl.classList.remove('visible', 'pending');
+        return;
+      }
+
+      const wrapH = wrapEl.clientHeight || 560;
+      if (yCoord < 18 || yCoord > wrapH - 8) {
+        tagEl.classList.remove('visible', 'pending');
+        return;
+      }
+
+      const topPx = Math.max(30, Math.min(wrapH - 10, yCoord - 4));
+      tagEl.style.top = `${topPx}px`;
+      tagEl.classList.add('visible');
+      tagEl.classList.toggle('pending', isPending);
+
+      const lotStr = Number(activeItem.lot || 1).toFixed(2);
+      if (isPending) {
+        sideEl.textContent = `${activeItem.orderType} ${activeItem.direction} ${lotStr}`;
+        pnlEl.textContent = `@ ${formatRpPrice(activeItem.orderPrice)}`;
+        pnlEl.classList.remove('pos', 'neg');
+      } else {
+        const currentCandle = rpLoadedCandles[rpReplayIndex];
+        const diff = activeItem.direction === 'Buy'
+          ? (currentCandle.close - activeItem.entryPrice)
+          : (activeItem.entryPrice - currentCandle.close);
+        const livePnl = diff * activeItem.lot * activeItem.contractSize;
+        const sign = livePnl > 0 ? '+' : (livePnl < 0 ? '-' : '');
+        sideEl.textContent = `${activeItem.direction} ${lotStr}`;
+        pnlEl.textContent = `${sign}${Math.abs(livePnl).toFixed(2)} USD`;
+        pnlEl.classList.toggle('pos', livePnl > 0);
+        pnlEl.classList.toggle('neg', livePnl < 0);
+      }
+    }
+
+    function stopRpLineDrag() {
+      if (!rpDraggingLine) return;
+      rpDraggingLine = null;
+      if (rpChartInstance) {
+        rpChartInstance.applyOptions({ handleScroll: true, handleScale: true });
+      }
+      const wrapEl = document.getElementById('rp-chart-wrap');
+      if (wrapEl) {
+        wrapEl.style.cursor = '';
+        wrapEl.classList.remove('rp-line-hover');
+      }
+    }
+
+    function clearRpPendingOrder(showToastMsg = false) {
+      if (!rpPendingOrder && showToastMsg) return;
+      const hadPending = !!rpPendingOrder;
+      rpPendingOrder = null;
+      if (!rpOpenTrade) {
+        clearRpTradePriceLines();
+      }
+      updateRpTradeControls();
+      updateRpChartOverlay();
+      if (showToastMsg && hadPending) {
+        showToast('Bekleyen emir iptal edildi.', 'info');
+      }
     }
 
     function clearRpOpenTrade() {
+      stopRpLineDrag();
       clearRpTradePriceLines();
       rpOpenTrade = null;
       updateRpTradeControls();
+      updateRpChartOverlay();
     }
 
     function formatRpPrice(val) {
@@ -7107,6 +7560,129 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (val === null || val === undefined || !Number.isFinite(val)) return '—';
       const sign = val > 0 ? '+' : '';
       return `${sign}${val.toFixed(2)} R`;
+    }
+
+    function detectRpContractSize(pairRaw) {
+      const clean = String(pairRaw || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (!clean) return { size: 1, recognized: true };
+
+      if (clean === 'XAUUSD' || clean.startsWith('XAU')) {
+        return { size: 100, recognized: true };
+      }
+      if (clean === 'XAGUSD' || clean.startsWith('XAG')) {
+        return { size: 5000, recognized: true };
+      }
+
+      const indexSymbols = new Set([
+        'NAS100', 'US30', 'SPX', 'SPX500', 'US500', 'US100', 'USTEC',
+        'USATECHIDXUSD', 'USA30IDXUSD', 'USA500IDXUSD', 'NDX', 'DJI',
+        'DAX', 'DE40', 'GER40', 'UK100', 'JP225', 'FRA40'
+      ]);
+      if (indexSymbols.has(clean)) {
+        return { size: 1, recognized: true };
+      }
+
+      if (clean === 'BTCUSD') {
+        return { size: 1, recognized: true };
+      }
+
+      const forexCurrencies = new Set([
+        'USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'NZD', 'CAD',
+        'TRY', 'SEK', 'NOK', 'DKK', 'PLN', 'ZAR', 'SGD', 'HKD', 'MXN', 'CNH'
+      ]);
+      if (clean.length === 6) {
+        const base = clean.slice(0, 3);
+        const quote = clean.slice(3, 6);
+        if (base !== quote && forexCurrencies.has(base) && forexCurrencies.has(quote)) {
+          return { size: 100000, recognized: true };
+        }
+      }
+
+      return { size: 1, recognized: false };
+    }
+
+    function syncRpContractSizeFromPair(notifyIfUnknown = true) {
+      const pairEl = document.getElementById('rp-pair-input');
+      const contractEl = document.getElementById('rp-contract-size-input');
+      if (!pairEl || !contractEl) return;
+      const rawPair = pairEl.value.trim();
+      const result = detectRpContractSize(rawPair);
+      contractEl.value = String(result.size);
+      if (notifyIfUnknown && rawPair && !result.recognized) {
+        const upperPair = rawPair.toUpperCase();
+        if (rpLastWarnedUnknownPair !== upperPair) {
+          rpLastWarnedUnknownPair = upperPair;
+          showToast(`"${upperPair}" için kontrat büyüklüğü tanınamadı, 1 olarak ayarlandı.`, 'info');
+        }
+      } else if (result.recognized) {
+        rpLastWarnedUnknownPair = '';
+      }
+    }
+
+    function syncRpOrderTypeVisibility() {
+      const typeEl = document.getElementById('rp-order-type-select');
+      const priceField = document.getElementById('rp-order-price-field');
+      if (!typeEl || !priceField) return;
+      const isPendingType = typeEl.value === 'Limit' || typeEl.value === 'Stop';
+      priceField.classList.toggle('visible', isPendingType);
+    }
+
+    function calculateRpLotFromRisk() {
+      const sl = parseOptionalRpInputNumber('rp-sl-input');
+      if (sl === null || Number.isNaN(sl)) {
+        showToast('Riske göre lot hesaplamak için önce Stop Loss değeri girin.', 'error');
+        return;
+      }
+
+      const balance = parseOptionalRpInputNumber('rp-balance-input');
+      const riskPct = parseOptionalRpInputNumber('rp-risk-input');
+      const contractSize = parseOptionalRpInputNumber('rp-contract-size-input');
+      const orderType = document.getElementById('rp-order-type-select')?.value || 'Market';
+
+      if (balance === null || Number.isNaN(balance) || balance <= 0) {
+        showToast('Geçerli bir bakiye değeri girin.', 'error');
+        return;
+      }
+      if (riskPct === null || Number.isNaN(riskPct) || riskPct <= 0) {
+        showToast('Geçerli bir risk (%) değeri girin.', 'error');
+        return;
+      }
+      if (contractSize === null || Number.isNaN(contractSize) || contractSize <= 0) {
+        showToast('Geçerli bir kontrat büyüklüğü girin.', 'error');
+        return;
+      }
+
+      let refPrice = null;
+      if (rpOpenTrade) {
+        refPrice = rpOpenTrade.entryPrice;
+      } else if (orderType === 'Limit' || orderType === 'Stop') {
+        const ordPrice = parseOptionalRpInputNumber('rp-order-price-input');
+        if (ordPrice === null || Number.isNaN(ordPrice)) {
+          showToast('Limit/Stop emri için geçerli bir Emir Fiyatı girin.', 'error');
+          return;
+        }
+        refPrice = ordPrice;
+      } else if (rpReplayActive && rpReplayIndex >= 0 && rpReplayIndex < rpLoadedCandles.length) {
+        refPrice = rpLoadedCandles[rpReplayIndex].close;
+      } else {
+        showToast('Lot hesaplamak için önce replay başlatın.', 'error');
+        return;
+      }
+
+      const slDistance = Math.abs(refPrice - sl);
+      if (slDistance <= 0) {
+        showToast('Stop Loss giriş fiyatıyla aynı olamaz.', 'error');
+        return;
+      }
+
+      const riskAmount = balance * (riskPct / 100);
+      const rawLot = riskAmount / (slDistance * contractSize);
+      const computedLot = Math.max(0.01, Number(rawLot.toFixed(2)));
+      const lotEl = document.getElementById('rp-lot-input');
+      if (lotEl) {
+        lotEl.value = computedLot.toFixed(2);
+      }
+      showToast(`Riske göre lot hesaplandı: ${computedLot.toFixed(2)} lot`, 'success');
     }
 
     function formatRpTimeToDatetimeLocal(unixSec) {
@@ -7139,71 +7715,218 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       return btTfEl.value || 'M15';
     }
 
-    function exportRpTradeToBacktest(index) {
-      const trade = rpClosedTrades[index];
-      if (!trade) return;
-
-      const pairVal = (document.getElementById('rp-pair-input')?.value || '').trim();
-      const tfVal = document.getElementById('rp-tf-select')?.value || 'M15';
-
-      if (typeof window.switchTab === 'function') {
-        window.switchTab('backtest');
-      }
-
-      const btPairEl = document.getElementById('bt-pair');
-      const btDirEl = document.getElementById('bt-direction');
-      const btDtEl = document.getElementById('bt-datetime');
-      const btTfEl = document.getElementById('bt-timeframe');
-      const btEntryEl = document.getElementById('bt-entry');
-      const btExitEl = document.getElementById('bt-exit');
-      const btSlEl = document.getElementById('bt-sl');
-      const btPnlEl = document.getElementById('bt-pnl');
-      const btResultEl = document.getElementById('bt-result');
-
-      if (btPairEl) btPairEl.value = pairVal;
-      if (btDirEl) btDirEl.value = trade.direction === 'Buy' ? 'Long' : 'Short';
-      if (btDtEl) btDtEl.value = formatRpTimeToDatetimeLocal(trade.entryTime);
-      if (btTfEl) btTfEl.value = resolveRpBacktestTimeframe(tfVal);
-      if (btEntryEl) btEntryEl.value = trade.entryPrice !== null && trade.entryPrice !== undefined ? trade.entryPrice : '';
-      if (btExitEl) btExitEl.value = trade.exitPrice !== null && trade.exitPrice !== undefined ? trade.exitPrice : '';
-      if (btSlEl) btSlEl.value = trade.sl !== null && trade.sl !== undefined ? trade.sl : '';
-      if (btPnlEl) btPnlEl.value = trade.pnl !== null && trade.pnl !== undefined && Number.isFinite(trade.pnl) ? Number(trade.pnl.toFixed(2)) : 0;
-      if (btResultEl) btResultEl.value = trade.result || 'Win';
-
-      showToast('İşlem Backtest formuna aktarıldı.', 'success');
+    function computeRpSessionFromUnixSec(unixSec) {
+      if (unixSec === null || unixSec === undefined || !Number.isFinite(unixSec)) return 'New York';
+      const d = new Date(unixSec * 1000);
+      if (Number.isNaN(d.getTime())) return 'New York';
+      const hour = d.getUTCHours();
+      if (hour >= 7 && hour <= 12) return 'London';
+      if (hour >= 13 && hour <= 16) return 'Overlap';
+      if (hour >= 17 && hour <= 21) return 'New York';
+      return 'Asia';
     }
 
-    function renderRpClosedTradesTable() {
-      const tbody = document.getElementById('rp-trades-tbody');
-      const countEl = document.getElementById('rp-trades-count');
-      if (countEl) {
-        countEl.textContent = `${rpClosedTrades.length} işlem`;
-      }
-      if (!tbody) return;
+    function openRpResultModal(tradeSummary, compressedImg) {
+      const backdrop = document.getElementById('rp-result-modal-backdrop');
+      if (!backdrop) return;
 
-      if (rpClosedTrades.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="9" class="rp-empty-row">Henüz kapanan sanal işlem yok.</td></tr>`;
-        return;
+      rpPendingResultData = {
+        ...tradeSummary,
+        image: compressedImg || null
+      };
+
+      const badgeEl = document.getElementById('rp-res-badge');
+      const pnlEl = document.getElementById('rp-res-pnl');
+      const rEl = document.getElementById('rp-res-r');
+
+      if (badgeEl) {
+        badgeEl.textContent = tradeSummary.result;
+        badgeEl.className = `rp-res-badge ${tradeSummary.result.toLowerCase()}`;
+      }
+      if (pnlEl) {
+        pnlEl.textContent = formatRpPnl(tradeSummary.pnl);
+        pnlEl.className = 'rp-res-pnl' + (tradeSummary.pnl > 0 ? ' pos' : (tradeSummary.pnl < 0 ? ' neg' : ''));
+      }
+      if (rEl) {
+        rEl.textContent = formatRpR(tradeSummary.rMultiple);
       }
 
-      tbody.innerHTML = rpClosedTrades.map((t, idx) => {
-        const dirClass = t.direction === 'Buy' ? 'rp-dir-buy' : 'rp-dir-sell';
-        const badgeClass = t.result === 'Win' ? 'rp-badge-win' : (t.result === 'Loss' ? 'rp-badge-loss' : 'rp-badge-be');
-        const pnlClass = t.pnl === null ? '' : (t.pnl > 0 ? 'rp-pnl-pos' : (t.pnl < 0 ? 'rp-pnl-neg' : ''));
-        return `
-          <tr>
-            <td class="${dirClass}">${t.direction}</td>
-            <td>${formatRpPrice(t.entryPrice)}</td>
-            <td>${formatRpPrice(t.exitPrice)}</td>
-            <td>${formatRpPrice(t.sl)}</td>
-            <td>${formatRpPrice(t.tp)}</td>
-            <td><span class="rp-badge ${badgeClass}">${t.result}</span></td>
-            <td class="${pnlClass}">${formatRpPnl(t.pnl)}</td>
-            <td class="${pnlClass}">${formatRpR(t.rMultiple)}</td>
-            <td><button type="button" class="rp-export-btn" data-rp-trade-idx="${idx}">Backtest'e Aktar</button></td>
-          </tr>
-        `;
-      }).join('');
+      const setText = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+      };
+
+      setText('rp-res-pair', tradeSummary.pair || '—');
+      setText('rp-res-direction', tradeSummary.direction === 'Buy' ? 'Long' : 'Short');
+      setText('rp-res-entry', formatRpPrice(tradeSummary.entryPrice));
+      setText('rp-res-exit', formatRpPrice(tradeSummary.exitPrice));
+      setText('rp-res-sl', formatRpPrice(tradeSummary.sl));
+      setText('rp-res-tp', formatRpPrice(tradeSummary.tp));
+      setText('rp-res-lot', Number(tradeSummary.lot || 1).toFixed(2));
+      setText('rp-res-duration', `${tradeSummary.durationCandles} mum`);
+      setText('rp-res-reason', tradeSummary.reason || 'Manuel');
+
+      const shotImg = document.getElementById('rp-res-shot-img');
+      const shotEmpty = document.getElementById('rp-res-shot-empty');
+      if (compressedImg && compressedImg.objectUrl && shotImg) {
+        shotImg.src = compressedImg.objectUrl;
+        shotImg.style.display = 'block';
+        if (shotEmpty) shotEmpty.classList.remove('visible');
+      } else {
+        if (shotImg) {
+          shotImg.removeAttribute('src');
+          shotImg.style.display = 'none';
+        }
+        if (shotEmpty) shotEmpty.classList.add('visible');
+      }
+
+      populateStrategySelects();
+      const sessionEl = document.getElementById('rp-res-session');
+      if (sessionEl) {
+        sessionEl.value = computeRpSessionFromUnixSec(tradeSummary.entryTime);
+      }
+      const notesEl = document.getElementById('rp-res-notes');
+      const psychEl = document.getElementById('rp-res-psychology');
+      if (notesEl) notesEl.value = '';
+      if (psychEl) psychEl.value = '';
+
+      backdrop.scrollTop = 0;
+      const panelEl = backdrop.querySelector('.rp-result-panel');
+      if (panelEl) panelEl.scrollTop = 0;
+      backdrop.classList.add('active');
+    }
+
+    function closeRpResultModal() {
+      const backdrop = document.getElementById('rp-result-modal-backdrop');
+      if (backdrop) {
+        backdrop.classList.remove('active');
+      }
+      if (rpPendingResultData && rpPendingResultData.image && rpPendingResultData.image.objectUrl) {
+        try { URL.revokeObjectURL(rpPendingResultData.image.objectUrl); } catch (_) {}
+      }
+      const shotImg = document.getElementById('rp-res-shot-img');
+      if (shotImg) {
+        shotImg.removeAttribute('src');
+        shotImg.style.display = 'none';
+      }
+      rpPendingResultData = null;
+    }
+
+    async function saveRpResultToBacktest() {
+      if (isSubmittingRpBacktest || !rpPendingResultData) return;
+      isSubmittingRpBacktest = true;
+
+      const saveBtn = document.getElementById('rp-res-save-btn');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Kaydediliyor...';
+      }
+
+      try {
+        const data = rpPendingResultData;
+        const tradeId = `bt_trade_${Date.now()}`;
+        const pair = (data.pair || '').trim().toUpperCase();
+        const direction = data.direction === 'Buy' ? 'Long' : 'Short';
+        const datetime = formatRpTimeToDatetimeLocal(data.entryTime);
+        const timeframe = resolveRpBacktestTimeframe(data.timeframe);
+        const session = document.getElementById('rp-res-session')?.value || 'New York';
+        const strategy = document.getElementById('rp-res-strategy')?.value || 'Varsayılan Setup';
+        const entryPrice = data.entryPrice !== null && data.entryPrice !== undefined ? Number(data.entryPrice) : null;
+        const exitPrice = data.exitPrice !== null && data.exitPrice !== undefined ? Number(data.exitPrice) : null;
+        const stopLoss = data.sl !== null && data.sl !== undefined ? Number(data.sl) : null;
+        const risk = data.riskPct > 0 ? Number(data.riskPct) : 1.0;
+        const result = data.result || 'Win';
+
+        let pnl = Number((data.pnl || 0).toFixed(2));
+        if (result === 'Loss') pnl = -Math.abs(pnl);
+        else if (result === 'Win') pnl = Math.abs(pnl);
+        else pnl = 0;
+
+        const notes = document.getElementById('rp-res-notes')?.value.trim() || '';
+        const psychology = document.getElementById('rp-res-psychology')?.value.trim() || '';
+
+        const images = [];
+        if (data.image && data.image.uint8Array) {
+          const imgObj = data.image;
+          const imgId = 'bt_img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+          let isCloudSynced = false;
+
+          await dbSaveImage(imgId, imgObj.uint8Array, {
+            tradeId,
+            name: imgObj.name,
+            contentType: imgObj.contentType,
+            isBacktest: true
+          });
+
+          if (AppState.user) {
+            try {
+              const uploadedMeta = await saveTradeImageToFirestore(AppState.user.uid, tradeId, {
+                id: imgId,
+                uint8Array: imgObj.uint8Array,
+                name: imgObj.name,
+                contentType: imgObj.contentType
+              });
+              if (uploadedMeta) isCloudSynced = true;
+            } catch (fsErr) {
+              console.warn('Backtest bulut görsel yükleme hatası:', fsErr);
+            }
+          }
+
+          images.push({
+            id: imgId,
+            tradeId,
+            name: imgObj.name || `bt_${imgId}.webp`,
+            size: imgObj.size || imgObj.uint8Array.byteLength,
+            contentType: imgObj.contentType || 'image/webp',
+            isCloudSynced
+          });
+        }
+
+        const nowIso = new Date().toISOString();
+        const tradePayload = {
+          id: tradeId,
+          pair,
+          direction,
+          datetime,
+          timeframe,
+          session,
+          strategy,
+          entryPrice,
+          exitPrice,
+          stopLoss,
+          risk,
+          pnl,
+          result,
+          notes,
+          psychology,
+          isBacktest: true,
+          images,
+          hasScreenshot: images.length > 0,
+          createdAt: nowIso,
+          updatedAt: nowIso
+        };
+
+        if (AppState.user) {
+          try {
+            await setDoc(doc(db, 'users', AppState.user.uid, 'backtestTrades', tradeId), tradePayload).catch(() => {});
+          } catch (_) {}
+        }
+
+        AppState.backtestTrades.unshift(tradePayload);
+        saveBacktestTradesState();
+
+        closeRpResultModal();
+        showToast('İşlem Backtest\'e kaydedildi.', 'success');
+      } catch (err) {
+        console.error('Chart -> Backtest kayıt hatası:', err);
+        showToast('Kayıt hatası: ' + err.message, 'error');
+      } finally {
+        isSubmittingRpBacktest = false;
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Backtest\'e Kaydet';
+        }
+      }
     }
 
     function updateRpTradeControls() {
@@ -7212,11 +7935,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const closeBtn = document.getElementById('rp-close-trade-btn');
 
       const canTrade = rpReplayActive && rpReplayIndex >= 0 && rpReplayIndex < rpLoadedCandles.length;
-      const hasOpen = rpOpenTrade !== null;
+      const hasActive = rpOpenTrade !== null || rpPendingOrder !== null;
 
-      if (buyBtn) buyBtn.disabled = !canTrade || hasOpen || rpIsPickingStart;
-      if (sellBtn) sellBtn.disabled = !canTrade || hasOpen || rpIsPickingStart;
-      if (closeBtn) closeBtn.disabled = !canTrade || !hasOpen;
+      if (buyBtn) buyBtn.disabled = !canTrade || hasActive || rpIsPickingStart;
+      if (sellBtn) sellBtn.disabled = !canTrade || hasActive || rpIsPickingStart;
+      if (closeBtn) closeBtn.disabled = !canTrade || rpOpenTrade === null;
     }
 
     function parseOptionalRpInputNumber(id) {
@@ -7230,21 +7953,60 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     function openRpVirtualTrade(direction) {
       if (!rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) return;
-      if (rpOpenTrade !== null) {
-        showToast('Aynı anda yalnızca bir açık işlem bulunabilir.', 'error');
+      if (rpOpenTrade !== null || rpPendingOrder !== null) {
+        showToast('Aynı anda yalnızca bir açık pozisyon veya bekleyen emir bulunabilir.', 'error');
         return;
       }
 
       const currentCandle = rpLoadedCandles[rpReplayIndex];
-      const entryPrice = currentCandle.close;
+      const orderType = document.getElementById('rp-order-type-select')?.value || 'Market';
+      const lotVal = parseOptionalRpInputNumber('rp-lot-input');
+      const contractVal = parseOptionalRpInputNumber('rp-contract-size-input');
       const sl = parseOptionalRpInputNumber('rp-sl-input');
       const tp = parseOptionalRpInputNumber('rp-tp-input');
       const balanceVal = parseOptionalRpInputNumber('rp-balance-input');
       const riskVal = parseOptionalRpInputNumber('rp-risk-input');
 
+      if (lotVal === null || Number.isNaN(lotVal) || lotVal <= 0) {
+        showToast('Geçerli bir lot büyüklüğü girin.', 'error');
+        return;
+      }
+      if (contractVal === null || Number.isNaN(contractVal) || contractVal <= 0) {
+        showToast('Geçerli bir kontrat büyüklüğü girin.', 'error');
+        return;
+      }
       if (Number.isNaN(sl) || Number.isNaN(tp)) {
         showToast('Stop Loss veya Take Profit değeri geçersiz.', 'error');
         return;
+      }
+
+      let entryPrice = currentCandle.close;
+      if (orderType === 'Limit' || orderType === 'Stop') {
+        const orderPrice = parseOptionalRpInputNumber('rp-order-price-input');
+        if (orderPrice === null || Number.isNaN(orderPrice)) {
+          showToast(`${orderType} emri için geçerli bir Emir Fiyatı girin.`, 'error');
+          return;
+        }
+        if (orderType === 'Limit') {
+          if (direction === 'Buy' && orderPrice >= currentCandle.close) {
+            showToast('Buy Limit emir fiyatı güncel fiyatın altında olmalıdır.', 'error');
+            return;
+          }
+          if (direction === 'Sell' && orderPrice <= currentCandle.close) {
+            showToast('Sell Limit emir fiyatı güncel fiyatın üstünde olmalıdır.', 'error');
+            return;
+          }
+        } else if (orderType === 'Stop') {
+          if (direction === 'Buy' && orderPrice <= currentCandle.close) {
+            showToast('Buy Stop emir fiyatı güncel fiyatın üstünde olmalıdır.', 'error');
+            return;
+          }
+          if (direction === 'Sell' && orderPrice >= currentCandle.close) {
+            showToast('Sell Stop emir fiyatı güncel fiyatın altında olmalıdır.', 'error');
+            return;
+          }
+        }
+        entryPrice = orderPrice;
       }
 
       if (sl !== null) {
@@ -7272,29 +8034,53 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const balance = (balanceVal !== null && !Number.isNaN(balanceVal) && balanceVal > 0) ? balanceVal : 0;
       const riskPct = (riskVal !== null && !Number.isNaN(riskVal) && riskVal > 0) ? riskVal : 0;
 
+      if (orderType === 'Limit' || orderType === 'Stop') {
+        rpPendingOrder = {
+          direction,
+          orderType,
+          orderPrice: entryPrice,
+          createdIndex: rpReplayIndex,
+          lot: lotVal,
+          contractSize: contractVal,
+          sl,
+          tp,
+          balance,
+          riskPct
+        };
+        drawRpTradePriceLines(rpPendingOrder, true);
+        updateRpTradeControls();
+        showToast(`${orderType} ${direction} emri oluşturuldu (${formatRpPrice(entryPrice)}).`, 'info');
+        return;
+      }
+
       rpOpenTrade = {
         direction,
         entryPrice,
         entryIndex: rpReplayIndex,
         entryTime: currentCandle.time,
+        lot: lotVal,
+        contractSize: contractVal,
         sl,
         tp,
         balance,
         riskPct
       };
 
-      drawRpTradePriceLines(rpOpenTrade);
+      drawRpTradePriceLines(rpOpenTrade, false);
       updateRpTradeControls();
 
       if (sl === null) {
-        showToast(`${direction} işlemi açıldı (${formatRpPrice(entryPrice)}). Uyarı: SL girilmediği için R ve P/L hesaplanmayacak.`, 'info');
+        showToast(`${direction} işlemi açıldı (${formatRpPrice(entryPrice)}). Uyarı: SL girilmediği için R hesaplanmayacak.`, 'info');
       } else {
         showToast(`${direction} işlemi açıldı (${formatRpPrice(entryPrice)}).`, 'success');
       }
     }
 
-    function closeRpOpenTrade(exitPrice, reason) {
-      if (!rpOpenTrade) return;
+    async function closeRpOpenTrade(exitPrice, reason) {
+      if (!rpOpenTrade || rpIsClosingTrade) return;
+      rpIsClosingTrade = true;
+      pauseRpReplay();
+
       const t = rpOpenTrade;
       const priceDiff = t.direction === 'Buy' ? (exitPrice - t.entryPrice) : (t.entryPrice - exitPrice);
 
@@ -7303,38 +8089,109 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         result = priceDiff > 0 ? 'Win' : 'Loss';
       }
 
+      const pnl = priceDiff * t.lot * t.contractSize;
       let rMultiple = null;
-      let pnl = null;
 
       if (t.sl !== null) {
         const slDistance = Math.abs(t.entryPrice - t.sl);
         if (slDistance > 0) {
           rMultiple = priceDiff / slDistance;
-          const riskAmount = t.balance * (t.riskPct / 100);
-          pnl = rMultiple * riskAmount;
         }
       }
 
-      rpClosedTrades.unshift({
+      const durationCandles = Math.max(0, rpReplayIndex - t.entryIndex);
+      const pair = (document.getElementById('rp-pair-input')?.value || '').trim().toUpperCase();
+      const timeframe = document.getElementById('rp-tf-select')?.value || 'M15';
+
+      // Çizgiler grafikteyken otomatik ekran görüntüsü al ve WebP'ye sıkıştır
+      let compressedImg = null;
+      try {
+        if (rpChartInstance && typeof rpChartInstance.takeScreenshot === 'function') {
+          const shotCanvas = rpChartInstance.takeScreenshot();
+          if (shotCanvas && typeof shotCanvas.toBlob === 'function') {
+            const rawBlob = await new Promise(resolve => shotCanvas.toBlob(resolve, 'image/png'));
+            if (rawBlob) {
+              const rawFile = new File([rawBlob], `rp_trade_${Date.now()}.png`, { type: 'image/png' });
+              compressedImg = await compressImageFileToWebP(rawFile);
+            }
+          }
+        }
+      } catch (shotErr) {
+        console.warn('Grafik ekran görüntüsü hatası:', shotErr);
+        compressedImg = null;
+      }
+
+      if (!compressedImg) {
+        showToast('Grafik ekran görüntüsü alınamadı, kayıt görselsiz yapılabilir.', 'info');
+      }
+
+      // Görüntü alındıktan sonra çizgileri ve açık pozisyonu temizle
+      clearRpOpenTrade();
+      rpIsClosingTrade = false;
+
+      const closedRecord = {
         direction: t.direction,
         entryPrice: t.entryPrice,
         entryTime: t.entryTime,
         exitPrice,
         sl: t.sl,
         tp: t.tp,
+        lot: t.lot,
+        contractSize: t.contractSize,
+        riskPct: t.riskPct,
+        durationCandles,
+        reason,
+        pair,
+        timeframe,
         result,
         pnl,
         rMultiple
-      });
+      };
 
-      clearRpOpenTrade();
-      renderRpClosedTradesTable();
+      rpClosedTrades.unshift(closedRecord);
 
       if (t.sl === null) {
-        showToast(`İşlem ${reason} ile kapandı (${result}). SL girilmediği için R hesaplanmadı.`, 'info');
+        showToast(`İşlem ${reason} ile kapandı (${result}, ${formatRpPnl(pnl)}). SL girilmediği için R hesaplanmadı.`, 'info');
       } else {
         showToast(`İşlem ${reason} ile kapandı: ${result} (${formatRpPnl(pnl)}, ${formatRpR(rMultiple)})`, result === 'Win' ? 'success' : (result === 'Loss' ? 'error' : 'info'));
       }
+
+      openRpResultModal(closedRecord, compressedImg);
+    }
+
+    function checkRpPendingOrderOnCandle(candle) {
+      if (!rpPendingOrder || !candle) return false;
+      const o = rpPendingOrder;
+      let triggered = false;
+
+      if (o.orderType === 'Limit') {
+        if (o.direction === 'Buy' && candle.low <= o.orderPrice) triggered = true;
+        else if (o.direction === 'Sell' && candle.high >= o.orderPrice) triggered = true;
+      } else if (o.orderType === 'Stop') {
+        if (o.direction === 'Buy' && candle.high >= o.orderPrice) triggered = true;
+        else if (o.direction === 'Sell' && candle.low <= o.orderPrice) triggered = true;
+      }
+
+      if (!triggered) return false;
+
+      rpPendingOrder = null;
+      rpOpenTrade = {
+        direction: o.direction,
+        entryPrice: o.orderPrice,
+        entryIndex: rpReplayIndex,
+        entryTime: candle.time,
+        lot: o.lot,
+        contractSize: o.contractSize,
+        sl: o.sl,
+        tp: o.tp,
+        balance: o.balance,
+        riskPct: o.riskPct
+      };
+
+      drawRpTradePriceLines(rpOpenTrade, false);
+      updateRpTradeControls();
+      showToast(`${o.orderType} ${o.direction} emri aktifleşti (${formatRpPrice(o.orderPrice)}).`, 'success');
+      return true;
     }
 
     function checkRpOpenTradeOnCandle(candle) {
@@ -7369,6 +8226,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     function stopRpReplayOnLeave() {
       pauseRpReplay();
+      stopRpLineDrag();
       if (rpIsPickingStart) {
         rpIsPickingStart = false;
         updateRpReplayControls();
@@ -7377,6 +8235,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     function resetRpReplayState() {
       pauseRpReplay();
+      clearRpPendingOrder(false);
       clearRpOpenTrade();
       rpIsPickingStart = false;
       rpReplayActive = false;
@@ -7430,6 +8289,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           : `${rpReplayIndex + 1} / ${total} mum`;
       }
       updateRpTradeControls();
+      updateRpChartOverlay();
     }
 
     function getRpReplayIntervalMs() {
@@ -7447,9 +8307,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       rpReplayIndex += 1;
       const nextCandle = rpLoadedCandles[rpReplayIndex];
       rpCandlestickSeries.update(nextCandle);
-      checkRpOpenTradeOnCandle(nextCandle);
+      const justActivated = checkRpPendingOrderOnCandle(nextCandle);
+      if (!justActivated) {
+        checkRpOpenTradeOnCandle(nextCandle);
+      }
       if (rpReplayIndex >= rpLoadedCandles.length - 1) {
         pauseRpReplay();
+        updateRpChartOverlay();
         showToast('Replay tamamlandı.', 'info');
         return false;
       }
@@ -7464,6 +8328,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       rpReplayIndex -= 1;
       if (rpOpenTrade && rpReplayIndex < rpOpenTrade.entryIndex) {
         clearRpOpenTrade();
+      }
+      if (rpPendingOrder && rpReplayIndex < rpPendingOrder.createdIndex) {
+        clearRpPendingOrder(false);
       }
       rpCandlestickSeries.setData(rpLoadedCandles.slice(0, rpReplayIndex + 1));
       updateRpReplayControls();
@@ -7511,6 +8378,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (pickedIndex === -1) return;
 
       pauseRpReplay();
+      clearRpPendingOrder(false);
       clearRpOpenTrade();
       rpIsPickingStart = false;
       rpReplayActive = true;
@@ -7520,8 +8388,62 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       showToast(`Replay ${rpReplayIndex + 1}. mumdan başlatıldı.`, 'info');
     }
 
+    function clampRpDraggedPrice(kind, rawPrice, entryPrice, direction) {
+      const minStep = Math.pow(10, -rpCurrentPrecision);
+      let price = rawPrice;
+      if (direction === 'Buy') {
+        if (kind === 'sl' && price >= entryPrice) price = entryPrice - minStep;
+        if (kind === 'tp' && price <= entryPrice) price = entryPrice + minStep;
+      } else {
+        if (kind === 'sl' && price <= entryPrice) price = entryPrice + minStep;
+        if (kind === 'tp' && price >= entryPrice) price = entryPrice - minStep;
+      }
+      return Number(price.toFixed(rpCurrentPrecision));
+    }
+
+    function applyRpLevelFromInput(kind, enforceAndWarn = false) {
+      const activeItem = rpOpenTrade || rpPendingOrder;
+      if (!activeItem) return;
+      const inputId = kind === 'sl' ? 'rp-sl-input' : 'rp-tp-input';
+      const inputEl = document.getElementById(inputId);
+      if (!inputEl) return;
+
+      const parsed = parseOptionalRpInputNumber(inputId);
+      const entryPrice = rpOpenTrade ? rpOpenTrade.entryPrice : rpPendingOrder.orderPrice;
+
+      if (parsed === null) {
+        activeItem[kind] = null;
+        drawRpTradePriceLines(activeItem, !rpOpenTrade && !!rpPendingOrder);
+        return;
+      }
+      if (Number.isNaN(parsed)) {
+        if (enforceAndWarn) showToast('Geçersiz fiyat değeri.', 'error');
+        return;
+      }
+
+      const isBuy = activeItem.direction === 'Buy';
+      const valid = kind === 'sl'
+        ? (isBuy ? parsed < entryPrice : parsed > entryPrice)
+        : (isBuy ? parsed > entryPrice : parsed < entryPrice);
+
+      if (!valid) {
+        if (enforceAndWarn) {
+          const msg = kind === 'sl'
+            ? (isBuy ? 'Buy işleminde SL girişin altında olmalıdır.' : 'Sell işleminde SL girişin üstünde olmalıdır.')
+            : (isBuy ? 'Buy işleminde TP girişin üstünde olmalıdır.' : 'Sell işleminde TP girişin altında olmalıdır.');
+          showToast(msg, 'error');
+          inputEl.value = activeItem[kind] !== null && activeItem[kind] !== undefined ? String(activeItem[kind]) : '';
+        }
+        return;
+      }
+
+      activeItem[kind] = parsed;
+      drawRpTradePriceLines(activeItem, !rpOpenTrade && !!rpPendingOrder);
+    }
+
     function destroyRpChart() {
       pauseRpReplay();
+      stopRpLineDrag();
       clearRpTradePriceLines();
       if (rpChartResizeObserver) {
         rpChartResizeObserver.disconnect();
@@ -7536,6 +8458,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         rpChartInstance = null;
         rpCandlestickSeries = null;
       }
+      updateRpChartOverlay();
     }
 
     function detectRpCsvDelimiter(lines) {
@@ -7878,15 +8801,149 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         });
       }
 
-      const tradesTbody = document.getElementById('rp-trades-tbody');
-      if (tradesTbody) {
-        tradesTbody.addEventListener('click', (e) => {
-          const btn = e.target.closest('.rp-export-btn');
-          if (!btn) return;
-          const idx = Number(btn.getAttribute('data-rp-trade-idx'));
-          if (Number.isInteger(idx) && idx >= 0) {
-            exportRpTradeToBacktest(idx);
+      const resCloseX = document.getElementById('rp-res-close-x');
+      const resDiscardBtn = document.getElementById('rp-res-discard-btn');
+      const resSaveBtn = document.getElementById('rp-res-save-btn');
+      const resShotImg = document.getElementById('rp-res-shot-img');
+
+      if (resCloseX) {
+        resCloseX.addEventListener('click', closeRpResultModal);
+      }
+      if (resDiscardBtn) {
+        resDiscardBtn.addEventListener('click', closeRpResultModal);
+      }
+      if (resSaveBtn) {
+        resSaveBtn.addEventListener('click', saveRpResultToBacktest);
+      }
+      if (resShotImg) {
+        resShotImg.addEventListener('click', () => {
+          if (rpPendingResultData && rpPendingResultData.image && rpPendingResultData.image.objectUrl) {
+            window.openLightbox(rpPendingResultData.image.objectUrl);
           }
+        });
+      }
+
+      const pairInput = document.getElementById('rp-pair-input');
+      if (pairInput) {
+        pairInput.addEventListener('change', () => syncRpContractSizeFromPair(true));
+        pairInput.addEventListener('input', () => syncRpContractSizeFromPair(false));
+      }
+
+      const orderTypeSelect = document.getElementById('rp-order-type-select');
+      if (orderTypeSelect) {
+        orderTypeSelect.addEventListener('change', syncRpOrderTypeVisibility);
+        syncRpOrderTypeVisibility();
+      }
+
+      const calcLotBtn = document.getElementById('rp-calc-lot-btn');
+      if (calcLotBtn) {
+        calcLotBtn.addEventListener('click', calculateRpLotFromRisk);
+      }
+
+      const slInput = document.getElementById('rp-sl-input');
+      const tpInput = document.getElementById('rp-tp-input');
+      if (slInput) {
+        slInput.addEventListener('input', () => applyRpLevelFromInput('sl', false));
+        slInput.addEventListener('change', () => applyRpLevelFromInput('sl', true));
+      }
+      if (tpInput) {
+        tpInput.addEventListener('input', () => applyRpLevelFromInput('tp', false));
+        tpInput.addEventListener('change', () => applyRpLevelFromInput('tp', true));
+      }
+
+      const overlayXBtn = document.getElementById('rp-overlay-x-btn');
+      if (overlayXBtn) {
+        overlayXBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (rpOpenTrade) {
+            if (!rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) return;
+            const currentCandle = rpLoadedCandles[rpReplayIndex];
+            closeRpOpenTrade(currentCandle.close, 'Manuel');
+          } else if (rpPendingOrder) {
+            clearRpPendingOrder(true);
+          }
+        });
+      }
+
+      const chartWrap = document.getElementById('rp-chart-wrap');
+      if (chartWrap) {
+        chartWrap.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
+          if (e.target && e.target.closest('#rp-pos-tag')) return;
+          if (rpIsPickingStart || !rpCandlestickSeries || !rpChartInstance) return;
+          const activeItem = rpOpenTrade || rpPendingOrder;
+          if (!activeItem) return;
+
+          const rect = chartWrap.getBoundingClientRect();
+          const y = e.clientY - rect.top;
+          const slY = activeItem.sl !== null && activeItem.sl !== undefined ? rpCandlestickSeries.priceToCoordinate(activeItem.sl) : null;
+          const tpY = activeItem.tp !== null && activeItem.tp !== undefined ? rpCandlestickSeries.priceToCoordinate(activeItem.tp) : null;
+
+          let hitKind = null;
+          const distSl = slY !== null ? Math.abs(y - slY) : Infinity;
+          const distTp = tpY !== null ? Math.abs(y - tpY) : Infinity;
+          if (distSl <= 6 && distSl <= distTp) hitKind = 'sl';
+          else if (distTp <= 6) hitKind = 'tp';
+
+          if (!hitKind) return;
+          e.preventDefault();
+          e.stopPropagation();
+          rpDraggingLine = hitKind;
+          rpChartInstance.applyOptions({ handleScroll: false, handleScale: false });
+          chartWrap.style.cursor = 'ns-resize';
+          chartWrap.classList.add('rp-line-hover');
+        }, true);
+
+        chartWrap.addEventListener('mousemove', (e) => {
+          if (rpDraggingLine || !rpCandlestickSeries || !rpChartInstance) return;
+          const activeItem = rpOpenTrade || rpPendingOrder;
+          if (!activeItem || rpIsPickingStart) {
+            chartWrap.style.cursor = '';
+            chartWrap.classList.remove('rp-line-hover');
+            return;
+          }
+
+          const rect = chartWrap.getBoundingClientRect();
+          const y = e.clientY - rect.top;
+          const slY = activeItem.sl !== null && activeItem.sl !== undefined ? rpCandlestickSeries.priceToCoordinate(activeItem.sl) : null;
+          const tpY = activeItem.tp !== null && activeItem.tp !== undefined ? rpCandlestickSeries.priceToCoordinate(activeItem.tp) : null;
+          const nearSl = slY !== null && Math.abs(y - slY) <= 6;
+          const nearTp = tpY !== null && Math.abs(y - tpY) <= 6;
+          const hovering = nearSl || nearTp;
+          chartWrap.style.cursor = hovering ? 'ns-resize' : '';
+          chartWrap.classList.toggle('rp-line-hover', hovering);
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!rpDraggingLine || !rpCandlestickSeries || !rpChartInstance) return;
+          const activeItem = rpOpenTrade || rpPendingOrder;
+          if (!activeItem) return;
+          const rect = chartWrap.getBoundingClientRect();
+          const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+          const rawPrice = rpCandlestickSeries.coordinateToPrice(y);
+          if (rawPrice === null || !Number.isFinite(rawPrice)) return;
+          const entryRef = rpOpenTrade ? rpOpenTrade.entryPrice : rpPendingOrder.orderPrice;
+          const clamped = clampRpDraggedPrice(rpDraggingLine, rawPrice, entryRef, activeItem.direction);
+          activeItem[rpDraggingLine] = clamped;
+          if (rpDraggingLine === 'sl' && rpTradePriceLines.sl) {
+            rpTradePriceLines.sl.applyOptions({ price: clamped });
+          } else if (rpDraggingLine === 'tp' && rpTradePriceLines.tp) {
+            rpTradePriceLines.tp.applyOptions({ price: clamped });
+          }
+          const targetInput = document.getElementById(rpDraggingLine === 'sl' ? 'rp-sl-input' : 'rp-tp-input');
+          if (targetInput) targetInput.value = String(clamped);
+        });
+
+        window.addEventListener('mouseup', () => {
+          if (!rpDraggingLine) return;
+          const finishedKind = rpDraggingLine;
+          stopRpLineDrag();
+          const activeItem = rpOpenTrade || rpPendingOrder;
+          if (activeItem && activeItem[finishedKind] !== null && activeItem[finishedKind] !== undefined) {
+            const targetInput = document.getElementById(finishedKind === 'sl' ? 'rp-sl-input' : 'rp-tp-input');
+            if (targetInput) targetInput.value = String(activeItem[finishedKind]);
+          }
+          updateRpChartOverlay();
         });
       }
     }
@@ -7936,21 +8993,28 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           rpChartInstance.timeScale().fitContent();
         }
         if (rpOpenTrade) {
-          drawRpTradePriceLines(rpOpenTrade);
+          drawRpTradePriceLines(rpOpenTrade, false);
+        } else if (rpPendingOrder) {
+          drawRpTradePriceLines(rpPendingOrder, true);
         }
 
         rpChartClickHandler = handleRpChartClick;
         rpChartInstance.subscribeClick(rpChartClickHandler);
+        rpChartInstance.timeScale().subscribeVisibleLogicalRangeChange(() => {
+          updateRpChartOverlay();
+        });
 
         if (typeof ResizeObserver === 'function') {
           rpChartResizeObserver = new ResizeObserver(() => {
             resizeRpChart();
+            updateRpChartOverlay();
           });
           rpChartResizeObserver.observe(container);
         }
       } else {
         updateRpChartTheme(AppState.settings.theme);
         resizeRpChart();
+        updateRpChartOverlay();
       }
     }
 
