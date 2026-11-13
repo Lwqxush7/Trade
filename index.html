@@ -1473,6 +1473,39 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   box-shadow: var(--neu-shadow-inset);
 }
 
+.rp-chart-wrap:fullscreen,
+.rp-chart-wrap:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+  background: #070B19;
+}
+
+:root[data-theme="light"] .rp-chart-wrap:fullscreen,
+:root[data-theme="light"] .rp-chart-wrap:-webkit-full-screen {
+  background: #F1F5F9;
+}
+
+.rp-chart-card.rp-fs-host {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transform: none !important;
+}
+
+.rp-chart-wrap.rp-fullscreen-fallback {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 150;
+  border-radius: 0;
+  background: #070B19;
+}
+
+:root[data-theme="light"] .rp-chart-wrap.rp-fullscreen-fallback {
+  background: #F1F5F9;
+}
+
 .rp-chart-wrap.rp-picking {
   cursor: crosshair;
   outline: 2px solid rgba(34, 211, 238, 0.7);
@@ -1484,31 +1517,85 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 }
 
 .rp-replay-bar {
-  display: flex;
-  flex-wrap: wrap;
+  position: absolute;
+  bottom: 38px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
+  display: inline-flex;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid var(--glass-border-subtle);
+  gap: 5px;
+  padding: 5px 9px;
+  max-width: calc(100% - 16px);
+  border-radius: 999px;
+  background: rgba(11, 18, 40, 0.8);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.36);
+  user-select: none;
+  touch-action: none;
+  cursor: grab;
+}
+
+:root[data-theme="light"] .rp-replay-bar {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: var(--glass-border);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.14);
+}
+
+.rp-replay-bar.rp-dragging {
+  cursor: grabbing;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+}
+
+.rp-replay-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 28px;
+  color: var(--text-muted);
+  cursor: grab;
+  flex-shrink: 0;
+  opacity: 0.75;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+}
+
+.rp-replay-bar:hover .rp-replay-drag-handle {
+  opacity: 1;
+  color: var(--text-main);
+}
+
+.rp-replay-bar.rp-dragging .rp-replay-drag-handle {
+  cursor: grabbing;
 }
 
 .rp-replay-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  height: 38px;
-  padding: 0 14px;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
   border-radius: 999px;
   background: var(--glass-hover-fill);
   border: 1px solid var(--glass-border);
   box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.16);
   color: var(--text-main);
   font-family: inherit;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
   transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.rp-replay-btn-icon {
+  min-width: 28px;
+  padding: 0 7px;
 }
 
 .rp-replay-btn:hover:not(:disabled) {
@@ -1534,33 +1621,93 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 }
 
 .rp-replay-speed {
-  height: 38px;
+  height: 28px;
   width: auto;
-  min-width: 82px;
+  min-width: 56px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  flex-shrink: 0;
 }
 
 .rp-replay-status {
-  margin-left: auto;
-  font-size: 0.78rem;
+  margin-left: 2px;
+  padding: 0 6px 0 4px;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 :root[data-theme="light"] .rp-replay-btn {
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.78);
   border-color: var(--glass-border);
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
 }
 
 :root[data-theme="light"] .rp-replay-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.98);
 }
 
 :root[data-theme="light"] .rp-replay-btn.active {
   background: rgba(2, 132, 199, 0.14);
   border-color: var(--color-neon-cyan);
   color: var(--color-neon-cyan);
+}
+
+.rp-fullscreen-btn {
+  position: absolute;
+  right: 64px;
+  bottom: 38px;
+  z-index: 8;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: rgba(11, 18, 40, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.rp-fullscreen-btn:hover {
+  background: rgba(15, 23, 42, 0.92);
+  border-color: var(--glass-border-highlight);
+  transform: translateY(-1px);
+}
+
+.rp-fullscreen-btn:active {
+  transform: scale(0.95);
+}
+
+.rp-fullscreen-btn .rp-fs-icon-exit {
+  display: none;
+}
+
+.rp-chart-wrap.rp-is-fullscreen .rp-fullscreen-btn .rp-fs-icon-enter {
+  display: none;
+}
+
+.rp-chart-wrap.rp-is-fullscreen .rp-fullscreen-btn .rp-fs-icon-exit {
+  display: block;
+}
+
+:root[data-theme="light"] .rp-fullscreen-btn {
+  background: rgba(255, 255, 255, 0.88);
+  color: #0F172A;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+}
+
+:root[data-theme="light"] .rp-fullscreen-btn:hover {
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .rp-chart-container {
@@ -2089,6 +2236,42 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   .rp-res-actions {
     flex-direction: column-reverse;
     align-items: stretch;
+  }
+  .rp-replay-bar {
+    bottom: 32px;
+    gap: 3px;
+    padding: 4px 6px;
+    max-width: calc(100% - 12px);
+    overflow-x: auto;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .rp-replay-btn {
+    height: 26px;
+    padding: 0 7px;
+    font-size: 0.7rem;
+  }
+  .rp-replay-btn-icon {
+    min-width: 26px;
+    padding: 0 5px;
+  }
+  .rp-replay-speed {
+    height: 26px;
+    min-width: 48px;
+    width: auto;
+    font-size: 0.7rem;
+  }
+  .rp-replay-status {
+    font-size: 0.66rem;
+    padding: 0 3px;
+  }
+  .rp-fullscreen-btn {
+    right: 54px;
+    bottom: 32px;
+    width: 28px;
+    height: 28px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 }
   </style>
@@ -3122,21 +3305,6 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             </div>
           </div>
 
-          <div class="rp-replay-bar" id="rp-replay-bar">
-            <button type="button" class="rp-replay-btn" id="rp-pick-btn" disabled>Başlangıç Seç</button>
-            <button type="button" class="rp-replay-btn" id="rp-step-back-btn" disabled title="Bir mum geri">⏮</button>
-            <button type="button" class="rp-replay-btn" id="rp-play-btn" disabled title="Oynat">▶ Oynat</button>
-            <button type="button" class="rp-replay-btn" id="rp-pause-btn" disabled title="Durdur">⏸ Durdur</button>
-            <button type="button" class="rp-replay-btn" id="rp-step-fwd-btn" disabled title="Bir mum ileri">⏭</button>
-            <select id="rp-speed-select" class="rp-select rp-replay-speed" aria-label="Replay Hızı">
-              <option value="1" selected>1x</option>
-              <option value="2">2x</option>
-              <option value="5">5x</option>
-              <option value="10">10x</option>
-            </select>
-            <span class="rp-replay-status" id="rp-replay-status">Replay hazır değil</span>
-          </div>
-
           <div class="rp-trade-bar" id="rp-trade-bar">
             <div class="rp-trade-params" id="rp-trade-params">
               <div class="rp-field rp-field-sm">
@@ -3199,6 +3367,43 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 <button type="button" class="rp-overlay-x-btn" id="rp-overlay-x-btn" title="Kapat / İptal">✕</button>
               </div>
             </div>
+
+            <div class="rp-replay-bar" id="rp-replay-bar">
+              <span class="rp-replay-drag-handle" id="rp-replay-drag-handle" title="Sürükleyerek taşı">
+                <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true">
+                  <circle cx="2.5" cy="2.5" r="1.2"/><circle cx="7.5" cy="2.5" r="1.2"/>
+                  <circle cx="2.5" cy="7" r="1.2"/><circle cx="7.5" cy="7" r="1.2"/>
+                  <circle cx="2.5" cy="11.5" r="1.2"/><circle cx="7.5" cy="11.5" r="1.2"/>
+                </svg>
+              </span>
+              <button type="button" class="rp-replay-btn" id="rp-pick-btn" disabled title="Başlangıç Mumu Seç">Başlangıç</button>
+              <button type="button" class="rp-replay-btn rp-replay-btn-icon" id="rp-step-back-btn" disabled title="Bir mum geri">⏮</button>
+              <button type="button" class="rp-replay-btn rp-replay-btn-icon" id="rp-play-btn" disabled title="Oynat">▶</button>
+              <button type="button" class="rp-replay-btn rp-replay-btn-icon" id="rp-pause-btn" disabled title="Durdur">⏸</button>
+              <button type="button" class="rp-replay-btn rp-replay-btn-icon" id="rp-step-fwd-btn" disabled title="Bir mum ileri">⏭</button>
+              <select id="rp-speed-select" class="rp-select rp-replay-speed" aria-label="Replay Hızı">
+                <option value="1" selected>1x</option>
+                <option value="2">2x</option>
+                <option value="5">5x</option>
+                <option value="10">10x</option>
+              </select>
+              <span class="rp-replay-status" id="rp-replay-status">Hazır değil</span>
+            </div>
+
+            <button type="button" class="rp-fullscreen-btn" id="rp-fullscreen-btn" title="Tam Ekran" aria-label="Grafiği Tam Ekran Yap">
+              <svg class="rp-fs-icon-enter" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </svg>
+              <svg class="rp-fs-icon-exit" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="4 14 10 14 10 20"></polyline>
+                <polyline points="20 10 14 10 14 4"></polyline>
+                <line x1="14" y1="10" x2="21" y2="3"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </svg>
+            </button>
           </div>
         </div>
       </section>
@@ -7331,6 +7536,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     let rpIsClosingTrade = false;
     let rpPendingResultData = null;
     let isSubmittingRpBacktest = false;
+    let rpReplayBarDragState = null;
+    let rpReplayBarCustomPositioned = false;
+    let rpChartFullscreenFallback = false;
 
     function getRpChartThemeOptions(theme) {
       const isLight = (theme || document.documentElement.getAttribute('data-theme')) === 'light';
@@ -7387,6 +7595,108 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
     }
 
+    function clampRpReplayBarPosition() {
+      if (!rpReplayBarCustomPositioned) return;
+      const wrap = document.getElementById('rp-chart-wrap');
+      const bar = document.getElementById('rp-replay-bar');
+      if (!wrap || !bar) return;
+      const wrapW = wrap.clientWidth;
+      const wrapH = wrap.clientHeight;
+      const barW = bar.offsetWidth;
+      const barH = bar.offsetHeight;
+      if (wrapW <= 0 || wrapH <= 0 || barW <= 0 || barH <= 0) return;
+      const maxLeft = Math.max(8, wrapW - barW - 8);
+      const maxTop = Math.max(8, wrapH - barH - 8);
+      const curLeft = parseFloat(bar.style.left) || 8;
+      const curTop = parseFloat(bar.style.top) || 8;
+      bar.style.left = `${Math.max(8, Math.min(maxLeft, curLeft))}px`;
+      bar.style.top = `${Math.max(8, Math.min(maxTop, curTop))}px`;
+    }
+
+    function stopRpReplayBarDrag() {
+      if (!rpReplayBarDragState) return;
+      rpReplayBarDragState = null;
+      const bar = document.getElementById('rp-replay-bar');
+      if (bar) bar.classList.remove('rp-dragging');
+      if (rpChartInstance) {
+        rpChartInstance.applyOptions({ handleScroll: true, handleScale: true });
+      }
+    }
+
+    function isRpChartFullscreen() {
+      const wrap = document.getElementById('rp-chart-wrap');
+      return !!(wrap && (document.fullscreenElement === wrap || document.webkitFullscreenElement === wrap || rpChartFullscreenFallback));
+    }
+
+    function syncRpFullscreenUi() {
+      const wrap = document.getElementById('rp-chart-wrap');
+      const card = document.getElementById('rp-chart-card');
+      const btn = document.getElementById('rp-fullscreen-btn');
+      const active = isRpChartFullscreen();
+      if (wrap) {
+        wrap.classList.toggle('rp-is-fullscreen', active);
+      }
+      if (card) {
+        card.classList.toggle('rp-fs-host', rpChartFullscreenFallback);
+      }
+      if (btn) {
+        btn.title = active ? 'Tam Ekrandan Çık' : 'Tam Ekran';
+        btn.setAttribute('aria-label', active ? 'Tam Ekrandan Çık' : 'Grafiği Tam Ekran Yap');
+      }
+      requestAnimationFrame(() => {
+        resizeRpChart();
+        clampRpReplayBarPosition();
+        updateRpChartOverlay();
+      });
+    }
+
+    function exitRpChartFullscreen() {
+      const wrap = document.getElementById('rp-chart-wrap');
+      const card = document.getElementById('rp-chart-card');
+      if (wrap && (document.fullscreenElement === wrap || document.webkitFullscreenElement === wrap)) {
+        const exitFn = document.exitFullscreen || document.webkitExitFullscreen;
+        if (typeof exitFn === 'function') {
+          Promise.resolve(exitFn.call(document)).catch(() => {}).finally(() => {
+            rpChartFullscreenFallback = false;
+            if (wrap) wrap.classList.remove('rp-fullscreen-fallback');
+            if (card) card.classList.remove('rp-fs-host');
+            syncRpFullscreenUi();
+          });
+          return;
+        }
+      }
+      if (rpChartFullscreenFallback && wrap) {
+        rpChartFullscreenFallback = false;
+        wrap.classList.remove('rp-fullscreen-fallback');
+        if (card) card.classList.remove('rp-fs-host');
+      }
+      syncRpFullscreenUi();
+    }
+
+    async function toggleRpChartFullscreen() {
+      const wrap = document.getElementById('rp-chart-wrap');
+      if (!wrap) return;
+      if (isRpChartFullscreen()) {
+        exitRpChartFullscreen();
+        return;
+      }
+      const reqFn = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+      if (typeof reqFn === 'function') {
+        try {
+          await reqFn.call(wrap);
+          rpChartFullscreenFallback = false;
+          wrap.classList.remove('rp-fullscreen-fallback');
+          syncRpFullscreenUi();
+          return;
+        } catch (_) {
+          // Iframe veya izin kısıtı durumunda CSS tam ekran yedeğine geç
+        }
+      }
+      rpChartFullscreenFallback = true;
+      wrap.classList.add('rp-fullscreen-fallback');
+      syncRpFullscreenUi();
+    }
+
     function resizeRpChart() {
       if (!rpChartInstance) return;
       const section = document.getElementById('sec-chart');
@@ -7396,6 +7706,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const height = container.clientHeight || 560;
       if (width > 0 && height > 0) {
         rpChartInstance.resize(width, height);
+        clampRpReplayBarPosition();
       }
     }
 
@@ -7729,6 +8040,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function openRpResultModal(tradeSummary, compressedImg) {
       const backdrop = document.getElementById('rp-result-modal-backdrop');
       if (!backdrop) return;
+      const chartWrap = document.getElementById('rp-chart-wrap');
+      if (chartWrap && (document.fullscreenElement === chartWrap || document.webkitFullscreenElement === chartWrap)) {
+        exitRpChartFullscreen();
+      }
 
       rpPendingResultData = {
         ...tradeSummary,
@@ -8227,6 +8542,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function stopRpReplayOnLeave() {
       pauseRpReplay();
       stopRpLineDrag();
+      stopRpReplayBarDrag();
+      if (isRpChartFullscreen()) {
+        exitRpChartFullscreen();
+      }
       if (rpIsPickingStart) {
         rpIsPickingStart = false;
         updateRpReplayControls();
@@ -8271,8 +8590,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         if (backBtn) backBtn.disabled = true;
         if (statusEl) {
           statusEl.textContent = rpIsPickingStart
-            ? 'Grafikte başlangıç mumuna tıklayın'
-            : (hasData ? 'Başlangıç mumu seçin' : 'Replay hazır değil');
+            ? 'Muma tıklayın'
+            : (hasData ? 'Başlangıç seçin' : 'Hazır değil');
         }
         updateRpTradeControls();
         return;
@@ -8285,8 +8604,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       if (statusEl) {
         statusEl.textContent = rpIsPickingStart
-          ? 'Grafikte başlangıç mumuna tıklayın'
-          : `${rpReplayIndex + 1} / ${total} mum`;
+          ? 'Muma tıklayın'
+          : `${rpReplayIndex + 1}/${total}`;
       }
       updateRpTradeControls();
       updateRpChartOverlay();
@@ -8444,6 +8763,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function destroyRpChart() {
       pauseRpReplay();
       stopRpLineDrag();
+      stopRpReplayBarDrag();
       clearRpTradePriceLines();
       if (rpChartResizeObserver) {
         rpChartResizeObserver.disconnect();
@@ -8866,10 +9186,102 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
 
       const chartWrap = document.getElementById('rp-chart-wrap');
+      const replayBar = document.getElementById('rp-replay-bar');
+      const fullscreenBtn = document.getElementById('rp-fullscreen-btn');
+
+      if (fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleRpChartFullscreen();
+        });
+      }
+
+      document.addEventListener('fullscreenchange', syncRpFullscreenUi);
+      document.addEventListener('webkitfullscreenchange', syncRpFullscreenUi);
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && rpChartFullscreenFallback) {
+          exitRpChartFullscreen();
+        }
+      });
+
+      if (chartWrap && replayBar) {
+        const beginBarDrag = (clientX, clientY) => {
+          const wrapRect = chartWrap.getBoundingClientRect();
+          const barRect = replayBar.getBoundingClientRect();
+          const curLeft = barRect.left - wrapRect.left;
+          const curTop = barRect.top - wrapRect.top;
+          replayBar.style.left = `${curLeft}px`;
+          replayBar.style.top = `${curTop}px`;
+          replayBar.style.bottom = 'auto';
+          replayBar.style.transform = 'none';
+          rpReplayBarCustomPositioned = true;
+          rpReplayBarDragState = {
+            startX: clientX,
+            startY: clientY,
+            origLeft: curLeft,
+            origTop: curTop
+          };
+          replayBar.classList.add('rp-dragging');
+          if (rpChartInstance) {
+            rpChartInstance.applyOptions({ handleScroll: false, handleScale: false });
+          }
+        };
+
+        const moveBarDrag = (clientX, clientY) => {
+          if (!rpReplayBarDragState) return;
+          const wrapW = chartWrap.clientWidth;
+          const wrapH = chartWrap.clientHeight;
+          const barW = replayBar.offsetWidth;
+          const barH = replayBar.offsetHeight;
+          const maxLeft = Math.max(8, wrapW - barW - 8);
+          const maxTop = Math.max(8, wrapH - barH - 8);
+          const nextLeft = Math.max(8, Math.min(maxLeft, rpReplayBarDragState.origLeft + (clientX - rpReplayBarDragState.startX)));
+          const nextTop = Math.max(8, Math.min(maxTop, rpReplayBarDragState.origTop + (clientY - rpReplayBarDragState.startY)));
+          replayBar.style.left = `${nextLeft}px`;
+          replayBar.style.top = `${nextTop}px`;
+        };
+
+        replayBar.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
+          if (e.target && e.target.closest('button, select, option')) return;
+          e.preventDefault();
+          e.stopPropagation();
+          beginBarDrag(e.clientX, e.clientY);
+        });
+
+        replayBar.addEventListener('touchstart', (e) => {
+          if (e.target && e.target.closest('button, select, option')) return;
+          const touch = e.touches && e.touches[0];
+          if (!touch) return;
+          e.stopPropagation();
+          beginBarDrag(touch.clientX, touch.clientY);
+        }, { passive: true });
+
+        window.addEventListener('mousemove', (e) => {
+          if (rpReplayBarDragState) {
+            moveBarDrag(e.clientX, e.clientY);
+          }
+        });
+
+        window.addEventListener('touchmove', (e) => {
+          if (!rpReplayBarDragState) return;
+          const touch = e.touches && e.touches[0];
+          if (touch) moveBarDrag(touch.clientX, touch.clientY);
+        }, { passive: true });
+
+        window.addEventListener('mouseup', () => {
+          if (rpReplayBarDragState) stopRpReplayBarDrag();
+        });
+
+        window.addEventListener('touchend', () => {
+          if (rpReplayBarDragState) stopRpReplayBarDrag();
+        });
+      }
+
       if (chartWrap) {
         chartWrap.addEventListener('mousedown', (e) => {
           if (e.button !== 0) return;
-          if (e.target && e.target.closest('#rp-pos-tag')) return;
+          if (e.target && e.target.closest('#rp-pos-tag, #rp-replay-bar, #rp-fullscreen-btn')) return;
           if (rpIsPickingStart || !rpCandlestickSeries || !rpChartInstance) return;
           const activeItem = rpOpenTrade || rpPendingOrder;
           if (!activeItem) return;
@@ -8895,7 +9307,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         }, true);
 
         chartWrap.addEventListener('mousemove', (e) => {
-          if (rpDraggingLine || !rpCandlestickSeries || !rpChartInstance) return;
+          if (rpDraggingLine || rpReplayBarDragState || !rpCandlestickSeries || !rpChartInstance) return;
+          if (e.target && e.target.closest('#rp-replay-bar, #rp-fullscreen-btn, #rp-pos-tag')) {
+            chartWrap.style.cursor = '';
+            chartWrap.classList.remove('rp-line-hover');
+            return;
+          }
           const activeItem = rpOpenTrade || rpPendingOrder;
           if (!activeItem || rpIsPickingStart) {
             chartWrap.style.cursor = '';
