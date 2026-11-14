@@ -1340,6 +1340,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   .modal-content-panel { padding: 22px; max-height: 92vh; max-height: 92dvh; }
   .search-input-box { min-width: 0; width: 100%; }
 }
+.filter-input-search { flex: 1 1 200px; min-width: 0; }
 
 .detail-top-grid {
   display: grid;
@@ -3196,7 +3197,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   .rp-toolbar {
     gap: 10px;
   }
-  .rp-field-file {
+  .rp-toolbar .rp-field-file {
+    flex: 1 1 100%;
     width: 100%;
   }
   .rp-field {
@@ -3665,7 +3667,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   <div class="app-wrapper">
     <header class="app-header">
       <div class="header-left">
-        <button type="button" class="mobile-menu-toggle" id="mobileMenuBtn">
+        <button type="button" class="mobile-menu-toggle" id="mobileMenuBtn" aria-label="Menüyü Aç">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <line x1="3" y1="12" x2="21" y2="12"></line>
             <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -5421,14 +5423,18 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     /* -------------------------------------------------------------
        FIREBASE GERÇEK WEB YAPILANDIRMASI (TEK SEFERLİK BAŞLATMA)
        ------------------------------------------------------------- */
+    const metaEnv = (typeof import.meta !== 'undefined' && import.meta && import.meta.env) ? import.meta.env : {};
+    const fallbackWinCfg = (typeof window !== 'undefined' && window.__FIREBASE_CONFIG__ && typeof window.__FIREBASE_CONFIG__ === 'object')
+      ? window.__FIREBASE_CONFIG__
+      : {};
     const firebaseConfig = {
-      apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
-      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
-      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
-      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
-      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-      appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
-      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ""
+      apiKey: metaEnv.VITE_FIREBASE_API_KEY || fallbackWinCfg.apiKey || "",
+      authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || fallbackWinCfg.authDomain || "",
+      projectId: metaEnv.VITE_FIREBASE_PROJECT_ID || fallbackWinCfg.projectId || "",
+      storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || fallbackWinCfg.storageBucket || "",
+      messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || fallbackWinCfg.messagingSenderId || "",
+      appId: metaEnv.VITE_FIREBASE_APP_ID || fallbackWinCfg.appId || "",
+      measurementId: metaEnv.VITE_FIREBASE_MEASUREMENT_ID || fallbackWinCfg.measurementId || ""
     };
 
     let app = null;
@@ -6032,7 +6038,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     let rpPrefCloudSyncTimer = null;
 
     function readStoredRpChartSettingsObj() {
-      if (rpChartSettings && typeof rpChartSettings === 'object') return rpChartSettings;
+      if (typeof rpChartSettings !== 'undefined' && rpChartSettings && typeof rpChartSettings === 'object') return rpChartSettings;
       try {
         const raw = localStorage.getItem(RP_CHART_SETTINGS_KEY);
         if (!raw) return null;
@@ -6071,7 +6077,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     async function syncPreferencesToCloudNow() {
-      if (!AppState.user) return false;
+      if (!db || !AppState.user) return false;
       if (rpPrefCloudSyncTimer !== null) {
         clearTimeout(rpPrefCloudSyncTimer);
         rpPrefCloudSyncTimer = null;
@@ -6463,7 +6469,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       try {
         await signInWithPopup(auth, provider);
       } catch (err) {
-        if (err && err.code === 'auth/popup-blocked') {
+        if (err && (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment')) {
           try {
             await signInWithRedirect(auth, provider);
             return;
@@ -6509,7 +6515,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     let isFlushingPendingSync = false;
 
     async function flushPendingCloudWrites(uid) {
-      if (!uid || !AppState.user || AppState.user.uid !== uid || isFlushingPendingSync) return;
+      if (!db || !uid || !AppState.user || AppState.user.uid !== uid || isFlushingPendingSync) return;
       isFlushingPendingSync = true;
       try {
         const pendingTradeUpserts = readPendingIdMap(PENDING_SYNC_KEYS.tradesUpsert);
@@ -6596,6 +6602,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     });
 
     function bindFirestoreSync(uid) {
+      if (!db || !uid) return;
       if (AppState.unsubTrades) { AppState.unsubTrades(); AppState.unsubTrades = null; }
       if (AppState.unsubBacktestTrades) { AppState.unsubBacktestTrades(); AppState.unsubBacktestTrades = null; }
       if (AppState.unsubFavorites) { AppState.unsubFavorites(); AppState.unsubFavorites = null; }
@@ -6878,6 +6885,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     document.getElementById('confirmMigrationBtn').addEventListener('click', async () => {
       document.getElementById('migrationModal').classList.remove('active');
+      if (!db || !AppState.user) return;
       showToast('Veriler Google hesabınıza aktarılıyor...', 'info');
       setSyncState('syncing', 'Aktarım Yapılıyor...');
 
@@ -7121,7 +7129,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       checkCurrentPairFavStatus();
       renderFavoritePills();
 
-      if (AppState.user) {
+      if (AppState.user && db) {
         await setDoc(doc(db, 'users', AppState.user.uid, 'settings', 'favorites'), {
           list: AppState.favorites
         }, { merge: true });
@@ -7170,7 +7178,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     window.removeFavoritePair = async function(pair) {
       AppState.favorites = AppState.favorites.filter(x => x !== pair);
       renderFavoritePills();
-      if (AppState.user) {
+      if (AppState.user && db) {
         await setDoc(doc(db, 'users', AppState.user.uid, 'settings', 'favorites'), {
           list: AppState.favorites
         }, { merge: true });
@@ -7611,10 +7619,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
     }
 
+    let chartJsErrorNotified = false;
     function renderCharts() {
-      if (typeof Chart !== 'undefined') {
-        Chart.defaults.animation = false;
+      if (typeof Chart === 'undefined') {
+        if (!chartJsErrorNotified) {
+          chartJsErrorNotified = true;
+          showToast('Grafik kütüphanesi (Chart.js) yüklenemedi.', 'error');
+        }
+        return;
       }
+      Chart.defaults.animation = false;
       const sorted = [...AppState.trades]
         .filter(t => t.result !== 'Open')
         .sort((a, b) => new Date(a.datetime) - new Date(b.datetime));
