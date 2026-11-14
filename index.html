@@ -1135,10 +1135,19 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 .strategy-header { display: flex; justify-content: space-between; align-items: flex-start; }
 .strategy-name { font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 6px; }
 .strategy-tf { display: inline-block; font-size: 0.72rem; padding: 3px 10px; border-radius: 999px; background: rgba(103, 124, 235, 0.25); color: var(--text-secondary); border: 1px solid rgba(103, 124, 235, 0.4); font-weight: 700; }
-.strategy-metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px; background: var(--glass-inset); border-radius: var(--radius-sm); border: 1px solid var(--glass-border-subtle); box-shadow: var(--neu-shadow-inset); }
+.strategy-metrics-group { display: flex; flex-direction: column; gap: 10px; }
+.strategy-metrics-block { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; background: var(--glass-inset); border-radius: var(--radius-sm); border: 1px solid var(--glass-border-subtle); box-shadow: var(--neu-shadow-inset); }
+.strategy-account-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.strategy-account-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; border: 1px solid transparent; }
+.strategy-account-badge.main { background: rgba(85, 229, 177, 0.14); color: var(--color-neon-green); border-color: rgba(85, 229, 177, 0.34); }
+.strategy-account-badge.backtest { background: rgba(34, 211, 238, 0.14); color: var(--color-neon-cyan); border-color: rgba(34, 211, 238, 0.34); }
+.strategy-account-sub { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; font-variant-numeric: tabular-nums; }
+.strategy-metrics-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .strat-metric { display: flex; flex-direction: column; gap: 2px; }
 .strat-metric-label { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
 .strat-metric-val { font-size: 0.95rem; font-weight: 800; color: var(--text-main); font-variant-numeric: tabular-nums; }
+:root[data-theme="light"] .strategy-account-badge.main { background: rgba(5, 150, 105, 0.12); border-color: rgba(5, 150, 105, 0.3); }
+:root[data-theme="light"] .strategy-account-badge.backtest { background: rgba(2, 132, 199, 0.12); border-color: rgba(2, 132, 199, 0.3); }
 
 /* ---------------------------------------------------------------------
    17. GALERİ
@@ -1623,6 +1632,65 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
 :root[data-theme="light"] .rp-chart-wrap.rp-fullscreen-fallback {
   background: #F1F5F9;
+}
+
+.rp-fs-topbar {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  z-index: 9;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  max-width: calc(100% - 28px);
+  border-radius: 999px;
+  background: rgba(11, 18, 40, 0.84);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.36);
+  user-select: none;
+}
+
+.rp-chart-wrap:fullscreen .rp-fs-topbar,
+.rp-chart-wrap:-webkit-full-screen .rp-fs-topbar,
+.rp-chart-wrap.rp-is-fullscreen .rp-fs-topbar {
+  display: inline-flex;
+}
+
+:root[data-theme="light"] .rp-fs-topbar {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--glass-border);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.14);
+}
+
+.rp-fs-pair-badge {
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text-main);
+  padding-right: 8px;
+  border-right: 1px solid var(--glass-border);
+  white-space: nowrap;
+}
+
+.rp-fs-tf-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.rp-fs-tf-select {
+  height: 26px;
+  width: auto;
+  min-width: 68px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
 }
 
 .rp-chart-wrap.rp-picking {
@@ -3192,6 +3260,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     flex-direction: column-reverse;
     align-items: stretch;
   }
+  .rp-fs-topbar {
+    top: 10px;
+    left: 10px;
+    padding: 4px 8px;
+    gap: 6px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .rp-chart-wrap.rp-is-fullscreen .rp-replay-bar:not(.rp-custom-pos) {
+    top: 52px;
+  }
   .rp-replay-bar {
     top: 10px;
     bottom: auto;
@@ -3327,11 +3406,78 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   line-height: 1.55;
   margin-bottom: 18px;
 }
+.account-setup-lead.warning {
+  color: var(--text-primary);
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+[data-theme="light"] .account-setup-lead.warning {
+  background: rgba(244, 63, 94, 0.08);
+  border-color: rgba(225, 29, 72, 0.32);
+}
 .account-setup-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 8px;
+}
+.pnl-mismatch-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pnl-mismatch-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.pnl-mismatch-stat-box {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+[data-theme="light"] .pnl-mismatch-stat-box {
+  background: rgba(15, 23, 42, 0.04);
+}
+.pnl-mismatch-stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.pnl-mismatch-stat-val {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.pnl-mismatch-stat-val.warn {
+  color: #fb7185;
+}
+.pnl-mismatch-stat-val.pos {
+  color: var(--color-neon-green);
+}
+.pnl-mismatch-stat-val.neg {
+  color: #fb7185;
+}
+.pnl-mismatch-hint {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin-top: 4px;
+}
+.pnl-mismatch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
 }
   </style>
 </head>
@@ -3742,7 +3888,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           <div class="glass-surface form-card">
             <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 20px;" id="journalFormHeading">Yeni İşlem Kaydı</h3>
             
-            <form id="tradeForm" class="form-grid-layout">
+            <form id="tradeForm" class="form-grid-layout" novalidate>
               <div class="upload-box" id="tradeDropzone">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -3770,7 +3916,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="f-direction">Yön</label>
-                    <select id="f-direction" class="input-glass">
+                    <select id="f-direction" class="input-glass" required>
                       <option value="Long">Long (Alış)</option>
                       <option value="Short">Short (Satış)</option>
                     </select>
@@ -3784,18 +3930,23 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 <div class="form-row">
                   <div class="form-group">
                     <label class="form-label" for="f-timeframe">Timeframe</label>
-                    <select id="f-timeframe" class="input-glass">
+                    <select id="f-timeframe" class="input-glass" required>
                       <option value="M1">M1</option>
+                      <option value="M3">M3</option>
                       <option value="M5">M5</option>
                       <option value="M15" selected>M15</option>
+                      <option value="M30">M30</option>
                       <option value="H1">H1</option>
+                      <option value="H2">H2</option>
                       <option value="H4">H4</option>
                       <option value="D1">D1</option>
+                      <option value="W1">W1</option>
+                      <option value="MN1">MN1</option>
                     </select>
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="f-session">Seans</label>
-                    <select id="f-session" class="input-glass">
+                    <select id="f-session" class="input-glass" required>
                       <option value="London">London</option>
                       <option value="New York" selected>New York</option>
                       <option value="Asia">Asia</option>
@@ -3804,7 +3955,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="f-strategy">Strateji / Setup</label>
-                    <select id="f-strategy" class="input-glass">
+                    <select id="f-strategy" class="input-glass" required>
                       <option value="Varsayılan Setup">Varsayılan Setup</option>
                     </select>
                   </div>
@@ -3813,22 +3964,22 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 <div class="form-row">
                   <div class="form-group">
                     <label class="form-label" for="f-entry">Entry Price</label>
-                    <input type="number" step="any" id="f-entry" class="input-glass" placeholder="1.08500">
+                    <input type="number" step="any" id="f-entry" class="input-glass" placeholder="1.08500" required>
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="f-exit">Exit Price</label>
-                    <input type="number" step="any" id="f-exit" class="input-glass" placeholder="1.09200">
+                    <input type="number" step="any" id="f-exit" class="input-glass" placeholder="1.09200" required>
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="f-sl">Stop Loss</label>
-                    <input type="number" step="any" id="f-sl" class="input-glass" placeholder="1.08200">
+                    <input type="number" step="any" id="f-sl" class="input-glass" placeholder="1.08200" required>
                   </div>
                 </div>
 
                 <div class="form-row">
                   <div class="form-group">
                     <label class="form-label" for="f-risk">Risk (%)</label>
-                    <input type="number" step="any" id="f-risk" class="input-glass" value="1.0">
+                    <input type="number" step="any" id="f-risk" class="input-glass" value="1.0" required>
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="f-pnl">Gerçekleşen P/L ($)</label>
@@ -3836,7 +3987,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="f-result">Sonuç</label>
-                    <select id="f-result" class="input-glass">
+                    <select id="f-result" class="input-glass" required>
                       <option value="Win">Win (Kazanıldı)</option>
                       <option value="Loss">Loss (Kaybedildi)</option>
                       <option value="BE">Breakeven (Başabaş)</option>
@@ -4140,7 +4291,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               <h3 style="font-size: 1.15rem; font-weight: 800;" id="backtestFormHeading">Yeni Backtest İşlemi</h3>
             </div>
             
-            <form id="backtestTradeForm" class="form-grid-layout">
+            <form id="backtestTradeForm" class="form-grid-layout" novalidate>
               <div class="upload-box" id="backtestDropzone">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -4168,7 +4319,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="bt-direction">İşlem Yönü</label>
-                    <select id="bt-direction" class="input-glass">
+                    <select id="bt-direction" class="input-glass" required>
                       <option value="Long">Long (Alış)</option>
                       <option value="Short">Short (Satış)</option>
                     </select>
@@ -4182,13 +4333,18 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="bt-timeframe">Zaman Dilimi</label>
-                    <select id="bt-timeframe" class="input-glass">
+                    <select id="bt-timeframe" class="input-glass" required>
                       <option value="M1">1 Dakika (M1)</option>
+                      <option value="M3">3 Dakika (M3)</option>
                       <option value="M5">5 Dakika (M5)</option>
                       <option value="M15" selected>15 Dakika (M15)</option>
+                      <option value="M30">30 Dakika (M30)</option>
                       <option value="H1">1 Saat (H1)</option>
+                      <option value="H2">2 Saat (H2)</option>
                       <option value="H4">4 Saat (H4)</option>
                       <option value="D1">Günlük (D1)</option>
+                      <option value="W1">Haftalık (W1)</option>
+                      <option value="MN1">Aylık (MN1)</option>
                     </select>
                   </div>
                 </div>
@@ -4196,7 +4352,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 <div class="form-row">
                   <div class="form-group">
                     <label class="form-label" for="bt-session">Piyasa Seansı</label>
-                    <select id="bt-session" class="input-glass">
+                    <select id="bt-session" class="input-glass" required>
                       <option value="London">Londra (London)</option>
                       <option value="New York" selected>New York</option>
                       <option value="Asia">Asya (Asia)</option>
@@ -4205,7 +4361,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="bt-strategy">Strateji / Model</label>
-                    <select id="bt-strategy" class="input-glass">
+                    <select id="bt-strategy" class="input-glass" required>
                       <option value="Varsayılan Setup">Varsayılan Setup</option>
                     </select>
                   </div>
@@ -4214,30 +4370,30 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 <div class="form-row three-col">
                   <div class="form-group">
                     <label class="form-label" for="bt-entry">Giriş Fiyatı</label>
-                    <input type="number" step="any" id="bt-entry" class="input-glass" placeholder="0.00000">
+                    <input type="number" step="any" id="bt-entry" class="input-glass" placeholder="0.00000" required>
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="bt-exit">Çıkış Fiyatı</label>
-                    <input type="number" step="any" id="bt-exit" class="input-glass" placeholder="0.00000">
+                    <input type="number" step="any" id="bt-exit" class="input-glass" placeholder="0.00000" required>
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="bt-sl">Stop Loss</label>
-                    <input type="number" step="any" id="bt-sl" class="input-glass" placeholder="0.00000">
+                    <input type="number" step="any" id="bt-sl" class="input-glass" placeholder="0.00000" required>
                   </div>
                 </div>
 
                 <div class="form-row three-col">
                   <div class="form-group">
                     <label class="form-label" for="bt-risk">Risk (%)</label>
-                    <input type="number" step="0.1" id="bt-risk" class="input-glass" value="1.0">
+                    <input type="number" step="any" id="bt-risk" class="input-glass" value="1.0" required>
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="bt-pnl">Kâr / Zarar ($)</label>
-                    <input type="number" step="any" id="bt-pnl" class="input-glass" value="0" required>
+                    <input type="number" step="any" id="bt-pnl" class="input-glass" placeholder="Örn: 350 veya -150" required>
                   </div>
                   <div class="form-group">
                     <label class="form-label" for="bt-result">Sonuç</label>
-                    <select id="bt-result" class="input-glass">
+                    <select id="bt-result" class="input-glass" required>
                       <option value="Win">Win (Kazan)</option>
                       <option value="Loss">Loss (Kayıp)</option>
                       <option value="BE">BE (Başa Baş)</option>
@@ -4381,6 +4537,24 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 <span class="rp-live-pnl" id="rp-live-pnl">0.00 USD</span>
                 <button type="button" class="rp-overlay-x-btn" id="rp-overlay-x-btn" title="Kapat / İptal">✕</button>
               </div>
+            </div>
+
+            <div class="rp-fs-topbar" id="rp-fs-topbar">
+              <span class="rp-fs-pair-badge" id="rp-fs-pair-badge">CHART</span>
+              <label class="rp-fs-tf-label" for="rp-fs-tf-select">TF</label>
+              <select id="rp-fs-tf-select" class="rp-select rp-fs-tf-select" aria-label="Tam Ekran Zaman Dilimi">
+                <option value="M1">M1</option>
+                <option value="M3">M3</option>
+                <option value="M5">M5</option>
+                <option value="M15" selected>M15</option>
+                <option value="M30">M30</option>
+                <option value="H1">H1</option>
+                <option value="H2">H2</option>
+                <option value="H4">H4</option>
+                <option value="D1">D1</option>
+                <option value="W1">W1</option>
+                <option value="MN1">MN1</option>
+              </select>
             </div>
 
             <div class="rp-replay-bar" id="rp-replay-bar">
@@ -4850,11 +5024,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 <label class="form-label" for="settingDefaultTimeframe">Varsayılan Timeframe</label>
                 <select id="settingDefaultTimeframe" class="input-glass">
                   <option value="M1">M1</option>
+                  <option value="M3">M3</option>
                   <option value="M5">M5</option>
                   <option value="M15" selected>M15</option>
+                  <option value="M30">M30</option>
                   <option value="H1">H1</option>
+                  <option value="H2">H2</option>
                   <option value="H4">H4</option>
                   <option value="D1">D1</option>
+                  <option value="W1">W1</option>
+                  <option value="MN1">MN1</option>
                 </select>
               </div>
               <div class="form-group">
@@ -5039,8 +5218,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
         </svg>
       </div>
-      <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 8px;">İşlemi Sil</h3>
-      <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 22px;">
+      <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 8px;" id="deleteConfirmModalTitle">İşlemi Sil</h3>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 22px;" id="deleteConfirmModalDesc">
         Bu işlem kaydını ve bağlı görselleri silmek istediğinize emin misiniz?
       </p>
       <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
@@ -5057,10 +5236,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   <div class="modal-backdrop" id="accountSetupModalBackdrop">
     <div class="glass-surface modal-content-panel account-setup-panel">
       <div class="modal-header">
-        <h3 style="font-size: 1.15rem; font-weight: 800;">Hesap Büyüklüklerini Ayarla</h3>
+        <h3 id="accountSetupModalTitle" style="font-size: 1.15rem; font-weight: 800;">Hesap Büyüklüklerini Ayarla</h3>
         <button type="button" class="modal-close-btn" id="closeAccountSetupModalBtn">&times;</button>
       </div>
-      <p class="account-setup-lead">
+      <p class="account-setup-lead" id="accountSetupLeadText">
         İşlem Günlüğü ve Backtest formlarında seçtiğiniz risk yüzdesine göre otomatik kâr/zarar ve R:R hesaplanabilmesi için hesap büyüklüklerinizi girin. Bu değerleri dilediğiniz zaman Ayarlar bölümünden değiştirebilirsiniz.
       </p>
       <form id="accountSetupForm" style="display: flex; flex-direction: column; gap: 14px;">
@@ -5070,13 +5249,36 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         </div>
         <div class="form-group">
           <label class="form-label" for="setupBacktestBalance">Backtest Hesap Büyüklüğü ($)</label>
-          <input type="number" step="any" min="0.01" id="setupBacktestBalance" class="input-glass" placeholder="Örn: 50000" required>
+          <input type="number" step="any" id="setupBacktestBalance" min="0.01" class="input-glass" placeholder="Örn: 50000" required>
         </div>
         <div class="account-setup-actions">
           <button type="button" class="btn-primary" id="skipAccountSetupBtn" style="background: rgba(255,255,255,0.08);">Daha Sonra</button>
           <button type="submit" class="btn-primary neon-green" id="saveAccountSetupBtn">Hesapları Kaydet</button>
         </div>
       </form>
+      <div id="pnlMismatchPanel" class="pnl-mismatch-panel" style="display: none;">
+        <p class="account-setup-lead warning" id="pnlMismatchLeadText"></p>
+        <div class="pnl-mismatch-stats">
+          <div class="pnl-mismatch-stat-box">
+            <span class="pnl-mismatch-stat-label">Girilen Kâr / Zarar</span>
+            <span class="pnl-mismatch-stat-val warn" id="mismatchEnteredPnlVal">$0.00</span>
+          </div>
+          <div class="pnl-mismatch-stat-box">
+            <span class="pnl-mismatch-stat-label" id="mismatchExpectedLabel">Hesaba Göre Beklenen</span>
+            <span class="pnl-mismatch-stat-val pos" id="mismatchExpectedPnlVal">$0.00</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="mismatchPnlInput">Kâr / Zarar ($) Değiştir</label>
+          <input type="number" step="any" id="mismatchPnlInput" class="input-glass" placeholder="Örn: 600 veya -100">
+          <p class="pnl-mismatch-hint">Yukarıdaki tutarı değiştirip "Elle Düzelt"e basarsanız yeni tutarla kaydedilir; değiştirmeden "Elle Düzelt"e basarsanız formdaki Kâr/Zarar alanına dönersiniz.</p>
+        </div>
+        <div class="pnl-mismatch-actions">
+          <button type="button" class="btn-primary" id="mismatchCancelBtn" style="background: rgba(255,255,255,0.08);">Daha Sonra</button>
+          <button type="button" class="btn-primary" id="mismatchManualBtn" style="background: rgba(56, 189, 248, 0.16); border-color: rgba(56, 189, 248, 0.45);">Elle Düzelt</button>
+          <button type="button" class="btn-primary neon-green" id="mismatchAutoFixBtn">Otomatik Düzelt</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -5220,22 +5422,34 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
        FIREBASE GERÇEK WEB YAPILANDIRMASI (TEK SEFERLİK BAŞLATMA)
        ------------------------------------------------------------- */
     const firebaseConfig = {
-      apiKey: "AIzaSyB13wDsbCVsexplGSXMwLY3CmwZJq7g-SY",
-      authDomain: "trade-d981b.firebaseapp.com",
-      projectId: "trade-d981b",
-      storageBucket: "trade-d981b.firebasestorage.app",
-      messagingSenderId: "725558486984",
-      appId: "1:725558486984:web:3cfeb27abb19638fec42fd",
-      measurementId: "G-Z9CVXFDTNK"
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+      appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
+      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ""
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    let app = null;
+    let auth = null;
+    let db = null;
 
-    isSupported().then(yes => {
-      if (yes) getAnalytics(app);
-    }).catch(() => {});
+    if (firebaseConfig.apiKey && firebaseConfig.projectId) {
+      try {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        isSupported().then(yes => {
+          if (yes) getAnalytics(app);
+        }).catch(() => {});
+      } catch (err) {
+        console.warn('Firebase başlatılamadı, çevrimdışı mod aktif:', err);
+        app = null;
+        auth = null;
+        db = null;
+      }
+    }
 
     /* -------------------------------------------------------------
        UYGULAMA DURUMU (APP STATE) & SABİTLER
@@ -5540,6 +5754,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
         applyTheme(AppState.settings.theme);
         syncSettingsToInputs();
+        if (typeof loadRpTradePrefs === 'function') {
+          loadRpTradePrefs();
+        }
         if (typeof seedRpBalanceFromBacktestIfUnset === 'function') {
           seedRpBalanceFromBacktestIfUnset();
         }
@@ -5811,7 +6028,107 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
     }
 
+    let localPrefSaveSeq = 0;
+    let rpPrefCloudSyncTimer = null;
+
+    function readStoredRpChartSettingsObj() {
+      if (rpChartSettings && typeof rpChartSettings === 'object') return rpChartSettings;
+      try {
+        const raw = localStorage.getItem(RP_CHART_SETTINGS_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return (parsed && typeof parsed === 'object') ? parsed : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function readStoredRpTradePrefsObj() {
+      try {
+        const raw = localStorage.getItem(RP_TRADE_PREFS_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return (parsed && typeof parsed === 'object') ? parsed : null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function buildUnifiedPreferencesPayload() {
+      const storedChartSett = readStoredRpChartSettingsObj();
+      const storedTradePrefs = readStoredRpTradePrefsObj();
+      const payload = {
+        ...AppState.settings,
+        updatedAt: AppState.settings.updatedAt || new Date().toISOString()
+      };
+      if (storedChartSett) {
+        payload.rpChartSettings = storedChartSett;
+      }
+      if (storedTradePrefs) {
+        payload.rpTradePrefs = storedTradePrefs;
+      }
+      return cleanForFirestore(payload);
+    }
+
+    async function syncPreferencesToCloudNow() {
+      if (!AppState.user) return false;
+      if (rpPrefCloudSyncTimer !== null) {
+        clearTimeout(rpPrefCloudSyncTimer);
+        rpPrefCloudSyncTimer = null;
+      }
+      const seqAtSend = localPrefSaveSeq;
+      const uid = AppState.user.uid;
+      try {
+        localStorage.setItem(PENDING_SYNC_KEYS.settingsPending, 'true');
+        const payload = buildUnifiedPreferencesPayload();
+        await setDoc(doc(db, 'users', uid, 'settings', 'preferences'), payload, { merge: true });
+        if (seqAtSend === localPrefSaveSeq) {
+          localStorage.removeItem(PENDING_SYNC_KEYS.settingsPending);
+        }
+        return true;
+      } catch (err) {
+        console.warn('Tercihler bulut kayıt hatası:', err);
+        return false;
+      }
+    }
+
+    function schedulePreferencesCloudSync(delayMs = 280) {
+      localPrefSaveSeq++;
+      try {
+        localStorage.setItem(PENDING_SYNC_KEYS.settingsPending, 'true');
+      } catch (_) {}
+      if (!AppState.user) return;
+      if (rpPrefCloudSyncTimer !== null) {
+        clearTimeout(rpPrefCloudSyncTimer);
+      }
+      rpPrefCloudSyncTimer = setTimeout(() => {
+        rpPrefCloudSyncTimer = null;
+        syncPreferencesToCloudNow();
+      }, delayMs);
+    }
+
+    function flushPreferencesCloudSyncNow() {
+      if (rpPrefCloudSyncTimer !== null) {
+        clearTimeout(rpPrefCloudSyncTimer);
+        rpPrefCloudSyncTimer = null;
+      }
+      if (AppState.user && localStorage.getItem(PENDING_SYNC_KEYS.settingsPending) === 'true') {
+        syncPreferencesToCloudNow();
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        flushPreferencesCloudSyncNow();
+      }
+    });
+    window.addEventListener('beforeunload', flushPreferencesCloudSyncNow);
+
     function saveSettingsState(syncCloud = true) {
+      if (syncCloud) {
+        AppState.settings.updatedAt = new Date().toISOString();
+        localPrefSaveSeq++;
+      }
       try {
         localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(AppState.settings));
       } catch (err) {
@@ -5819,18 +6136,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
       if (syncCloud) {
         if (AppState.user) {
-          localStorage.setItem(PENDING_SYNC_KEYS.settingsPending, 'true');
-          const cleanPref = cleanForFirestore({
-            ...AppState.settings,
-            updatedAt: new Date().toISOString()
-          });
-          setDoc(doc(db, 'users', AppState.user.uid, 'settings', 'preferences'), cleanPref, { merge: true })
-            .then(() => {
-              localStorage.removeItem(PENDING_SYNC_KEYS.settingsPending);
-            })
-            .catch((err) => {
-              console.warn('Tercihler bulut kayıt hatası:', err);
-            });
+          syncPreferencesToCloudNow();
         } else {
           localStorage.setItem(PENDING_SYNC_KEYS.settingsPending, 'true');
         }
@@ -5844,20 +6150,203 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       updateBacktestModules();
     }
 
+    const DEFAULT_ACCOUNT_SETUP_LEAD = 'İşlem Günlüğü ve Backtest formlarında seçtiğiniz risk yüzdesine göre otomatik kâr/zarar ve R:R hesaplanabilmesi için hesap büyüklüklerinizi girin. Bu değerleri dilediğiniz zaman Ayarlar bölümünden değiştirebilirsiniz.';
+    let pendingAccountSetupContext = null;
+    let pendingMismatchState = null;
+    let bypassPnlValidationContext = null;
+
+    function formatModalMoney(val) {
+      const curr = AppState.settings.currency || '$';
+      const num = Number(val) || 0;
+      const absStr = Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return `${num < 0 ? '-' : ''}${curr}${absStr}`;
+    }
+
+    function setAccountModalMode(mode) {
+      const titleEl = document.getElementById('accountSetupModalTitle');
+      const leadEl = document.getElementById('accountSetupLeadText');
+      const setupFormEl = document.getElementById('accountSetupForm');
+      const mismatchPanelEl = document.getElementById('pnlMismatchPanel');
+      if (mode === 'mismatch') {
+        if (titleEl) titleEl.textContent = 'Kâr / Zarar Hesaba Göre Uyumsuz';
+        if (leadEl) leadEl.style.display = 'none';
+        if (setupFormEl) setupFormEl.style.display = 'none';
+        if (mismatchPanelEl) mismatchPanelEl.style.display = 'flex';
+      } else {
+        if (titleEl) titleEl.textContent = 'Hesap Büyüklüklerini Ayarla';
+        if (leadEl) leadEl.style.display = '';
+        if (setupFormEl) setupFormEl.style.display = 'flex';
+        if (mismatchPanelEl) mismatchPanelEl.style.display = 'none';
+      }
+    }
+
+    function openAccountSetupModal(options = {}) {
+      const backdrop = document.getElementById('accountSetupModalBackdrop');
+      const mainInput = document.getElementById('setupMainBalance');
+      const btInput = document.getElementById('setupBacktestBalance');
+      const leadEl = document.getElementById('accountSetupLeadText');
+      if (!backdrop || !mainInput || !btInput) return;
+
+      pendingMismatchState = null;
+      setAccountModalMode('setup');
+
+      const mainBal = parsePositiveBalance(AppState.settings.mainAccountBalance);
+      const btBal = parsePositiveBalance(AppState.settings.backtestAccountBalance);
+      mainInput.value = mainBal ? String(mainBal) : '';
+      btInput.value = btBal ? String(btBal) : '';
+
+      if (leadEl) {
+        if (options.leadText) {
+          leadEl.textContent = options.leadText;
+          leadEl.classList.toggle('warning', Boolean(options.isWarning));
+        } else {
+          leadEl.textContent = DEFAULT_ACCOUNT_SETUP_LEAD;
+          leadEl.classList.remove('warning');
+        }
+      }
+
+      pendingAccountSetupContext = options.context || null;
+      backdrop.classList.add('active');
+
+      setTimeout(() => {
+        if (options.context === 'backtest' && !btBal) {
+          btInput.focus();
+        } else if (!mainBal) {
+          mainInput.focus();
+        } else if (!btBal) {
+          btInput.focus();
+        }
+      }, 60);
+    }
+
+    function openPnlMismatchModal(info) {
+      const backdrop = document.getElementById('accountSetupModalBackdrop');
+      const leadEl = document.getElementById('pnlMismatchLeadText');
+      const enteredEl = document.getElementById('mismatchEnteredPnlVal');
+      const expectedLblEl = document.getElementById('mismatchExpectedLabel');
+      const expectedEl = document.getElementById('mismatchExpectedPnlVal');
+      const inputEl = document.getElementById('mismatchPnlInput');
+      if (!backdrop || !leadEl || !enteredEl || !expectedEl || !inputEl) return;
+
+      pendingAccountSetupContext = null;
+      pendingMismatchState = info;
+      setAccountModalMode('mismatch');
+
+      const accountName = info.context === 'backtest' ? 'Backtest Hesap' : 'Ana Hesap';
+      const rSign = info.priceR > 0 ? '+' : '';
+      const rText = `${rSign}${info.priceR.toFixed(2)} R`;
+      const balText = formatModalMoney(info.balance);
+      const enteredText = formatModalMoney(info.enteredPnl);
+      const expectedText = `${info.expectedPnl > 0 ? '+' : ''}${formatModalMoney(info.expectedPnl)}`;
+
+      leadEl.textContent = `${accountName} büyüklüğünüze (${balText}), %${info.riskPct} risk oranına ve fiyatların verdiği ${rText} sonucuna göre Kâr / Zarar tutarını yanlış girdiniz. Hesaba göre olması gereken tutar ${expectedText} olmalıdır; aşağıdan değiştirebilir veya otomatik düzeltebilirsiniz.`;
+      enteredEl.textContent = enteredText;
+      if (expectedLblEl) expectedLblEl.textContent = `Hesaba Göre (${rText})`;
+      expectedEl.textContent = expectedText;
+      expectedEl.className = `pnl-mismatch-stat-val ${info.expectedPnl > 0 ? 'pos' : info.expectedPnl < 0 ? 'neg' : ''}`;
+      inputEl.value = String(info.enteredPnl);
+
+      backdrop.classList.add('active');
+      setTimeout(() => {
+        inputEl.focus();
+        inputEl.select();
+      }, 60);
+    }
+
+    function closeAccountSetupModal(dismissed = false) {
+      const backdrop = document.getElementById('accountSetupModalBackdrop');
+      const leadEl = document.getElementById('accountSetupLeadText');
+      backdrop?.classList.remove('active');
+      setAccountModalMode('setup');
+      if (leadEl) {
+        leadEl.textContent = DEFAULT_ACCOUNT_SETUP_LEAD;
+        leadEl.classList.remove('warning');
+      }
+      const prevContext = pendingAccountSetupContext;
+      const prevMismatch = pendingMismatchState;
+      pendingAccountSetupContext = null;
+      pendingMismatchState = null;
+      if (dismissed) {
+        if (prevMismatch) {
+          showToast('Kâr / Zarar uyuşmazlığı düzeltilmediği için işlem kaydedilmedi.', 'error');
+        } else if (prevContext) {
+          showToast('Hesap büyüklüğü girilmeden işlem kaydedilemez. İstediğiniz zaman hesap büyüklüğünü girip tekrar deneyebilirsiniz.', 'error');
+        }
+      }
+    }
+
+    function ensureAccountBalanceForTradeSave(context) {
+      const isBacktest = context === 'backtest';
+      const balanceVal = parsePositiveBalance(
+        isBacktest ? AppState.settings.backtestAccountBalance : AppState.settings.mainAccountBalance
+      );
+      if (balanceVal) return true;
+
+      const accountName = isBacktest ? 'Backtest Hesap' : 'Ana Hesap';
+      openAccountSetupModal({
+        context,
+        isWarning: true,
+        leadText: `İşlem kaydedebilmek için ${accountName} büyüklüğünüzü girmeniz zorunludur. İsterseniz "Daha Sonra" seçeneğiyle kapatabilirsiniz; ancak hesap büyüklüğü girilmeden işleminiz kaydedilmeyecektir.`
+      });
+      showToast(`İşlem kaydedebilmek için önce ${accountName.toLowerCase()} büyüklüğünü girmelisiniz.`, 'error');
+      return false;
+    }
+
+    function verifyTradePnlConsistency(context) {
+      if (bypassPnlValidationContext === context) {
+        bypassPnlValidationContext = null;
+        return true;
+      }
+      const isBacktest = context === 'backtest';
+      const prefix = isBacktest ? 'bt-' : 'f-';
+      const calcCtrl = isBacktest
+        ? (typeof backtestCalcCtrl !== 'undefined' ? backtestCalcCtrl : null)
+        : (typeof journalCalcCtrl !== 'undefined' ? journalCalcCtrl : null);
+      if (calcCtrl && typeof calcCtrl.isPreservedChartSource === 'function' && calcCtrl.isPreservedChartSource()) {
+        return true;
+      }
+
+      const balance = parsePositiveBalance(
+        isBacktest ? AppState.settings.backtestAccountBalance : AppState.settings.mainAccountBalance
+      );
+      const entry = parseOptionalNumber(document.getElementById(`${prefix}entry`)?.value);
+      const exit = parseOptionalNumber(document.getElementById(`${prefix}exit`)?.value);
+      const sl = parseOptionalNumber(document.getElementById(`${prefix}sl`)?.value);
+      const dir = document.getElementById(`${prefix}direction`)?.value || 'Long';
+      const riskPct = parsePositiveBalance(document.getElementById(`${prefix}risk`)?.value);
+      const rawPnl = parseOptionalNumber(document.getElementById(`${prefix}pnl`)?.value);
+      const result = document.getElementById(`${prefix}result`)?.value || 'Win';
+
+      if (!balance || !riskPct || rawPnl === null) return true;
+      const priceR = computeRealizedRFromPrices(entry, exit, sl, dir);
+      if (priceR === null || !Number.isFinite(priceR)) return true;
+
+      let effectivePnl = rawPnl;
+      if (result === 'Loss') effectivePnl = -Math.abs(effectivePnl);
+      else if (result === 'Win') effectivePnl = Math.abs(effectivePnl);
+      else if (result === 'BE') effectivePnl = 0;
+
+      const expectedPnl = Number((balance * (riskPct / 100) * priceR).toFixed(2));
+      const tolerance = Math.max(0.5, Math.abs(expectedPnl) * 0.005);
+      if (Math.abs(effectivePnl - expectedPnl) <= tolerance) return true;
+
+      openPnlMismatchModal({
+        context,
+        balance,
+        riskPct,
+        priceR,
+        enteredPnl: Number(effectivePnl.toFixed(2)),
+        expectedPnl
+      });
+      return false;
+    }
+
     function checkAccountSetupPrompt() {
       if (!AppState.user) return;
       const mainBal = parsePositiveBalance(AppState.settings.mainAccountBalance);
       const btBal = parsePositiveBalance(AppState.settings.backtestAccountBalance);
       if (mainBal && btBal) return;
-
-      const backdrop = document.getElementById('accountSetupModalBackdrop');
-      const mainInput = document.getElementById('setupMainBalance');
-      const btInput = document.getElementById('setupBacktestBalance');
-      if (!backdrop || !mainInput || !btInput) return;
-
-      mainInput.value = mainBal ? String(mainBal) : '';
-      btInput.value = btBal ? String(btBal) : '';
-      backdrop.classList.add('active');
+      openAccountSetupModal();
     }
 
     function applyTheme(theme) {
@@ -5897,64 +6386,72 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     const menuUserName = document.getElementById('menuUserName');
     const menuUserEmail = document.getElementById('menuUserEmail');
 
-    getRedirectResult(auth).catch((err) => {
-      if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request' || err.code === 'auth/redirect-cancelled-by-user')) {
-        setSyncState('offline', 'Çevrimdışı (Giriş Yapılmadı)');
-        return;
-      }
-      setSyncState('error', 'Bağlantı Hatası');
-      showToast('Giriş yönlendirme hatası: ' + (err?.message || err), 'error');
-    });
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        AppState.user = user;
-        if (googleSignInBtn) googleSignInBtn.style.display = 'none';
-        if (userProfileBtn) userProfileBtn.style.display = 'flex';
-        
-        if (user.photoURL) {
-          userAvatarImg.src = user.photoURL;
-          userAvatarImg.style.display = 'block';
-          fallbackAvatar.style.display = 'none';
-        } else {
-          userAvatarImg.style.display = 'none';
-          fallbackAvatar.style.display = 'flex';
+    if (auth) {
+      getRedirectResult(auth).catch((err) => {
+        if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request' || err.code === 'auth/redirect-cancelled-by-user')) {
+          setSyncState('offline', 'Çevrimdışı (Giriş Yapılmadı)');
+          return;
         }
+        setSyncState('error', 'Bağlantı Hatası');
+        showToast('Giriş yönlendirme hatası: ' + (err?.message || err), 'error');
+      });
 
-        const displayName = user.displayName || 'Trader';
-        userProfileName.textContent = displayName.split(' ')[0];
-        menuUserName.textContent = displayName;
-        menuUserEmail.textContent = user.email || '';
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          AppState.user = user;
+          if (googleSignInBtn) googleSignInBtn.style.display = 'none';
+          if (userProfileBtn) userProfileBtn.style.display = 'flex';
+          
+          if (user.photoURL) {
+            userAvatarImg.src = user.photoURL;
+            userAvatarImg.style.display = 'block';
+            fallbackAvatar.style.display = 'none';
+          } else {
+            userAvatarImg.style.display = 'none';
+            fallbackAvatar.style.display = 'flex';
+          }
 
-        setSyncState('synced', 'Google Hesabına Bağlı (Güncel)');
-        showToast(`Hoş geldin, ${displayName}`, 'success');
+          const displayName = user.displayName || 'Trader';
+          userProfileName.textContent = displayName.split(' ')[0];
+          menuUserName.textContent = displayName;
+          menuUserEmail.textContent = user.email || '';
 
-        bindFirestoreSync(user.uid);
-        checkLocalDataForMigration();
-      } else {
-        AppState.user = null;
-        accountPromptCheckedForUid = null;
-        if (AppState.unsubTrades) { AppState.unsubTrades(); AppState.unsubTrades = null; }
-        if (AppState.unsubBacktestTrades) { AppState.unsubBacktestTrades(); AppState.unsubBacktestTrades = null; }
-        if (AppState.unsubFavorites) { AppState.unsubFavorites(); AppState.unsubFavorites = null; }
-        if (AppState.unsubPreferences) { AppState.unsubPreferences(); AppState.unsubPreferences = null; }
-        if (AppState.unsubStrategies) { AppState.unsubStrategies(); AppState.unsubStrategies = null; }
+          setSyncState('synced', 'Google Hesabına Bağlı (Güncel)');
+          showToast(`Hoş geldin, ${displayName}`, 'success');
 
-        document.getElementById('accountSetupModalBackdrop')?.classList.remove('active');
+          bindFirestoreSync(user.uid);
+          checkLocalDataForMigration();
+        } else {
+          AppState.user = null;
+          accountPromptCheckedForUid = null;
+          if (AppState.unsubTrades) { AppState.unsubTrades(); AppState.unsubTrades = null; }
+          if (AppState.unsubBacktestTrades) { AppState.unsubBacktestTrades(); AppState.unsubBacktestTrades = null; }
+          if (AppState.unsubFavorites) { AppState.unsubFavorites(); AppState.unsubFavorites = null; }
+          if (AppState.unsubPreferences) { AppState.unsubPreferences(); AppState.unsubPreferences = null; }
+          if (AppState.unsubStrategies) { AppState.unsubStrategies(); AppState.unsubStrategies = null; }
 
-        if (googleSignInBtn) googleSignInBtn.style.display = 'inline-flex';
-        if (userProfileBtn) userProfileBtn.style.display = 'none';
-        if (profileDropdown) profileDropdown.classList.remove('active');
+          document.getElementById('accountSetupModalBackdrop')?.classList.remove('active');
 
-        setSyncState('offline', 'Çevrimdışı (Giriş Yapılmadı)');
-        loadAppState();
-        updateAllModules();
-        updateBacktestModules();
-      }
-    });
+          if (googleSignInBtn) googleSignInBtn.style.display = 'inline-flex';
+          if (userProfileBtn) userProfileBtn.style.display = 'none';
+          if (profileDropdown) profileDropdown.classList.remove('active');
+
+          setSyncState('offline', 'Çevrimdışı (Giriş Yapılmadı)');
+          loadAppState();
+          updateAllModules();
+          updateBacktestModules();
+        }
+      });
+    } else {
+      setSyncState('offline', 'Çevrimdışı (Yerel Mod)');
+    }
 
     let isGoogleSigningIn = false;
     googleSignInBtn.addEventListener('click', async () => {
+      if (!auth) {
+        showToast('Bulut senkronizasyonu için Firebase yapılandırması (.env) gereklidir. Şu an yerel modda çalışıyorsunuz.', 'info');
+        return;
+      }
       if (isGoogleSigningIn) return;
       isGoogleSigningIn = true;
       googleSignInBtn.disabled = true;
@@ -5991,6 +6488,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     });
 
     document.getElementById('logoutBtn').addEventListener('click', () => {
+      if (!auth) return;
       signOut(auth).then(() => {
         showToast('Oturum kapatıldı.', 'info');
       });
@@ -6079,11 +6577,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
         if (localStorage.getItem(PENDING_SYNC_KEYS.settingsPending) === 'true') {
           try {
-            await setDoc(doc(db, 'users', uid, 'settings', 'preferences'), cleanForFirestore({
-              ...AppState.settings,
-              updatedAt: new Date().toISOString()
-            }), { merge: true });
-            localStorage.removeItem(PENDING_SYNC_KEYS.settingsPending);
+            const seqAtFlush = localPrefSaveSeq;
+            await setDoc(doc(db, 'users', uid, 'settings', 'preferences'), buildUnifiedPreferencesPayload(), { merge: true });
+            if (seqAtFlush === localPrefSaveSeq) {
+              localStorage.removeItem(PENDING_SYNC_KEYS.settingsPending);
+            }
           } catch (_) {}
         }
       } finally {
@@ -6250,7 +6748,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           }
         }
         localStorage.setItem(stratSyncFlagKey, 'true');
-        if (merged.length > 0 || cloudById.size > 0) {
+        if (merged.length > 0 || cloudById.size > 0 || !snapshot.metadata.fromCache) {
           AppState.strategies = merged;
           saveStrategiesState();
         }
@@ -6273,20 +6771,82 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             flushPendingCloudWrites(uid);
           } else {
             const remote = docSnap.data() || {};
-            const nextMain = parsePositiveBalance(remote.mainAccountBalance);
-            const nextBt = parsePositiveBalance(remote.backtestAccountBalance);
-            AppState.settings = Object.assign(AppState.settings, {
-              ...(remote.currency ? { currency: remote.currency } : {}),
-              ...(Number.isFinite(Number(remote.defaultRisk)) && Number(remote.defaultRisk) > 0 ? { defaultRisk: Number(remote.defaultRisk) } : {}),
-              ...(remote.defaultTimeframe ? { defaultTimeframe: remote.defaultTimeframe } : {}),
-              ...(remote.dateFormat ? { dateFormat: remote.dateFormat } : {}),
-              ...(remote.theme ? { theme: remote.theme } : {}),
-              mainAccountBalance: nextMain !== null ? nextMain : parsePositiveBalance(AppState.settings.mainAccountBalance),
-              backtestAccountBalance: nextBt !== null ? nextBt : parsePositiveBalance(AppState.settings.backtestAccountBalance),
-              accountsConfigured: Boolean(remote.accountsConfigured || (nextMain && nextBt))
-            });
-            saveSettingsState(false);
+            const remoteUpdatedAt = String(remote.updatedAt || '');
+            const localUpdatedAt = String(AppState.settings.updatedAt || '');
+            const shouldApplyRemoteGeneral = !localUpdatedAt || !remoteUpdatedAt || remoteUpdatedAt >= localUpdatedAt;
+
+            if (shouldApplyRemoteGeneral) {
+              const nextMain = parsePositiveBalance(remote.mainAccountBalance);
+              const nextBt = parsePositiveBalance(remote.backtestAccountBalance);
+              AppState.settings = Object.assign(AppState.settings, {
+                ...(remote.currency ? { currency: remote.currency } : {}),
+                ...(Number.isFinite(Number(remote.defaultRisk)) && Number(remote.defaultRisk) > 0 ? { defaultRisk: Number(remote.defaultRisk) } : {}),
+                ...(remote.defaultTimeframe ? { defaultTimeframe: remote.defaultTimeframe } : {}),
+                ...(remote.dateFormat ? { dateFormat: remote.dateFormat } : {}),
+                ...(remote.theme ? { theme: remote.theme } : {}),
+                ...(remoteUpdatedAt ? { updatedAt: remoteUpdatedAt } : {}),
+                mainAccountBalance: nextMain !== null ? nextMain : parsePositiveBalance(AppState.settings.mainAccountBalance),
+                backtestAccountBalance: nextBt !== null ? nextBt : parsePositiveBalance(AppState.settings.backtestAccountBalance),
+                accountsConfigured: Boolean(remote.accountsConfigured || (nextMain && nextBt))
+              });
+              saveSettingsState(false);
+            } else {
+              localStorage.setItem(PENDING_SYNC_KEYS.settingsPending, 'true');
+            }
+
+            let needsPushBack = !shouldApplyRemoteGeneral;
+
+            const localChartSett = readStoredRpChartSettingsObj();
+            const remoteChartSett = (remote.rpChartSettings && typeof remote.rpChartSettings === 'object') ? remote.rpChartSettings : null;
+            if (remoteChartSett) {
+              const remoteChartTs = String(remoteChartSett.updatedAt || '');
+              const localChartTs = String((localChartSett && localChartSett.updatedAt) || '');
+              const localNewerChart = Boolean(localChartSett && localChartSett.customized && localChartTs && (!remoteChartTs || localChartTs > remoteChartTs));
+              if (localNewerChart) {
+                needsPushBack = true;
+              } else {
+                const defaults = getDefaultRpChartSettings(AppState.settings.theme || 'dark');
+                rpChartSettings = {
+                  customized: !!remoteChartSett.customized,
+                  updatedAt: remoteChartTs || new Date().toISOString(),
+                  candles: { ...defaults.candles, ...(remoteChartSett.candles || {}) },
+                  canvas: { ...defaults.canvas, ...(remoteChartSett.canvas || {}) },
+                  scales: { ...defaults.scales, ...(remoteChartSett.scales || {}) },
+                  watermark: { ...defaults.watermark, ...(remoteChartSett.watermark || {}) }
+                };
+                if (typeof saveRpChartSettings === 'function') saveRpChartSettings(false);
+                if (typeof syncRpSettingsUiFromState === 'function') syncRpSettingsUiFromState();
+                if (typeof applyRpChartSettings === 'function') applyRpChartSettings();
+              }
+            } else if (localChartSett && localChartSett.customized) {
+              needsPushBack = true;
+            }
+
+            const localTradePrefs = readStoredRpTradePrefsObj();
+            const remoteTradePrefs = (remote.rpTradePrefs && typeof remote.rpTradePrefs === 'object') ? remote.rpTradePrefs : null;
+            if (remoteTradePrefs) {
+              const remotePrefTs = String(remoteTradePrefs.updatedAt || '');
+              const localPrefTs = String((localTradePrefs && localTradePrefs.updatedAt) || '');
+              const localNewerPrefs = Boolean(localTradePrefs && localPrefTs && (!remotePrefTs || localPrefTs > remotePrefTs));
+              if (localNewerPrefs) {
+                needsPushBack = true;
+              } else {
+                try {
+                  localStorage.setItem(RP_TRADE_PREFS_KEY, JSON.stringify(remoteTradePrefs));
+                } catch (_) {}
+                if (typeof loadRpTradePrefs === 'function') loadRpTradePrefs();
+              }
+            } else if (localTradePrefs) {
+              needsPushBack = true;
+            }
+
+            if (needsPushBack) {
+              localStorage.setItem(PENDING_SYNC_KEYS.settingsPending, 'true');
+              flushPendingCloudWrites(uid);
+            }
           }
+        } else if (!docSnap.metadata.fromCache) {
+          syncPreferencesToCloudNow();
         }
         if (accountPromptCheckedForUid !== uid) {
           accountPromptCheckedForUid = uid;
@@ -7522,8 +8082,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
 
       AppState.strategies.forEach(s => {
-        const stratTrades = AppState.trades.filter(t => t.strategy === s.name && t.result !== 'Open');
-        const m = computeMetrics(stratTrades, AppState.settings.mainAccountBalance);
+        const mainStratTrades = AppState.trades.filter(t => t.strategy === s.name && t.result !== 'Open' && t.status !== 'OPEN');
+        const btStratTrades = AppState.backtestTrades.filter(t => t.strategy === s.name && t.result !== 'Open' && t.status !== 'OPEN');
+        const mMain = computeMetrics(mainStratTrades, AppState.settings.mainAccountBalance);
+        const mBt = computeMetrics(btStratTrades, AppState.settings.backtestAccountBalance);
 
         const card = document.createElement('div');
         card.className = 'glass-surface strategy-card';
@@ -7553,20 +8115,51 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             ${escapeHtml(s.desc || 'Açıklama girilmedi.')}
           </p>
 
-          <div class="strategy-metrics-row">
-            <div class="strat-metric">
-              <span class="strat-metric-label">İşlemler</span>
-              <span class="strat-metric-val">${m.totalTrades}</span>
+          <div class="strategy-metrics-group">
+            <div class="strategy-metrics-block">
+              <div class="strategy-account-header">
+                <span class="strategy-account-badge main">Ana Hesap</span>
+                <span class="strategy-account-sub">PF: ${mMain.profitFactor} • Avg R: ${mMain.avgRR}R</span>
+              </div>
+              <div class="strategy-metrics-row">
+                <div class="strat-metric">
+                  <span class="strat-metric-label">İşlemler</span>
+                  <span class="strat-metric-val">${mMain.totalTrades}</span>
+                </div>
+                <div class="strat-metric">
+                  <span class="strat-metric-label">Win Rate</span>
+                  <span class="strat-metric-val" style="color: ${parseFloat(mMain.winRate) >= 50 || mMain.totalTrades === 0 ? 'var(--color-neon-green)' : 'var(--color-danger)'};">${mMain.winRate}%</span>
+                </div>
+                <div class="strat-metric">
+                  <span class="strat-metric-label">Net P/L</span>
+                  <span class="strat-metric-val" style="color: ${mMain.netPnl >= 0 ? 'var(--color-neon-green)' : 'var(--color-danger)'};">
+                    ${formatCurrency(mMain.netPnl)}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div class="strat-metric">
-              <span class="strat-metric-label">Win Rate</span>
-              <span class="strat-metric-val" style="color: var(--color-neon-green);">${m.winRate}%</span>
-            </div>
-            <div class="strat-metric">
-              <span class="strat-metric-label">Net P/L</span>
-              <span class="strat-metric-val" style="color: ${m.netPnl >= 0 ? 'var(--color-neon-green)' : 'var(--color-danger)'};">
-                ${formatCurrency(m.netPnl)}
-              </span>
+
+            <div class="strategy-metrics-block">
+              <div class="strategy-account-header">
+                <span class="strategy-account-badge backtest">Backtest</span>
+                <span class="strategy-account-sub">PF: ${mBt.profitFactor} • Avg R: ${mBt.avgRR}R</span>
+              </div>
+              <div class="strategy-metrics-row">
+                <div class="strat-metric">
+                  <span class="strat-metric-label">İşlemler</span>
+                  <span class="strat-metric-val">${mBt.totalTrades}</span>
+                </div>
+                <div class="strat-metric">
+                  <span class="strat-metric-label">Win Rate</span>
+                  <span class="strat-metric-val" style="color: ${parseFloat(mBt.winRate) >= 50 || mBt.totalTrades === 0 ? 'var(--color-neon-cyan)' : 'var(--color-danger)'};">${mBt.winRate}%</span>
+                </div>
+                <div class="strat-metric">
+                  <span class="strat-metric-label">Net P/L</span>
+                  <span class="strat-metric-val" style="color: ${mBt.netPnl >= 0 ? 'var(--color-neon-green)' : 'var(--color-danger)'};">
+                    ${formatCurrency(mBt.netPnl)}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         `;
@@ -7972,6 +8565,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       renderBacktestTable();
       renderBacktestCalendar();
       renderBacktestGallery();
+      renderStrategyCards();
     }
 
     /* -------------------------------------------------------------
@@ -8255,7 +8849,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       document.getElementById('bt-exit').value = trade.exitPrice !== null && trade.exitPrice !== undefined ? trade.exitPrice : '';
       document.getElementById('bt-sl').value = trade.stopLoss !== null && trade.stopLoss !== undefined ? trade.stopLoss : '';
       document.getElementById('bt-risk').value = trade.risk !== null && trade.risk !== undefined ? trade.risk : 1.0;
-      document.getElementById('bt-pnl').value = trade.pnl !== null && trade.pnl !== undefined ? trade.pnl : 0;
+      document.getElementById('bt-pnl').value = trade.pnl !== null && trade.pnl !== undefined ? trade.pnl : '';
       document.getElementById('bt-result').value = trade.result || 'Win';
       document.getElementById('bt-notes').value = trade.notes || '';
       document.getElementById('bt-psychology').value = trade.psychology || '';
@@ -8310,10 +8904,49 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       cancelEditBacktestBtn.addEventListener('click', window.cancelBacktestTradeEdit);
     }
 
+    function validateTradeFormRequiredFields(prefix) {
+      const checks = [
+        { id: `${prefix}pair`, label: 'Parite / Enstrüman', type: 'text' },
+        { id: `${prefix}direction`, label: 'Yön', type: 'text' },
+        { id: `${prefix}datetime`, label: 'Tarih & Saat', type: 'text' },
+        { id: `${prefix}timeframe`, label: 'Timeframe', type: 'text' },
+        { id: `${prefix}session`, label: 'Seans', type: 'text' },
+        { id: `${prefix}strategy`, label: 'Strateji', type: 'text' },
+        { id: `${prefix}entry`, label: 'Giriş Fiyatı (Entry)', type: 'number' },
+        { id: `${prefix}exit`, label: 'Çıkış Fiyatı (Exit)', type: 'number' },
+        { id: `${prefix}sl`, label: 'Stop Loss', type: 'number' },
+        { id: `${prefix}risk`, label: 'Risk (%)', type: 'positive' },
+        { id: `${prefix}pnl`, label: 'Kâr / Zarar (P/L)', type: 'number' },
+        { id: `${prefix}result`, label: 'Sonuç', type: 'text' }
+      ];
+      for (const item of checks) {
+        const el = document.getElementById(item.id);
+        if (!el) continue;
+        const raw = String(el.value || '').trim();
+        let valid = true;
+        if (!raw) {
+          valid = false;
+        } else if (item.type === 'number') {
+          valid = parseOptionalNumber(raw) !== null;
+        } else if (item.type === 'positive') {
+          valid = parsePositiveBalance(raw) !== null;
+        }
+        if (!valid) {
+          showToast(`Lütfen "${item.label}" alanını geçerli şekilde doldurun.`, 'error');
+          el.focus();
+          return false;
+        }
+      }
+      return true;
+    }
+
     if (backtestTradeForm) {
       backtestTradeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        if (!ensureAccountBalanceForTradeSave('backtest')) return;
+        if (!validateTradeFormRequiredFields('bt-')) return;
+        if (!verifyTradePnlConsistency('backtest')) return;
         if (isSubmittingBacktest) return;
         isSubmittingBacktest = true;
 
@@ -8717,6 +9350,33 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             renderBanner();
           }
         },
+        isPreservedChartSource() {
+          return preserveChartSource;
+        },
+        applyAutoCalculatedPnl(value) {
+          manualPnlOverride = false;
+          preserveChartSource = false;
+          preservedChartR = null;
+          preservedChartPnl = null;
+          if (pnlEl) pnlEl.value = String(value);
+          if (resultEl) {
+            if (Math.abs(value) <= 1e-10) resultEl.value = 'BE';
+            else resultEl.value = value > 0 ? 'Win' : 'Loss';
+          }
+          renderBanner();
+        },
+        applyManualPnl(value) {
+          manualPnlOverride = true;
+          preserveChartSource = false;
+          preservedChartR = null;
+          preservedChartPnl = null;
+          if (pnlEl) pnlEl.value = String(value);
+          if (resultEl) {
+            if (Math.abs(value) <= 1e-10) resultEl.value = 'BE';
+            else resultEl.value = value > 0 ? 'Win' : 'Loss';
+          }
+          renderBanner();
+        },
         getSubmitMetadata(pnlValue, entryPrice, exitPrice, stopLoss, direction, riskPct) {
           const balance = getAccountBalance();
           const riskAmount = (balance && riskPct > 0) ? Number((balance * (riskPct / 100)).toFixed(2)) : null;
@@ -8930,6 +9590,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     tradeForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      if (!ensureAccountBalanceForTradeSave('journal')) return;
+      if (!validateTradeFormRequiredFields('f-')) return;
+      if (!verifyTradePnlConsistency('journal')) return;
       if (isSubmittingTrade) return;
       isSubmittingTrade = true;
 
@@ -9113,6 +9776,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
        İŞLEM SİLME (FIRESTORE SUBCOLLECTION & INDEXEDDB TEMİZLİĞİ)
        ------------------------------------------------------------- */
     let pendingDeleteTradeId = null;
+    let pendingDeleteStrategyId = null;
 
     async function executeDeleteTrade(id) {
       const isBacktest = AppState.backtestTrades.some(t => t.id === id);
@@ -9171,7 +9835,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     window.confirmDeleteTrade = function(id) {
+      pendingDeleteStrategyId = null;
       pendingDeleteTradeId = id;
+      const titleEl = document.getElementById('deleteConfirmModalTitle');
+      const descEl = document.getElementById('deleteConfirmModalDesc');
+      if (titleEl) titleEl.textContent = 'İşlemi Sil';
+      if (descEl) descEl.textContent = 'Bu işlem kaydını ve bağlı görselleri silmek istediğinize emin misiniz?';
       const modal = document.getElementById('deleteConfirmModalBackdrop');
       if (modal) {
         modal.classList.add('active');
@@ -9185,6 +9854,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     document.getElementById('cancelDeleteTradeModalBtn')?.addEventListener('click', () => {
       document.getElementById('deleteConfirmModalBackdrop')?.classList.remove('active');
       pendingDeleteTradeId = null;
+      pendingDeleteStrategyId = null;
     });
 
     document.getElementById('confirmDeleteTradeModalBtn')?.addEventListener('click', async () => {
@@ -9194,6 +9864,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const idToDelete = pendingDeleteTradeId;
         pendingDeleteTradeId = null;
         await executeDeleteTrade(idToDelete);
+      } else if (pendingDeleteStrategyId) {
+        const stratIdToDelete = pendingDeleteStrategyId;
+        pendingDeleteStrategyId = null;
+        await executeDeleteStrategy(stratIdToDelete);
       }
     });
 
@@ -9201,6 +9875,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (e.target.id === 'deleteConfirmModalBackdrop') {
         e.target.classList.remove('active');
         pendingDeleteTradeId = null;
+        pendingDeleteStrategyId = null;
       }
     });
 
@@ -9406,23 +10081,42 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       strategyModal.classList.add('active');
     };
 
-    window.confirmDeleteStrategy = async function(id) {
-      if (confirm('Bu stratejiyi silmek istediğinize emin misiniz?')) {
-        AppState.strategies = AppState.strategies.filter(s => s.id !== id);
-        markPendingSyncId(PENDING_SYNC_KEYS.strategiesUpsert, id, false);
-        markPendingSyncId(PENDING_SYNC_KEYS.strategiesDelete, id, true);
-        saveStrategiesState();
-        if (AppState.user) {
-          try {
-            await deleteDoc(doc(db, 'users', AppState.user.uid, 'strategies', id));
-            markPendingSyncId(PENDING_SYNC_KEYS.strategiesDelete, id, false);
-          } catch (err) {
-            console.warn('Strateji bulut silme hatası:', err);
-          }
-        } else {
+    async function executeDeleteStrategy(id) {
+      if (!id) return;
+      AppState.strategies = AppState.strategies.filter(s => s.id !== id);
+      markPendingSyncId(PENDING_SYNC_KEYS.strategiesUpsert, id, false);
+      markPendingSyncId(PENDING_SYNC_KEYS.strategiesDelete, id, true);
+      saveStrategiesState();
+      if (AppState.user) {
+        try {
+          await deleteDoc(doc(db, 'users', AppState.user.uid, 'strategies', id));
           markPendingSyncId(PENDING_SYNC_KEYS.strategiesDelete, id, false);
+        } catch (err) {
+          console.warn('Strateji bulut silme hatası:', err);
         }
-        showToast('Strateji silindi.', 'info');
+      } else {
+        markPendingSyncId(PENDING_SYNC_KEYS.strategiesDelete, id, false);
+      }
+      showToast('Strateji silindi.', 'info');
+    }
+
+    window.confirmDeleteStrategy = function(id) {
+      pendingDeleteTradeId = null;
+      pendingDeleteStrategyId = id;
+      const target = AppState.strategies.find(s => s.id === id);
+      const titleEl = document.getElementById('deleteConfirmModalTitle');
+      const descEl = document.getElementById('deleteConfirmModalDesc');
+      if (titleEl) titleEl.textContent = 'Stratejiyi Sil';
+      if (descEl) {
+        descEl.textContent = target && target.name
+          ? `"${target.name}" stratejisini silmek istediğinize emin misiniz?`
+          : 'Bu stratejiyi silmek istediğinize emin misiniz?';
+      }
+      const modal = document.getElementById('deleteConfirmModalBackdrop');
+      if (modal) {
+        modal.classList.add('active');
+      } else if (confirm('Bu stratejiyi silmek istediğinize emin misiniz?')) {
+        executeDeleteStrategy(id);
       }
     };
 
@@ -9489,25 +10183,56 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         return;
       }
 
-      const stratTrades = AppState.trades.filter(t => t.strategy === s.name && t.result !== 'Open' && t.status !== 'OPEN');
-      const stratMetrics = computeMetrics(stratTrades, AppState.settings.mainAccountBalance);
+      const mainStratTrades = AppState.trades.filter(t => t.strategy === s.name && t.result !== 'Open' && t.status !== 'OPEN');
+      const btStratTrades = AppState.backtestTrades.filter(t => t.strategy === s.name && t.result !== 'Open' && t.status !== 'OPEN');
+      const mainMetrics = computeMetrics(mainStratTrades, AppState.settings.mainAccountBalance);
+      const btMetrics = computeMetrics(btStratTrades, AppState.settings.backtestAccountBalance);
 
       title.textContent = s.name;
       tfEl.textContent = s.timeframe || 'Timeframe belirtilmemiş';
 
       body.innerHTML = `
-        <div class="strat-detail-stats-grid">
-          <div class="strat-metric">
-            <span class="strat-metric-label">Toplam İşlem</span>
-            <span class="strat-metric-val">${stratMetrics.totalTrades}</span>
+        <div class="strategy-metrics-group">
+          <div class="strategy-metrics-block">
+            <div class="strategy-account-header">
+              <span class="strategy-account-badge main">Ana Hesap</span>
+              <span class="strategy-account-sub">PF: ${mainMetrics.profitFactor} • Avg R: ${mainMetrics.avgRR}R</span>
+            </div>
+            <div class="strategy-metrics-row">
+              <div class="strat-metric">
+                <span class="strat-metric-label">Toplam İşlem</span>
+                <span class="strat-metric-val">${mainMetrics.totalTrades}</span>
+              </div>
+              <div class="strat-metric">
+                <span class="strat-metric-label">Win Rate</span>
+                <span class="strat-metric-val" style="color: ${parseFloat(mainMetrics.winRate) >= 50 || mainMetrics.totalTrades === 0 ? 'var(--color-neon-green)' : 'var(--color-danger)'};">${mainMetrics.winRate}%</span>
+              </div>
+              <div class="strat-metric">
+                <span class="strat-metric-label">Net P/L</span>
+                <span class="strat-metric-val" style="color: ${mainMetrics.netPnl >= 0 ? 'var(--color-neon-green)' : 'var(--color-danger)'};">${formatCurrency(mainMetrics.netPnl)}</span>
+              </div>
+            </div>
           </div>
-          <div class="strat-metric">
-            <span class="strat-metric-label">Win Rate</span>
-            <span class="strat-metric-val" style="color: ${parseFloat(stratMetrics.winRate) >= 50 ? 'var(--color-neon-green)' : 'var(--color-danger)'};">${stratMetrics.winRate}%</span>
-          </div>
-          <div class="strat-metric">
-            <span class="strat-metric-label">Net P/L</span>
-            <span class="strat-metric-val" style="color: ${stratMetrics.netPnl >= 0 ? 'var(--color-neon-green)' : 'var(--color-danger)'};">${formatCurrency(stratMetrics.netPnl)}</span>
+
+          <div class="strategy-metrics-block">
+            <div class="strategy-account-header">
+              <span class="strategy-account-badge backtest">Backtest</span>
+              <span class="strategy-account-sub">PF: ${btMetrics.profitFactor} • Avg R: ${btMetrics.avgRR}R</span>
+            </div>
+            <div class="strategy-metrics-row">
+              <div class="strat-metric">
+                <span class="strat-metric-label">Toplam İşlem</span>
+                <span class="strat-metric-val">${btMetrics.totalTrades}</span>
+              </div>
+              <div class="strat-metric">
+                <span class="strat-metric-label">Win Rate</span>
+                <span class="strat-metric-val" style="color: ${parseFloat(btMetrics.winRate) >= 50 || btMetrics.totalTrades === 0 ? 'var(--color-neon-cyan)' : 'var(--color-danger)'};">${btMetrics.winRate}%</span>
+              </div>
+              <div class="strat-metric">
+                <span class="strat-metric-label">Net P/L</span>
+                <span class="strat-metric-val" style="color: ${btMetrics.netPnl >= 0 ? 'var(--color-neon-green)' : 'var(--color-danger)'};">${formatCurrency(btMetrics.netPnl)}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -9672,11 +10397,62 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
     });
 
+    const settingCurrencyEl = document.getElementById('settingCurrency');
+    if (settingCurrencyEl) {
+      settingCurrencyEl.addEventListener('change', () => {
+        AppState.settings.currency = settingCurrencyEl.value || '$';
+        saveSettingsState(true);
+      });
+    }
+
+    const settingDefaultRiskEl = document.getElementById('settingDefaultRisk');
+    if (settingDefaultRiskEl) {
+      settingDefaultRiskEl.addEventListener('change', () => {
+        const nextRisk = parsePositiveBalance(settingDefaultRiskEl.value);
+        if (nextRisk !== null) {
+          AppState.settings.defaultRisk = nextRisk;
+          saveSettingsState(true);
+        }
+      });
+    }
+
+    const settingDateFormatEl = document.getElementById('settingDateFormat');
+    if (settingDateFormatEl) {
+      settingDateFormatEl.addEventListener('change', () => {
+        AppState.settings.dateFormat = settingDateFormatEl.value || 'tr-TR';
+        saveSettingsState(true);
+      });
+    }
+
     const settingDefaultTfEl = document.getElementById('settingDefaultTimeframe');
     if (settingDefaultTfEl) {
       settingDefaultTfEl.addEventListener('change', () => {
         AppState.settings.defaultTimeframe = settingDefaultTfEl.value || 'M15';
         saveSettingsState(true);
+      });
+    }
+
+    const settingMainBalEl = document.getElementById('settingMainAccountBalance');
+    if (settingMainBalEl) {
+      settingMainBalEl.addEventListener('change', () => {
+        const val = parsePositiveBalance(settingMainBalEl.value);
+        if (val !== null) {
+          AppState.settings.mainAccountBalance = val;
+          AppState.settings.accountsConfigured = Boolean(val && parsePositiveBalance(AppState.settings.backtestAccountBalance));
+          saveSettingsState(true);
+        }
+      });
+    }
+
+    const settingBtBalEl = document.getElementById('settingBacktestAccountBalance');
+    if (settingBtBalEl) {
+      settingBtBalEl.addEventListener('change', () => {
+        const val = parsePositiveBalance(settingBtBalEl.value);
+        if (val !== null) {
+          AppState.settings.backtestAccountBalance = val;
+          AppState.settings.accountsConfigured = Boolean(parsePositiveBalance(AppState.settings.mainAccountBalance) && val);
+          saveSettingsState(true);
+        }
       });
     }
 
@@ -9710,18 +10486,18 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     if (closeAccountSetupModalBtn) {
       closeAccountSetupModalBtn.addEventListener('click', () => {
-        accountSetupModalBackdrop?.classList.remove('active');
+        closeAccountSetupModal(true);
       });
     }
     if (skipAccountSetupBtn) {
       skipAccountSetupBtn.addEventListener('click', () => {
-        accountSetupModalBackdrop?.classList.remove('active');
+        closeAccountSetupModal(true);
       });
     }
     if (accountSetupModalBackdrop) {
       accountSetupModalBackdrop.addEventListener('click', (e) => {
         if (e.target === accountSetupModalBackdrop) {
-          accountSetupModalBackdrop.classList.remove('active');
+          closeAccountSetupModal(true);
         }
       });
     }
@@ -9734,12 +10510,81 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           showToast('Lütfen her iki hesap için 0’dan büyük geçerli bir büyüklük girin.', 'error');
           return;
         }
+        const resumeContext = pendingAccountSetupContext;
         AppState.settings.mainAccountBalance = mainBal;
         AppState.settings.backtestAccountBalance = btBal;
         AppState.settings.accountsConfigured = true;
         saveSettingsState(true);
-        accountSetupModalBackdrop?.classList.remove('active');
+        closeAccountSetupModal(false);
         showToast('Hesap büyüklükleri kaydedildi.', 'success');
+        if (resumeContext === 'journal' && tradeForm) {
+          tradeForm.requestSubmit();
+        } else if (resumeContext === 'backtest' && backtestTradeForm) {
+          backtestTradeForm.requestSubmit();
+        }
+      });
+    }
+
+    const mismatchCancelBtn = document.getElementById('mismatchCancelBtn');
+    const mismatchManualBtn = document.getElementById('mismatchManualBtn');
+    const mismatchAutoFixBtn = document.getElementById('mismatchAutoFixBtn');
+
+    if (mismatchCancelBtn) {
+      mismatchCancelBtn.addEventListener('click', () => {
+        closeAccountSetupModal(true);
+      });
+    }
+    if (mismatchAutoFixBtn) {
+      mismatchAutoFixBtn.addEventListener('click', () => {
+        const info = pendingMismatchState;
+        if (!info) return;
+        const calcCtrl = info.context === 'backtest' ? backtestCalcCtrl : journalCalcCtrl;
+        if (calcCtrl && typeof calcCtrl.applyAutoCalculatedPnl === 'function') {
+          calcCtrl.applyAutoCalculatedPnl(info.expectedPnl);
+        }
+        closeAccountSetupModal(false);
+        showToast(`Kâr / Zarar hesaba göre ${formatModalMoney(info.expectedPnl)} olarak düzeltildi.`, 'success');
+        if (info.context === 'journal' && tradeForm) {
+          tradeForm.requestSubmit();
+        } else if (info.context === 'backtest' && backtestTradeForm) {
+          backtestTradeForm.requestSubmit();
+        }
+      });
+    }
+    if (mismatchManualBtn) {
+      mismatchManualBtn.addEventListener('click', () => {
+        const info = pendingMismatchState;
+        if (!info) return;
+        const inputEl = document.getElementById('mismatchPnlInput');
+        const rawVal = inputEl ? parseOptionalNumber(inputEl.value) : null;
+        if (rawVal === null) {
+          showToast('Lütfen geçerli bir Kâr / Zarar tutarı girin.', 'error');
+          inputEl?.focus();
+          return;
+        }
+        const calcCtrl = info.context === 'backtest' ? backtestCalcCtrl : journalCalcCtrl;
+        const targetPnlId = info.context === 'backtest' ? 'bt-pnl' : 'f-pnl';
+
+        if (Math.abs(rawVal - info.enteredPnl) > 0.001) {
+          if (calcCtrl && typeof calcCtrl.applyManualPnl === 'function') {
+            calcCtrl.applyManualPnl(rawVal);
+          }
+          bypassPnlValidationContext = info.context;
+          closeAccountSetupModal(false);
+          if (info.context === 'journal' && tradeForm) {
+            tradeForm.requestSubmit();
+          } else if (info.context === 'backtest' && backtestTradeForm) {
+            backtestTradeForm.requestSubmit();
+          }
+        } else {
+          closeAccountSetupModal(false);
+          const pnlInput = document.getElementById(targetPnlId);
+          if (pnlInput) {
+            pnlInput.focus();
+            pnlInput.select();
+          }
+          showToast('Kâr / Zarar tutarını form üzerinden elle düzeltip tekrar kaydedebilirsiniz.', 'info');
+        }
       });
     }
 
@@ -10026,6 +10871,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     let rpChartListenersBound = false;
     let rpChartErrorNotified = false;
     let rpLoadedCandles = [];
+    let rpLoadedCandlesByTf = new Map();
+    let rpHasTimeframeData = false;
+    let rpLoadedFileName = '';
+    let rpLastActiveTf = 'M15';
     let rpIsPickingStart = false;
     let rpReplayActive = false;
     let rpReplayIndex = -1;
@@ -10137,6 +10986,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         }
         rpChartSettings = {
           customized: !!parsed.customized,
+          updatedAt: parsed.updatedAt || '',
           candles: { ...defaults.candles, ...(parsed.candles || {}) },
           canvas: { ...defaults.canvas, ...(parsed.canvas || {}) },
           scales: { ...defaults.scales, ...(parsed.scales || {}) },
@@ -10148,11 +10998,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       return rpChartSettings;
     }
 
-    function saveRpChartSettings() {
+    function saveRpChartSettings(syncCloud = true) {
       if (!rpChartSettings) return;
+      if (syncCloud) {
+        rpChartSettings.updatedAt = new Date().toISOString();
+      }
       try {
         localStorage.setItem(RP_CHART_SETTINGS_KEY, JSON.stringify(rpChartSettings));
       } catch (_) {}
+      if (syncCloud) {
+        schedulePreferencesCloudSync(280);
+      }
     }
 
     function seedRpBalanceFromBacktestIfUnset() {
@@ -10173,11 +11029,14 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const raw = localStorage.getItem(RP_TRADE_PREFS_KEY);
         const balEl = document.getElementById('rp-balance-input');
         const riskEl = document.getElementById('rp-risk-input');
+        const tfEl = document.getElementById('rp-tf-select');
+        const fsTfEl = document.getElementById('rp-fs-tf-select');
         if (!raw) {
           seedRpBalanceFromBacktestIfUnset();
           if (riskEl && Number.isFinite(Number(AppState.settings.defaultRisk)) && Number(AppState.settings.defaultRisk) > 0) {
             riskEl.value = String(AppState.settings.defaultRisk);
           }
+          if (tfEl && fsTfEl) fsTfEl.value = tfEl.value || 'M15';
           return;
         }
         const parsed = JSON.parse(raw);
@@ -10188,17 +11047,37 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         if (riskEl && Number.isFinite(Number(parsed.risk)) && Number(parsed.risk) > 0) {
           riskEl.value = String(parsed.risk);
         }
+        if (parsed.timeframe && !rpHasTimeframeData) {
+          const normTf = normalizeRpTimeframe(parsed.timeframe) || parsed.timeframe;
+          if (tfEl) {
+            ensureRpTfSelectOption(tfEl, normTf);
+            tfEl.value = normTf;
+          }
+          if (fsTfEl) {
+            ensureRpTfSelectOption(fsTfEl, normTf);
+            fsTfEl.value = normTf;
+          }
+          rpLastActiveTf = normTf;
+        }
+        if (typeof updateRpPanelDollarHints === 'function') updateRpPanelDollarHints();
       } catch (_) {}
     }
 
-    function saveRpTradePrefs() {
+    function saveRpTradePrefs(syncCloud = true) {
       try {
         const bal = parseOptionalRpInputNumber('rp-balance-input');
         const risk = parseOptionalRpInputNumber('rp-risk-input');
-        localStorage.setItem(RP_TRADE_PREFS_KEY, JSON.stringify({
+        const tf = document.getElementById('rp-tf-select')?.value || rpLastActiveTf || 'M15';
+        const payload = {
           balance: bal !== null && !Number.isNaN(bal) && bal > 0 ? bal : 10000,
-          risk: risk !== null && !Number.isNaN(risk) && risk > 0 ? risk : 1
-        }));
+          risk: risk !== null && !Number.isNaN(risk) && risk > 0 ? risk : 1,
+          timeframe: tf,
+          updatedAt: new Date().toISOString()
+        };
+        localStorage.setItem(RP_TRADE_PREFS_KEY, JSON.stringify(payload));
+        if (syncCloud) {
+          schedulePreferencesCloudSync(280);
+        }
       } catch (_) {}
     }
 
@@ -10400,9 +11279,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function resetRpChartSettings() {
       const theme = AppState.settings.theme || document.documentElement.getAttribute('data-theme') || 'dark';
       rpChartSettings = getDefaultRpChartSettings(theme);
+      rpChartSettings.customized = false;
+      rpChartSettings.updatedAt = new Date().toISOString();
       try {
-        localStorage.removeItem(RP_CHART_SETTINGS_KEY);
+        localStorage.setItem(RP_CHART_SETTINGS_KEY, JSON.stringify(rpChartSettings));
       } catch (_) {}
+      schedulePreferencesCloudSync(120);
       syncRpSettingsUiFromState();
       applyRpChartSettings();
       showToast('Grafik ayarları varsayılana sıfırlandı.', 'info');
@@ -10429,6 +11311,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (panel) panel.classList.remove('visible');
       const card = document.getElementById('rp-chart-card');
       if (card) card.classList.toggle('rp-fs-host', rpChartFullscreenFallback);
+      flushPreferencesCloudSyncNow();
     }
 
     function updateRpChartTheme(theme) {
@@ -10514,6 +11397,22 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       return !!(wrap && (document.fullscreenElement === wrap || document.webkitFullscreenElement === wrap || rpChartFullscreenFallback));
     }
 
+    function syncRpFullscreenTopbar() {
+      const pairVal = (document.getElementById('rp-pair-input')?.value || '').trim().toUpperCase();
+      const badge = document.getElementById('rp-fs-pair-badge');
+      if (badge) {
+        badge.textContent = pairVal || 'CHART';
+      }
+      const tfSelect = document.getElementById('rp-tf-select');
+      const fsTfSelect = document.getElementById('rp-fs-tf-select');
+      if (tfSelect && fsTfSelect && tfSelect.value) {
+        ensureRpTfSelectOption(fsTfSelect, tfSelect.value);
+        if (fsTfSelect.value !== tfSelect.value) {
+          fsTfSelect.value = tfSelect.value;
+        }
+      }
+    }
+
     function syncRpFullscreenUi() {
       const wrap = document.getElementById('rp-chart-wrap');
       const card = document.getElementById('rp-chart-card');
@@ -10529,6 +11428,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         btn.title = active ? 'Tam Ekrandan Çık' : 'Tam Ekran';
         btn.setAttribute('aria-label', active ? 'Tam Ekrandan Çık' : 'Grafiği Tam Ekran Yap');
       }
+      syncRpFullscreenTopbar();
       const syncLayoutPass = () => {
         resizeRpChart();
         clampRpReplayBarPosition();
@@ -12177,6 +13077,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           orderType,
           orderPrice: entryPrice,
           createdIndex: rpReplayIndex,
+          createdTime: currentCandle.time,
           lot: lotVal,
           contractSize: contractVal,
           sl,
@@ -12813,16 +13714,49 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       return null;
     }
 
-    function parseRpCsvCandles(text) {
-      if (!text || typeof text !== 'string') return [];
+    function normalizeRpTimeframe(raw, preferMonthFor1M = false) {
+      if (raw === undefined || raw === null) return '';
+      const trimmed = String(raw).trim().replace(/^["']|["']$/g, '');
+      if (!trimmed) return '';
+      if (trimmed === '1M' && preferMonthFor1M) return 'MN1';
+      if (trimmed === 'M' || /^1\s*mo(nths?)?$/i.test(trimmed)) return 'MN1';
+
+      const s = trimmed.toUpperCase().replace(/\s+/g, '');
+      const map = {
+        '1': 'M1', '1M': 'M1', 'M1': 'M1', '1MIN': 'M1', '1MINUTE': 'M1', '1MINUTES': 'M1',
+        '3': 'M3', '3M': 'M3', 'M3': 'M3', '3MIN': 'M3', '3MINUTES': 'M3',
+        '5': 'M5', '5M': 'M5', 'M5': 'M5', '5MIN': 'M5', '5MINUTES': 'M5',
+        '15': 'M15', '15M': 'M15', 'M15': 'M15', '15MIN': 'M15', '15MINUTES': 'M15',
+        '30': 'M30', '30M': 'M30', 'M30': 'M30', '30MIN': 'M30', '30MINUTES': 'M30',
+        '60': 'H1', '60M': 'H1', '60MIN': 'H1', '1H': 'H1', 'H1': 'H1', '1HR': 'H1', '1HRS': 'H1', '1HOUR': 'H1', '1HOURS': 'H1',
+        '120': 'H2', '120M': 'H2', '120MIN': 'H2', '2H': 'H2', 'H2': 'H2', '2HR': 'H2', '2HRS': 'H2', '2HOUR': 'H2', '2HOURS': 'H2',
+        '240': 'H4', '240M': 'H4', '240MIN': 'H4', '4H': 'H4', 'H4': 'H4', '4HR': 'H4', '4HRS': 'H4', '4HOUR': 'H4', '4HOURS': 'H4',
+        '1440': 'D1', '1440M': 'D1', '1D': 'D1', 'D1': 'D1', 'D': 'D1', 'DAY': 'D1', 'DAILY': 'D1', '1DAY': 'D1',
+        '10080': 'W1', '10080M': 'W1', '1W': 'W1', 'W1': 'W1', 'W': 'W1', '1WK': 'W1', 'WK': 'W1', 'WEEK': 'W1', 'WEEKLY': 'W1', '1WEEK': 'W1', '1WEEKS': 'W1',
+        '43200': 'MN1', '43200M': 'MN1', 'MN': 'MN1', 'MN1': 'MN1', '1MN': 'MN1', 'MO': 'MN1', '1MO': 'MN1', '1MON': 'MN1', 'MONTH': 'MN1', 'MONTHLY': 'MN1', '1MONTH': 'MN1', '1MONTHS': 'MN1'
+      };
+      return map[s] || s;
+    }
+
+    function parseRpCsvData(text) {
+      const emptyResult = {
+        candlesByTf: new Map(),
+        availableTfs: [],
+        hasTimeframeColumn: false,
+        symbols: [],
+        flatCandles: []
+      };
+      if (!text || typeof text !== 'string') return emptyResult;
       const cleanText = text.replace(/^\uFEFF/, '');
       const lines = cleanText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-      if (lines.length === 0) return [];
+      if (lines.length === 0) return emptyResult;
 
       const delimiter = detectRpCsvDelimiter(lines);
       const firstCells = lines[0].split(delimiter).map(c => c.trim());
       const normHeader = firstCells.map(c => c.replace(/^["'<]+|["'>]+$/g, '').toLowerCase());
 
+      let symbolIdx = -1;
+      let tfIdx = -1;
       let dateIdx = -1;
       let timeIdx = -1;
       let openIdx = -1;
@@ -12832,7 +13766,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       let startRow = 0;
 
       const hasHeaderKeywords = normHeader.some(h =>
-        /^(time|date|datetime|timestamp|gmt time|time \(utc\)|open|high|low|close)$/.test(h) ||
+        /^(time|date|datetime|timestamp|gmt time|time \(utc\)|open|high|low|close|symbol|ticker|pair|instrument|timeframe|tf|period|interval|resolution)$/.test(h) ||
         h.includes('gmt time') ||
         h.includes('time (utc)') ||
         h === 'o' || h === 'h' || h === 'l' || h === 'c'
@@ -12841,7 +13775,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (hasHeaderKeywords) {
         startRow = 1;
         normHeader.forEach((h, idx) => {
-          if (h === 'date' && dateIdx === -1) dateIdx = idx;
+          if ((h === 'symbol' || h === 'ticker' || h === 'pair' || h === 'instrument') && symbolIdx === -1) symbolIdx = idx;
+          else if ((h === 'timeframe' || h === 'tf' || h === 'period' || h === 'interval' || h === 'resolution') && tfIdx === -1) tfIdx = idx;
+          else if (h === 'date' && dateIdx === -1) dateIdx = idx;
           else if ((h === 'time' || h === 'datetime' || h === 'timestamp' || h.includes('gmt time') || h.includes('time (utc)')) && timeIdx === -1) timeIdx = idx;
           else if ((h === 'open' || h === 'o') && openIdx === -1) openIdx = idx;
           else if ((h === 'high' || h === 'h') && highIdx === -1) highIdx = idx;
@@ -12879,10 +13815,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         }
       }
 
-      const rawCandles = [];
+      const rawRows = [];
+      const rawTfTokens = new Set();
+      const symbolsSet = new Set();
+
       for (let i = startRow; i < lines.length; i++) {
         const cols = lines[i].split(delimiter);
-        const maxIdx = Math.max(dateIdx, timeIdx, openIdx, highIdx, lowIdx, closeIdx);
+        const maxIdx = Math.max(dateIdx, timeIdx, openIdx, highIdx, lowIdx, closeIdx, tfIdx, symbolIdx);
         if (cols.length <= maxIdx) continue;
 
         const timeStr = dateIdx !== -1
@@ -12899,19 +13838,123 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         if (!Number.isFinite(open) || !Number.isFinite(high) || !Number.isFinite(low) || !Number.isFinite(close)) continue;
         if (high < low) continue;
 
-        rawCandles.push({ time, open, high, low, close });
+        let rawTf = '';
+        if (tfIdx !== -1) {
+          rawTf = String(cols[tfIdx] || '').trim().replace(/^["']|["']$/g, '');
+          if (rawTf) rawTfTokens.add(rawTf);
+        }
+
+        if (symbolIdx !== -1) {
+          const sym = String(cols[symbolIdx] || '').trim().replace(/^["']|["']$/g, '').toUpperCase();
+          if (sym) symbolsSet.add(sym);
+        }
+
+        rawRows.push({ rawTf, candle: { time, open, high, low, close } });
       }
 
-      if (rawCandles.length === 0) return [];
+      if (rawRows.length === 0) return emptyResult;
 
-      rawCandles.sort((a, b) => a.time - b.time);
-
-      const dedupedMap = new Map();
-      for (const candle of rawCandles) {
-        dedupedMap.set(candle.time, candle);
+      // '1M' TradingView'da 1 Ay (1m = 1 Dakika) iken bazı büyük harfli CSV'lerde 1 Dakika (1M, 5M, 15M) olabilir
+      const hasLowerStyle = ['1m', '3m', '5m', '15m', '30m', '1h', '2h', '4h', '1d', '1w'].some(t => rawTfTokens.has(t));
+      const hasUpperMinuteStyle = rawTfTokens.has('5M') || rawTfTokens.has('15M') || rawTfTokens.has('30M') || rawTfTokens.has('MN1');
+      let preferMonthFor1M = hasLowerStyle && !hasUpperMinuteStyle;
+      if (!preferMonthFor1M && rawTfTokens.size === 1 && rawTfTokens.has('1M') && rawRows.length >= 2) {
+        const dt = Math.abs(rawRows[1].candle.time - rawRows[0].candle.time);
+        if (dt >= 86400 * 20) preferMonthFor1M = true;
       }
 
-      return Array.from(dedupedMap.values());
+      const buckets = new Map();
+      let hasTimeframeColumn = false;
+
+      for (const row of rawRows) {
+        const tfKey = row.rawTf ? normalizeRpTimeframe(row.rawTf, preferMonthFor1M) : '__DEFAULT__';
+        if (tfKey !== '__DEFAULT__') hasTimeframeColumn = true;
+        if (!buckets.has(tfKey)) {
+          buckets.set(tfKey, []);
+        }
+        buckets.get(tfKey).push(row.candle);
+      }
+
+      const candlesByTf = new Map();
+      const allCandles = [];
+
+      for (const [tfKey, list] of buckets.entries()) {
+        list.sort((a, b) => a.time - b.time);
+        const dedupedMap = new Map();
+        for (const candle of list) {
+          dedupedMap.set(candle.time, candle);
+        }
+        const sortedDeduped = Array.from(dedupedMap.values());
+        if (tfKey !== '__DEFAULT__') {
+          candlesByTf.set(tfKey, sortedDeduped);
+        }
+        for (const c of sortedDeduped) {
+          allCandles.push(c);
+        }
+      }
+
+      const tfOrder = ['M1', 'M3', 'M5', 'M15', 'M30', 'H1', 'H2', 'H4', 'D1', 'W1', 'MN1'];
+      const availableTfs = Array.from(candlesByTf.keys()).sort((a, b) => {
+        const ia = tfOrder.indexOf(a);
+        const ib = tfOrder.indexOf(b);
+        if (ia !== -1 && ib !== -1) return ia - ib;
+        if (ia !== -1) return -1;
+        if (ib !== -1) return 1;
+        return a.localeCompare(b);
+      });
+
+      allCandles.sort((a, b) => a.time - b.time);
+      const flatMap = new Map();
+      for (const c of allCandles) flatMap.set(c.time, c);
+
+      return {
+        candlesByTf,
+        availableTfs,
+        hasTimeframeColumn,
+        symbols: Array.from(symbolsSet),
+        flatCandles: Array.from(flatMap.values())
+      };
+    }
+
+    function parseRpCsvCandles(text) {
+      const parsed = parseRpCsvData(text);
+      if (parsed.hasTimeframeColumn && parsed.availableTfs.length > 0) {
+        const selectedTf = document.getElementById('rp-tf-select')?.value || '';
+        if (selectedTf && parsed.candlesByTf.has(selectedTf)) {
+          return parsed.candlesByTf.get(selectedTf);
+        }
+        return parsed.candlesByTf.get(parsed.availableTfs[0]) || [];
+      }
+      return parsed.flatCandles;
+    }
+
+    function findRpCandleIndexAtOrBeforeTime(candles, targetTime) {
+      if (!Array.isArray(candles) || candles.length === 0) return -1;
+      if (!Number.isFinite(targetTime)) return candles.length - 1;
+      let lo = 0;
+      let hi = candles.length - 1;
+      let ans = 0;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (candles[mid].time <= targetTime) {
+          ans = mid;
+          lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
+      }
+      return ans;
+    }
+
+    function ensureRpTfSelectOption(tfSelect, tfValue) {
+      if (!tfSelect || !tfValue) return;
+      const exists = Array.from(tfSelect.options).some(opt => opt.value === tfValue);
+      if (!exists) {
+        const opt = document.createElement('option');
+        opt.value = tfValue;
+        opt.textContent = tfValue;
+        tfSelect.appendChild(opt);
+      }
     }
 
     function getRpPriceFormatForCandles(candles) {
@@ -12937,6 +13980,99 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       };
     }
 
+    function switchRpTimeframe(nextTf) {
+      const tfSelect = document.getElementById('rp-tf-select');
+      const fsTfSelect = document.getElementById('rp-fs-tf-select');
+      const normalizedNext = normalizeRpTimeframe(nextTf) || nextTf;
+
+      if (!rpHasTimeframeData || rpLoadedCandlesByTf.size === 0) {
+        rpLastActiveTf = normalizedNext;
+        if (tfSelect) {
+          ensureRpTfSelectOption(tfSelect, normalizedNext);
+          tfSelect.value = normalizedNext;
+        }
+        if (fsTfSelect) {
+          ensureRpTfSelectOption(fsTfSelect, normalizedNext);
+          fsTfSelect.value = normalizedNext;
+        }
+        saveRpTradePrefs(true);
+        applyRpChartSettings();
+        syncRpFullscreenTopbar();
+        return;
+      }
+
+      if (!rpLoadedCandlesByTf.has(normalizedNext)) {
+        if (tfSelect && rpLastActiveTf) {
+          ensureRpTfSelectOption(tfSelect, rpLastActiveTf);
+          tfSelect.value = rpLastActiveTf;
+        }
+        if (fsTfSelect && rpLastActiveTf) {
+          ensureRpTfSelectOption(fsTfSelect, rpLastActiveTf);
+          fsTfSelect.value = rpLastActiveTf;
+        }
+        showToast(`Yüklü CSV dosyasında ${normalizedNext} zaman dilimi bulunmuyor.`, 'error');
+        return;
+      }
+
+      const nextCandles = rpLoadedCandlesByTf.get(normalizedNext);
+      if (!nextCandles || nextCandles.length === 0) return;
+
+      const wasReplayActive = rpReplayActive && rpReplayIndex >= 0 && rpLoadedCandles.length > 0;
+      const prevReplayTime = wasReplayActive ? rpLoadedCandles[rpReplayIndex].time : null;
+      pauseRpReplay();
+
+      rpLoadedCandles = nextCandles;
+      rpLastActiveTf = normalizedNext;
+      if (tfSelect) {
+        ensureRpTfSelectOption(tfSelect, normalizedNext);
+        tfSelect.value = normalizedNext;
+      }
+      if (fsTfSelect) {
+        ensureRpTfSelectOption(fsTfSelect, normalizedNext);
+        fsTfSelect.value = normalizedNext;
+      }
+      saveRpTradePrefs(true);
+
+      const fileNameEl = document.getElementById('rp-file-name');
+      if (fileNameEl && rpLoadedFileName) {
+        fileNameEl.textContent = `${rpLoadedFileName} · ${normalizedNext} (${rpLoadedCandles.length} mum)`;
+      }
+
+      if (wasReplayActive && prevReplayTime !== null) {
+        rpReplayIndex = findRpCandleIndexAtOrBeforeTime(rpLoadedCandles, prevReplayTime);
+        if (rpOpenTrade && Number.isFinite(rpOpenTrade.entryTime)) {
+          const mappedEntryIdx = findRpCandleIndexAtOrBeforeTime(rpLoadedCandles, rpOpenTrade.entryTime);
+          rpOpenTrade.entryIndex = Math.min(rpReplayIndex, Math.max(0, mappedEntryIdx));
+        }
+        if (rpPendingOrder && Number.isFinite(rpPendingOrder.createdTime)) {
+          const mappedCreatedIdx = findRpCandleIndexAtOrBeforeTime(rpLoadedCandles, rpPendingOrder.createdTime);
+          rpPendingOrder.createdIndex = Math.min(rpReplayIndex, Math.max(0, mappedCreatedIdx));
+        }
+      }
+
+      initOrResizeRpChart();
+      if (rpCandlestickSeries && rpChartInstance) {
+        rpCandlestickSeries.applyOptions({ priceFormat: getRpPriceFormatForCandles(rpLoadedCandles) });
+        if (wasReplayActive && !rpIsPickingStart) {
+          rpCandlestickSeries.setData(rpLoadedCandles.slice(0, rpReplayIndex + 1));
+        } else {
+          rpCandlestickSeries.setData(rpLoadedCandles);
+        }
+        rpChartInstance.timeScale().fitContent();
+      }
+
+      applyRpChartSettings();
+      syncRpFullscreenTopbar();
+      updateRpReplayControls();
+      updateRpChartOverlay();
+      updateRpPanelDollarHints();
+      updateRpPriceLineLabels();
+      requestAnimationFrame(() => {
+        updateRpChartOverlay();
+        positionRpFullscreenBtn();
+      });
+    }
+
     async function handleRpCsvFile(file) {
       if (!file) return;
       let text = '';
@@ -12947,17 +14083,64 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         return;
       }
 
-      const candles = parseRpCsvCandles(text);
-      if (candles.length === 0) {
+      const parsed = parseRpCsvData(text);
+      const hasTf = parsed.hasTimeframeColumn && parsed.availableTfs.length > 0;
+      const totalCheck = hasTf ? parsed.availableTfs.length : parsed.flatCandles.length;
+      if (totalCheck === 0) {
         showToast('CSV dosyasında geçerli mum verisi bulunamadı.', 'error');
         return;
       }
 
       resetRpReplayState();
-      rpLoadedCandles = candles;
+
+      const tfSelect = document.getElementById('rp-tf-select');
+      const currentTf = tfSelect ? tfSelect.value : 'M15';
+      let activeTf = currentTf;
+      let initialCandles = [];
+
+      if (hasTf) {
+        rpLoadedCandlesByTf = parsed.candlesByTf;
+        rpHasTimeframeData = true;
+        if (parsed.candlesByTf.has(currentTf)) {
+          activeTf = currentTf;
+        } else {
+          const preferredOrder = ['M15', 'M5', 'H1', 'M1', 'M30', 'H2', 'H4', 'D1', 'W1', 'MN1'];
+          activeTf = preferredOrder.find(tf => parsed.candlesByTf.has(tf)) || parsed.availableTfs[0];
+          if (tfSelect) {
+            ensureRpTfSelectOption(tfSelect, activeTf);
+            tfSelect.value = activeTf;
+          }
+        }
+        initialCandles = parsed.candlesByTf.get(activeTf) || [];
+      } else {
+        rpLoadedCandlesByTf = new Map();
+        rpHasTimeframeData = false;
+        initialCandles = parsed.flatCandles;
+      }
+
+      if (parsed.symbols.length === 1) {
+        const pairInput = document.getElementById('rp-pair-input');
+        if (pairInput && !pairInput.value.trim()) {
+          pairInput.value = parsed.symbols[0];
+          syncRpContractSizeFromPair(true);
+        }
+      }
+
+      rpLoadedFileName = file.name;
+      rpLastActiveTf = activeTf;
+      rpLoadedCandles = initialCandles;
+      const fsTfSelect = document.getElementById('rp-fs-tf-select');
+      if (fsTfSelect) {
+        ensureRpTfSelectOption(fsTfSelect, activeTf);
+        fsTfSelect.value = activeTf;
+      }
+      syncRpFullscreenTopbar();
+
       const fileNameEl = document.getElementById('rp-file-name');
       if (fileNameEl) {
-        fileNameEl.textContent = `${file.name} (${candles.length} mum)`;
+        fileNameEl.textContent = hasTf
+          ? `${file.name} · ${activeTf} (${rpLoadedCandles.length} mum)`
+          : `${file.name} (${rpLoadedCandles.length} mum)`;
       }
 
       initOrResizeRpChart();
@@ -12967,9 +14150,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         rpChartInstance.timeScale().fitContent();
       }
 
+      applyRpChartSettings();
       requestAnimationFrame(() => positionRpFullscreenBtn());
       updateRpReplayControls();
-      showToast(`${candles.length} mum grafiğe yüklendi.`, 'success');
+      if (hasTf && parsed.availableTfs.length > 1) {
+        showToast(`${parsed.availableTfs.length} zaman dilimi yüklendi (${parsed.availableTfs.join(', ')}). Aktif: ${activeTf} (${rpLoadedCandles.length} mum).`, 'success');
+      } else if (hasTf) {
+        showToast(`${activeTf} zaman diliminde ${rpLoadedCandles.length} mum grafiğe yüklendi.`, 'success');
+      } else {
+        showToast(`${rpLoadedCandles.length} mum grafiğe yüklendi.`, 'success');
+      }
     }
 
     function bindRpChartListeners() {
@@ -13219,10 +14409,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       const pairInput = document.getElementById('rp-pair-input');
       const tfSelect = document.getElementById('rp-tf-select');
+      const fsTfSelect = document.getElementById('rp-fs-tf-select');
       if (pairInput) {
         pairInput.addEventListener('change', () => {
           syncRpContractSizeFromPair(true);
           applyRpChartSettings();
+          syncRpFullscreenTopbar();
           if (!rpOpenTrade && !rpPendingOrder) syncRpLotFromRisk();
           updateRpPanelDollarHints();
           updateRpPriceLineLabels();
@@ -13230,14 +14422,24 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         pairInput.addEventListener('input', () => {
           syncRpContractSizeFromPair(false);
           applyRpChartSettings();
+          syncRpFullscreenTopbar();
           if (!rpOpenTrade && !rpPendingOrder) syncRpLotFromRisk();
           updateRpPanelDollarHints();
           updateRpPriceLineLabels();
         });
       }
       if (tfSelect) {
-        tfSelect.addEventListener('change', applyRpChartSettings);
+        rpLastActiveTf = tfSelect.value || 'M15';
+        tfSelect.addEventListener('change', () => {
+          switchRpTimeframe(tfSelect.value);
+        });
       }
+      if (fsTfSelect) {
+        fsTfSelect.addEventListener('change', () => {
+          switchRpTimeframe(fsTfSelect.value);
+        });
+      }
+      syncRpFullscreenTopbar();
 
       const balInput = document.getElementById('rp-balance-input');
       const riskInput = document.getElementById('rp-risk-input');
@@ -13529,6 +14731,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           replayBar.style.top = `${curTop}px`;
           replayBar.style.bottom = 'auto';
           replayBar.style.transform = 'none';
+          replayBar.classList.add('rp-custom-pos');
           rpReplayBarCustomPositioned = true;
           rpReplayBarDragState = {
             startX: clientX,
@@ -13874,7 +15077,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
         // FX Replay Tarzı Sağ Tık İşlem Paneli Açılışı
         chartWrap.addEventListener('contextmenu', (e) => {
-          if (e.target && e.target.closest('#rp-ctx-trade-panel, #rp-settings-panel, #rp-replay-bar, #rp-fullscreen-btn, #rp-settings-btn, #rp-pos-tag')) {
+          if (e.target && e.target.closest('#rp-ctx-trade-panel, #rp-settings-panel, #rp-replay-bar, #rp-fs-topbar, #rp-fullscreen-btn, #rp-settings-btn, #rp-pos-tag')) {
             return;
           }
           e.preventDefault();
@@ -13886,7 +15089,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         let touchStartPoint = null;
         chartWrap.addEventListener('touchstart', (e) => {
           if (e.touches.length !== 1) return;
-          if (e.target && e.target.closest('#rp-ctx-trade-panel, #rp-settings-panel, #rp-replay-bar, #rp-fullscreen-btn, #rp-settings-btn, #rp-pos-tag')) {
+          if (e.target && e.target.closest('#rp-ctx-trade-panel, #rp-settings-panel, #rp-replay-bar, #rp-fs-topbar, #rp-fullscreen-btn, #rp-settings-btn, #rp-pos-tag')) {
             return;
           }
           const t = e.touches[0];
@@ -13950,7 +15153,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
         chartWrap.addEventListener('mousedown', (e) => {
           if (e.button !== 0) return;
-          const insideControl = e.target && e.target.closest('#rp-pos-tag, #rp-replay-bar, #rp-fullscreen-btn, #rp-settings-btn, #rp-ctx-trade-panel, #rp-settings-panel');
+          const insideControl = e.target && e.target.closest('#rp-pos-tag, #rp-replay-bar, #rp-fs-topbar, #rp-fullscreen-btn, #rp-settings-btn, #rp-ctx-trade-panel, #rp-settings-panel');
           if (insideControl) return;
 
           const rect = chartWrap.getBoundingClientRect();
@@ -13974,7 +15177,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
         chartWrap.addEventListener('mousemove', (e) => {
           if (rpDraggingLine || rpReplayBarDragState || rpCtxPanelDragState || !rpCandlestickSeries || !rpChartInstance) return;
-          if (e.target && e.target.closest('#rp-replay-bar, #rp-fullscreen-btn, #rp-settings-btn, #rp-pos-tag, #rp-ctx-trade-panel, #rp-settings-panel')) {
+          if (e.target && e.target.closest('#rp-replay-bar, #rp-fs-topbar, #rp-fullscreen-btn, #rp-settings-btn, #rp-pos-tag, #rp-ctx-trade-panel, #rp-settings-panel')) {
             chartWrap.style.cursor = '';
             chartWrap.classList.remove('rp-line-hover');
             return;
