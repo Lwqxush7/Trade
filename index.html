@@ -1587,10 +1587,114 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   color: #0F172A;
 }
 
+.rp-field-tf {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .rp-tf-control-row {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  max-width: 100%;
+}
+
+.rp-tf-select-hidden {
+  display: none !important;
+}
+
+.rp-tf-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 42px;
+  padding: 4px;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: var(--radius-sm);
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-subtle);
+  box-shadow: var(--neu-shadow-inset);
+}
+
+.rp-tf-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.rp-tf-btn {
+  height: 32px;
+  padding: 0 9px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+}
+
+.rp-tf-btn:hover {
+  background: var(--glass-hover-fill-strong);
+  color: var(--text-main);
+}
+
+.rp-tf-btn.active {
+  background: linear-gradient(135deg, rgba(59, 108, 255, 0.34), rgba(34, 211, 238, 0.24));
+  border-color: rgba(56, 189, 248, 0.65);
+  color: var(--color-neon-cyan);
+  box-shadow: 0 2px 10px rgba(34, 211, 238, 0.18);
+}
+
+.rp-tf-btn.unavailable {
+  opacity: 0.34;
+}
+
+.rp-tf-btn.unavailable:hover {
+  opacity: 0.68;
+}
+
+:root[data-theme="light"] .rp-tf-strip {
+  background: rgba(255, 255, 255, 0.76);
+  border-color: var(--glass-border);
+}
+
+:root[data-theme="light"] .rp-tf-btn {
+  color: #475569;
+}
+
+:root[data-theme="light"] .rp-tf-btn:hover {
+  background: rgba(15, 23, 42, 0.06);
+  color: #0F172A;
+}
+
+:root[data-theme="light"] .rp-tf-btn.active {
+  background: rgba(37, 99, 235, 0.14);
+  border-color: rgba(37, 99, 235, 0.48);
+  color: #1D4ED8;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.14);
+}
+
+.rp-tf-strip.rp-fs-tf-strip {
+  height: 28px;
+  padding: 2px 3px;
+  border-radius: 999px;
+}
+
+.rp-tf-strip.rp-fs-tf-strip .rp-tf-btn {
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 0.7rem;
 }
 
 .rp-tf-quick-btn {
@@ -3702,7 +3806,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 }
 
 .rp-chart-wrap.rp-drawing-hover {
-  cursor: pointer;
+  cursor: var(--rp-draw-cursor, pointer);
+}
+
+.rp-chart-wrap.rp-drawing-hover .tv-lightweight-charts,
+.rp-chart-wrap.rp-drawing-hover .tv-lightweight-charts * {
+  cursor: var(--rp-draw-cursor, pointer) !important;
 }
 
 .rp-chart-wrap.rp-drawing-grabbing,
@@ -4450,6 +4559,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   .rp-toolbar .rp-field-file {
     flex: 1 1 100%;
     width: 100%;
+  }
+  .rp-toolbar .rp-field-tf {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+  .rp-tf-control-row {
+    width: 100%;
+  }
+  .rp-tf-strip {
+    flex: 1;
+    min-width: 0;
   }
   .rp-field {
     flex: 1 1 125px;
@@ -5753,10 +5873,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               <input type="text" id="rp-pair-input" class="rp-input" placeholder="örn. EURUSD, XAUUSD" autocomplete="off">
             </div>
 
-            <div class="rp-field">
+            <div class="rp-field rp-field-tf">
               <label class="rp-label" for="rp-tf-select">Timeframe</label>
               <div class="rp-tf-control-row">
-                <select id="rp-tf-select" class="rp-select">
+                <div class="rp-tf-strip" id="rp-tf-strip" role="group" aria-label="Zaman Dilimi"></div>
+                <select id="rp-tf-select" class="rp-select rp-tf-select-hidden">
                   <option value="M1">M1</option>
                   <option value="M3">M3</option>
                   <option value="M5">M5</option>
@@ -5844,6 +5965,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 <input type="color" id="rp-draw-prop-color" class="rp-draw-props-color" title="Çizim Rengi" value="#38BDF8">
                 <select id="rp-draw-prop-width" class="rp-draw-props-select" aria-label="Çizgi Kalınlığı">
                   <option value="1">1 px</option>
+                  <option value="1.5">1.5 px</option>
                   <option value="2" selected>2 px</option>
                   <option value="3">3 px</option>
                   <option value="4">4 px</option>
@@ -5910,7 +6032,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             <div class="rp-fs-topbar" id="rp-fs-topbar">
               <span class="rp-fs-pair-badge" id="rp-fs-pair-badge">CHART</span>
               <label class="rp-fs-tf-label" for="rp-fs-tf-select">TF</label>
-              <select id="rp-fs-tf-select" class="rp-select rp-fs-tf-select" aria-label="Tam Ekran Zaman Dilimi">
+              <div class="rp-tf-strip rp-fs-tf-strip" id="rp-fs-tf-strip" role="group" aria-label="Tam Ekran Zaman Dilimi"></div>
+              <select id="rp-fs-tf-select" class="rp-select rp-fs-tf-select rp-tf-select-hidden" aria-label="Tam Ekran Zaman Dilimi">
                 <option value="M1">M1</option>
                 <option value="M3">M3</option>
                 <option value="M5">M5</option>
@@ -7127,8 +7250,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
         applyTheme(AppState.settings.theme);
         syncSettingsToInputs();
+        if (typeof loadRpChartSettings === 'function') {
+          loadRpChartSettings(AppState.settings.theme);
+        }
         if (typeof loadRpTradePrefs === 'function') {
           loadRpTradePrefs();
+        }
+        if (typeof loadRpDrawPrefs === 'function') {
+          loadRpDrawPrefs();
+        }
+        if (typeof loadRpDrawingsFromStorage === 'function') {
+          loadRpDrawingsFromStorage();
         }
         if (typeof seedRpBalanceFromBacktestIfUnset === 'function') {
           seedRpBalanceFromBacktestIfUnset();
@@ -7427,7 +7559,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
     }
 
-    function readStoredRpDrawPrefsObj() {
+    function readStoredRpDrawPrefsObj(preferMemory = true) {
+      if (preferMemory && typeof rpDrawPrefs !== 'undefined' && rpDrawPrefs && typeof rpDrawPrefs === 'object') {
+        return rpDrawPrefs;
+      }
       try {
         const raw = localStorage.getItem(RP_DRAW_PREFS_KEY);
         if (!raw) return null;
@@ -7441,7 +7576,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function buildUnifiedPreferencesPayload() {
       const storedChartSett = readStoredRpChartSettingsObj();
       const storedTradePrefs = readStoredRpTradePrefsObj();
-      const storedDrawPrefs = readStoredRpDrawPrefsObj();
+      const storedDrawPrefs = readStoredRpDrawPrefsObj(true);
       const payload = {
         ...AppState.settings,
         updatedAt: AppState.settings.updatedAt || new Date().toISOString()
@@ -7458,6 +7593,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       return cleanForFirestore(payload);
     }
 
+    async function writePreferencesPayloadToFirestore(uid, payload) {
+      const ref = doc(db, 'users', uid, 'settings', 'preferences');
+      const keys = Object.keys(payload || {});
+      if (keys.length > 0) {
+        await setDoc(ref, payload, { mergeFields: keys });
+      } else {
+        await setDoc(ref, payload, { merge: true });
+      }
+    }
+
     async function syncPreferencesToCloudNow() {
       if (!db || !AppState.user) return false;
       if (rpPrefCloudSyncTimer !== null) {
@@ -7469,9 +7614,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       try {
         localStorage.setItem(PENDING_SYNC_KEYS.settingsPending, 'true');
         const payload = buildUnifiedPreferencesPayload();
-        await setDoc(doc(db, 'users', uid, 'settings', 'preferences'), payload, { merge: true });
+        await writePreferencesPayloadToFirestore(uid, payload);
         if (seqAtSend === localPrefSaveSeq) {
           localStorage.removeItem(PENDING_SYNC_KEYS.settingsPending);
+        } else if (AppState.user && AppState.user.uid === uid) {
+          schedulePreferencesCloudSync(80);
         }
         return true;
       } catch (err) {
@@ -7895,10 +8042,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
        FIRESTORE GERÇEK ZAMANLI SENKRONİZASYON (onSnapshot + KUYRUK)
        ------------------------------------------------------------- */
     let isFlushingPendingSync = false;
+    let queuedPendingFlushUid = null;
 
     async function flushPendingCloudWrites(uid) {
-      if (!db || !uid || !AppState.user || AppState.user.uid !== uid || isFlushingPendingSync) return;
+      if (!db || !uid || !AppState.user || AppState.user.uid !== uid) return;
+      if (isFlushingPendingSync) {
+        queuedPendingFlushUid = uid;
+        return;
+      }
       isFlushingPendingSync = true;
+      let shouldReflush = false;
       try {
         const pendingTradeUpserts = readPendingIdMap(PENDING_SYNC_KEYS.tradesUpsert);
         for (const id of Object.keys(pendingTradeUpserts)) {
@@ -7966,14 +8119,21 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         if (localStorage.getItem(PENDING_SYNC_KEYS.settingsPending) === 'true') {
           try {
             const seqAtFlush = localPrefSaveSeq;
-            await setDoc(doc(db, 'users', uid, 'settings', 'preferences'), buildUnifiedPreferencesPayload(), { merge: true });
+            await writePreferencesPayloadToFirestore(uid, buildUnifiedPreferencesPayload());
             if (seqAtFlush === localPrefSaveSeq) {
               localStorage.removeItem(PENDING_SYNC_KEYS.settingsPending);
+            } else {
+              shouldReflush = true;
             }
           } catch (_) {}
         }
       } finally {
         isFlushingPendingSync = false;
+        const nextUid = queuedPendingFlushUid || (shouldReflush ? uid : null);
+        queuedPendingFlushUid = null;
+        if (nextUid && AppState.user && AppState.user.uid === nextUid) {
+          flushPendingCloudWrites(nextUid);
+        }
       }
     }
 
@@ -8156,6 +8316,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const prefDocRef = doc(db, 'users', uid, 'settings', 'preferences');
       AppState.unsubPreferences = onSnapshot(prefDocRef, (docSnap) => {
         if (docSnap.exists()) {
+          if (docSnap.metadata.hasPendingWrites) {
+            return;
+          }
           if (localStorage.getItem(PENDING_SYNC_KEYS.settingsPending) === 'true') {
             flushPendingCloudWrites(uid);
           } else {
@@ -8190,14 +8353,14 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             if (remoteChartSett) {
               const remoteChartTs = String(remoteChartSett.updatedAt || '');
               const localChartTs = String((localChartSett && localChartSett.updatedAt) || '');
-              const localNewerChart = Boolean(localChartSett && localChartSett.customized && localChartTs && (!remoteChartTs || localChartTs > remoteChartTs));
+              const localNewerChart = Boolean(localChartSett && localChartTs && (!remoteChartTs || localChartTs > remoteChartTs));
               if (localNewerChart) {
                 needsPushBack = true;
               } else {
                 const defaults = getDefaultRpChartSettings(AppState.settings.theme || 'dark');
                 rpChartSettings = {
                   customized: !!remoteChartSett.customized,
-                  updatedAt: remoteChartTs || new Date().toISOString(),
+                  updatedAt: remoteChartTs || '',
                   candles: { ...defaults.candles, ...(remoteChartSett.candles || {}) },
                   canvas: { ...defaults.canvas, ...(remoteChartSett.canvas || {}) },
                   scales: { ...defaults.scales, ...(remoteChartSett.scales || {}) },
@@ -8207,7 +8370,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 if (typeof syncRpSettingsUiFromState === 'function') syncRpSettingsUiFromState();
                 if (typeof applyRpChartSettings === 'function') applyRpChartSettings();
               }
-            } else if (localChartSett && localChartSett.customized) {
+            } else if (localChartSett && (localChartSett.customized || localChartSett.updatedAt)) {
               needsPushBack = true;
             }
 
@@ -8229,12 +8392,19 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               needsPushBack = true;
             }
 
-            const localDrawPrefs = readStoredRpDrawPrefsObj();
+            const localDrawPrefs = readStoredRpDrawPrefsObj(true);
             const remoteDrawPrefs = (remote.rpDrawPrefs && typeof remote.rpDrawPrefs === 'object') ? remote.rpDrawPrefs : null;
             if (remoteDrawPrefs) {
               const remoteDrawTs = String(remoteDrawPrefs.updatedAt || '');
               const localDrawTs = String((localDrawPrefs && localDrawPrefs.updatedAt) || '');
-              const localNewerDraw = Boolean(localDrawPrefs && localDrawTs && (!remoteDrawTs || localDrawTs > remoteDrawTs));
+              const localHasToolDefs = Boolean(localDrawPrefs && localDrawPrefs.toolDefaults && Object.keys(localDrawPrefs.toolDefaults).length > 0);
+              const remoteHasToolDefs = Boolean(remoteDrawPrefs.toolDefaults && Object.keys(remoteDrawPrefs.toolDefaults).length > 0);
+              const localNewerDraw = Boolean(
+                localDrawPrefs && (
+                  (localDrawTs && (!remoteDrawTs || localDrawTs > remoteDrawTs)) ||
+                  (!localDrawTs && !remoteDrawTs && localHasToolDefs && !remoteHasToolDefs)
+                )
+              );
               if (localNewerDraw) {
                 needsPushBack = true;
               } else {
@@ -8245,8 +8415,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 if (typeof applyRpDrawSidebarCollapseUi === 'function') applyRpDrawSidebarCollapseUi();
                 if (typeof renderRpDrawSidebar === 'function') renderRpDrawSidebar();
                 if (typeof renderRpFavToolbar === 'function') renderRpFavToolbar();
+                if (typeof syncRpDrawToolButtons === 'function') syncRpDrawToolButtons();
+                if (typeof syncRpDrawPropsBar === 'function') syncRpDrawPropsBar();
+                if (typeof renderRpDrawings === 'function') renderRpDrawings();
               }
-            } else if (localDrawPrefs) {
+            } else if (localDrawPrefs && (localDrawPrefs.updatedAt || (localDrawPrefs.toolDefaults && Object.keys(localDrawPrefs.toolDefaults).length > 0))) {
               needsPushBack = true;
             }
 
@@ -12333,6 +12506,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     let rpDrawingDragState = null;
     let rpFavBarDragState = null;
     let rpDrawRafId = null;
+    let rpViewportSyncRafId = null;
+    let rpViewportSyncUntil = 0;
+    let rpLastViewportSig = '';
     let rpPendingTextContext = null;
     let rpDrawPrefs = null;
 
@@ -12479,6 +12655,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             riskEl.value = String(AppState.settings.defaultRisk);
           }
           if (tfEl && fsTfEl) fsTfEl.value = tfEl.value || 'M15';
+          if (typeof renderRpTfBarButtons === 'function') renderRpTfBarButtons();
           return;
         }
         const parsed = JSON.parse(raw);
@@ -12510,6 +12687,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           }
           rpLastActiveTf = normTf;
         }
+        if (typeof renderRpTfBarButtons === 'function') renderRpTfBarButtons();
         if (typeof updateRpPanelDollarHints === 'function') updateRpPanelDollarHints();
       } catch (_) {}
     }
@@ -12693,7 +12871,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (rpCandlestickSeries) {
         rpCandlestickSeries.applyOptions(getRpCandlestickThemeOptions(theme));
       }
-      requestAnimationFrame(() => positionRpFullscreenBtn());
+      requestAnimationFrame(() => {
+        positionRpFullscreenBtn();
+        if (typeof renderRpDrawings === 'function') renderRpDrawings();
+      });
     }
 
     function syncRpSettingsUiFromState() {
@@ -12764,6 +12945,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         localStorage.setItem(RP_CHART_SETTINGS_KEY, JSON.stringify(rpChartSettings));
       } catch (_) {}
       schedulePreferencesCloudSync(120);
+      flushPreferencesCloudSyncNow();
       syncRpSettingsUiFromState();
       applyRpChartSettings();
       showToast('Grafik ayarları varsayılana sıfırlandı.', 'info');
@@ -12878,6 +13060,68 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       return !!((layout && fsEl === layout) || (wrap && fsEl === wrap) || rpChartFullscreenFallback);
     }
 
+    const RP_DEFAULT_TF_LIST = ['M1', 'M3', 'M5', 'M15', 'M30', 'H1', 'H2', 'H4', 'D1', 'W1', 'MN1'];
+
+    function formatRpTfDisplayLabel(tf) {
+      const val = String(tf || '').trim().toUpperCase();
+      const map = {
+        M1: '1m', M3: '3m', M5: '5m', M15: '15m', M30: '30m',
+        H1: '1h', H2: '2h', H4: '4h', D1: '1D', W1: '1W', MN1: '1M'
+      };
+      if (map[val]) return map[val];
+      const mnMatch = val.match(/^MN(\d+)$/);
+      if (mnMatch) return `${mnMatch[1]}M`;
+      const mMatch = val.match(/^M(\d+)$/);
+      if (mMatch) return `${mMatch[1]}m`;
+      const hMatch = val.match(/^H(\d+)$/);
+      if (hMatch) return `${hMatch[1]}h`;
+      const dMatch = val.match(/^D(\d+)$/);
+      if (dMatch) return `${dMatch[1]}D`;
+      const wMatch = val.match(/^W(\d+)$/);
+      if (wMatch) return `${wMatch[1]}W`;
+      return val;
+    }
+
+    function renderRpTfBarButtons() {
+      const strip = document.getElementById('rp-tf-strip');
+      const fsStrip = document.getElementById('rp-fs-tf-strip');
+      if (!strip && !fsStrip) return;
+      const tfSelect = document.getElementById('rp-tf-select');
+      const activeTf = (tfSelect && tfSelect.value) || rpLastActiveTf || 'M15';
+      const hasMultiTf = Boolean(rpHasTimeframeData && rpLoadedCandlesByTf && rpLoadedCandlesByTf.size > 0);
+      const tfList = [...RP_DEFAULT_TF_LIST];
+      if (hasMultiTf) {
+        rpLoadedCandlesByTf.forEach((_, k) => {
+          if (!tfList.includes(k)) tfList.push(k);
+        });
+      }
+      if (activeTf && !tfList.includes(activeTf)) tfList.push(activeTf);
+
+      const populateStrip = (container) => {
+        if (!container) return;
+        container.innerHTML = '';
+        tfList.forEach(tf => {
+          const available = !hasMultiTf || rpLoadedCandlesByTf.has(tf);
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'rp-tf-btn' + (tf === activeTf ? ' active' : '') + (!available ? ' unavailable' : '');
+          btn.dataset.tf = tf;
+          btn.textContent = formatRpTfDisplayLabel(tf);
+          btn.setAttribute('aria-pressed', tf === activeTf ? 'true' : 'false');
+          btn.title = available ? `${tf} zaman dilimine geç` : `${tf} (Yüklü CSV içinde yok)`;
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            switchRpTimeframe(tf);
+          });
+          container.appendChild(btn);
+        });
+      };
+
+      populateStrip(strip);
+      populateStrip(fsStrip);
+    }
+
     function syncRpFullscreenTopbar() {
       const pairVal = (document.getElementById('rp-pair-input')?.value || '').trim().toUpperCase();
       const badge = document.getElementById('rp-fs-pair-badge');
@@ -12892,6 +13136,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           fsTfSelect.value = tfSelect.value;
         }
       }
+      renderRpTfBarButtons();
     }
 
     function syncRpFullscreenUi() {
@@ -14900,6 +15145,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         return false;
       }
       updateRpReplayControls();
+      if (typeof renderRpDrawings === 'function') renderRpDrawings();
+      if (typeof startRpViewportSyncWatch === 'function') startRpViewportSyncWatch(320);
       return true;
     }
 
@@ -14940,6 +15187,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         }
       }
       updateRpReplayControls();
+      if (typeof renderRpDrawings === 'function') renderRpDrawings();
+      if (typeof startRpViewportSyncWatch === 'function') startRpViewportSyncWatch(320);
     }
 
     function startRpReplay() {
@@ -15539,6 +15788,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         saveRpTradePrefs(true);
         applyRpChartSettings();
         syncRpFullscreenTopbar();
+        renderRpTfBarButtons();
         return;
       }
 
@@ -15689,6 +15939,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       applyRpChartSettings();
       syncRpFullscreenTopbar();
+      renderRpTfBarButtons();
       updateRpReplayControls();
       updateRpChartOverlay();
       updateRpPanelDollarHints();
@@ -15699,6 +15950,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         updateRpChartOverlay();
         positionRpFullscreenBtn();
         if (typeof renderRpDrawings === 'function') renderRpDrawings();
+        if (typeof startRpViewportSyncWatch === 'function') startRpViewportSyncWatch(360);
       });
     }
 
@@ -15780,7 +16032,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
 
       applyRpChartSettings();
-      requestAnimationFrame(() => positionRpFullscreenBtn());
+      renderRpTfBarButtons();
+      requestAnimationFrame(() => {
+        positionRpFullscreenBtn();
+        if (typeof renderRpDrawings === 'function') renderRpDrawings();
+      });
       updateRpReplayControls();
       if (hasTf && parsed.availableTfs.length > 1) {
         showToast(`${parsed.availableTfs.length} zaman dilimi yüklendi (${parsed.availableTfs.join(', ')}). Aktif: ${activeTf} (${rpLoadedCandles.length} mum).`, 'success');
@@ -16000,7 +16256,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     function loadRpDrawPrefs() {
       const defaults = getDefaultRpDrawPrefs();
-      const stored = readStoredRpDrawPrefsObj();
+      const stored = readStoredRpDrawPrefsObj(false);
       if (!stored) {
         rpDrawPrefs = defaults;
         return;
@@ -16203,9 +16459,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       return candles[i0].time + frac * (candles[i1].time - candles[i0].time);
     }
 
-    function rpPointToPixel(pt) {
+    function rpPointToPixel(pt, cachedPlot = null) {
       if (!pt || !rpChartInstance || !rpCandlestickSeries) return null;
-      const plot = getRpPlotRect();
+      const plot = cachedPlot || getRpPlotRect();
       if (!plot) return null;
       const timeScale = rpChartInstance.timeScale();
       let x = null;
@@ -16278,27 +16534,52 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
     }
 
-    function clipInfiniteLineToBox(x1, y1, x2, y2, left, top, right, bottom, rayOnly = false) {
+    function clipInfiniteLineToBox(x1, y1, x2, y2, left, top, right, bottom, rayOnly = false, pad = 2) {
       const dx = x2 - x1;
       const dy = y2 - y1;
-      if (Math.abs(dx) < 0.001 && Math.abs(dy) < 0.001) return null;
-      const maxSpan = Math.max(right - left, bottom - top) * 4 + 2000;
-      const len = Math.hypot(dx, dy);
-      const ux = dx / len;
-      const uy = dy / len;
+      if (Math.abs(dx) < 1e-6 && Math.abs(dy) < 1e-6) return null;
+      const minX = left - pad;
+      const maxX = right + pad;
+      const minY = top - pad;
+      const maxY = bottom + pad;
+      let t0 = rayOnly ? 0 : -Infinity;
+      let t1 = Infinity;
+      const tests = [
+        [-dx, x1 - minX],
+        [dx, maxX - x1],
+        [-dy, y1 - minY],
+        [dy, maxY - y1]
+      ];
+      for (let i = 0; i < 4; i++) {
+        const p = tests[i][0];
+        const q = tests[i][1];
+        if (Math.abs(p) < 1e-9) {
+          if (q < 0) return null;
+        } else {
+          const r = q / p;
+          if (p < 0) {
+            if (r > t1) return null;
+            if (r > t0) t0 = r;
+          } else {
+            if (r < t0) return null;
+            if (r < t1) t1 = r;
+          }
+        }
+      }
+      if (!Number.isFinite(t0) || !Number.isFinite(t1) || t0 > t1) return null;
       return {
-        sx: rayOnly ? x1 : x1 - ux * maxSpan,
-        sy: rayOnly ? y1 : y1 - uy * maxSpan,
-        ex: x1 + ux * maxSpan,
-        ey: y1 + uy * maxSpan
+        sx: x1 + t0 * dx,
+        sy: y1 + t0 * dy,
+        ex: x1 + t1 * dx,
+        ey: y1 + t1 * dy
       };
     }
 
-    function getRpDrawingPixels(drawing) {
+    function getRpDrawingPixels(drawing, cachedPlot = null) {
       if (!drawing || !Array.isArray(drawing.points)) return [];
       const pixels = [];
       for (const pt of drawing.points) {
-        const px = rpPointToPixel(pt);
+        const px = rpPointToPixel(pt, cachedPlot);
         if (!px) return [];
         pixels.push(px);
       }
@@ -16361,6 +16642,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           ...base,
           lineWidth: 1.5,
           fillOpacity: 8,
+          showBackground: true,
+          showTrendLine: false,
           extendRight: false,
           reverse: false,
           showPrices: true,
@@ -16377,10 +16660,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           showStats: true
         };
       }
+      if (type === 'measure') {
+        return {
+          ...base,
+          useCustomColor: false
+        };
+      }
       if (type === 'text' || type === 'callout') {
         return {
           ...base,
-          fontSize: type === 'text' ? 12 : 11.5,
+          fontSize: 12,
           bold: true,
           showBackground: true,
           fillColor: '#0E1734',
@@ -16429,16 +16718,48 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function getRpDrawingHandles(drawing, pixels) {
       if (!drawing || !pixels || pixels.length === 0) return [];
       if (drawing.type === 'brush' || drawing.type === 'highlighter') return [];
+      if (drawing.type === 'rect' && pixels.length >= 2) {
+        const p0 = pixels[0];
+        const p1 = pixels[1];
+        const leftIdx = p0.x <= p1.x ? 0 : 1;
+        const rightIdx = 1 - leftIdx;
+        const topIdx = p0.y <= p1.y ? 0 : 1;
+        const bottomIdx = 1 - topIdx;
+        const minX = Math.min(p0.x, p1.x);
+        const maxX = Math.max(p0.x, p1.x);
+        const minY = Math.min(p0.y, p1.y);
+        const maxY = Math.max(p0.y, p1.y);
+        const midX = (minX + maxX) / 2;
+        const midY = (minY + maxY) / 2;
+        const sameDiag = (p0.x <= p1.x) === (p0.y <= p1.y);
+        const handles = [
+          { index: 0, x: p0.x, y: p0.y, handleMode: 'xy', cursor: sameDiag ? 'nwse-resize' : 'nesw-resize' },
+          { index: 1, x: p1.x, y: p1.y, handleMode: 'xy', cursor: sameDiag ? 'nwse-resize' : 'nesw-resize' },
+          { index: 0, timeIndex: 0, priceIndex: 1, x: p0.x, y: p1.y, handleMode: 'rectCorner', cursor: sameDiag ? 'nesw-resize' : 'nwse-resize' },
+          { index: 1, timeIndex: 1, priceIndex: 0, x: p1.x, y: p0.y, handleMode: 'rectCorner', cursor: sameDiag ? 'nesw-resize' : 'nwse-resize' }
+        ];
+        if (!drawing.extendLeft) {
+          handles.push({ index: leftIdx, x: minX, y: midY, handleMode: 'timeOnly', isMidHandle: true, axis: 'x', cursor: 'ew-resize' });
+        }
+        if (!drawing.extendRight) {
+          handles.push({ index: rightIdx, x: maxX, y: midY, handleMode: 'timeOnly', isMidHandle: true, axis: 'x', cursor: 'ew-resize' });
+        }
+        handles.push(
+          { index: topIdx, x: midX, y: minY, handleMode: 'priceOnly', isMidHandle: true, axis: 'y', cursor: 'ns-resize' },
+          { index: bottomIdx, x: midX, y: maxY, handleMode: 'priceOnly', isMidHandle: true, axis: 'y', cursor: 'ns-resize' }
+        );
+        return handles;
+      }
       if ((drawing.type === 'longpos' || drawing.type === 'shortpos') && pixels.length >= 3) {
         const [pEntry, pTp, pSl] = pixels;
         return [
-          { index: 0, x: pEntry.x, y: pEntry.y },
-          { index: 1, x: pTp.x, y: pEntry.y },
-          { index: 1, x: (pEntry.x + pTp.x) / 2, y: pTp.y, handleMode: 'priceOnly' },
-          { index: 2, x: (pEntry.x + pTp.x) / 2, y: pSl.y, handleMode: 'priceOnly' }
+          { index: 0, x: pEntry.x, y: pEntry.y, cursor: 'grab' },
+          { index: 1, x: pTp.x, y: pEntry.y, cursor: 'ew-resize' },
+          { index: 1, x: (pEntry.x + pTp.x) / 2, y: pTp.y, handleMode: 'priceOnly', cursor: 'ns-resize' },
+          { index: 2, x: (pEntry.x + pTp.x) / 2, y: pSl.y, handleMode: 'priceOnly', cursor: 'ns-resize' }
         ];
       }
-      return pixels.map((p, idx) => ({ index: idx, x: p.x, y: p.y }));
+      return pixels.map((p, idx) => ({ index: idx, x: p.x, y: p.y, cursor: 'pointer' }));
     }
 
     function hitTestRpDrawing(px, py) {
@@ -16449,11 +16770,18 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (rpSelectedDrawingId) {
         const sel = rpDrawings.find(d => d.id === rpSelectedDrawingId);
         if (sel) {
-          const pixels = getRpDrawingPixels(sel);
+          const pixels = getRpDrawingPixels(sel, plot);
           const handles = getRpDrawingHandles(sel, pixels);
           for (const h of handles) {
             if (Math.hypot(px - h.x, py - h.y) <= 9) {
-              return { drawing: sel, handleIndex: h.index, handleMode: h.handleMode || 'xy' };
+              return {
+                drawing: sel,
+                handleIndex: h.index,
+                handleMode: h.handleMode || 'xy',
+                handleTimeIndex: h.timeIndex,
+                handlePriceIndex: h.priceIndex,
+                handleCursor: h.cursor || 'pointer'
+              };
             }
           }
         }
@@ -16462,13 +16790,20 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const tol = 8;
       for (let i = rpDrawings.length - 1; i >= 0; i--) {
         const d = rpDrawings[i];
-        const pixels = getRpDrawingPixels(d);
+        const pixels = getRpDrawingPixels(d, plot);
         if (pixels.length === 0) continue;
 
         const handles = getRpDrawingHandles(d, pixels);
         for (const h of handles) {
           if (Math.hypot(px - h.x, py - h.y) <= 9) {
-            return { drawing: d, handleIndex: h.index, handleMode: h.handleMode || 'xy' };
+            return {
+              drawing: d,
+              handleIndex: h.index,
+              handleMode: h.handleMode || 'xy',
+              handleTimeIndex: h.timeIndex,
+              handlePriceIndex: h.priceIndex,
+              handleCursor: h.cursor || 'pointer'
+            };
           }
         }
 
@@ -16524,8 +16859,24 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           if (pixels.length >= 3) {
             const dx = pixels[2].x - pixels[0].x;
             const dy = pixels[2].y - pixels[0].y;
-            const d1 = distPointToSegment(px, py, pixels[0].x, pixels[0].y, pixels[1].x, pixels[1].y);
-            const d2 = distPointToSegment(px, py, pixels[0].x + dx, pixels[0].y + dy, pixels[1].x + dx, pixels[1].y + dy);
+            let a1 = { x: pixels[0].x, y: pixels[0].y };
+            let a2 = { x: pixels[1].x, y: pixels[1].y };
+            if (d.extendLeft || d.extendRight) {
+              const chPad = Math.max(Math.abs(dx), Math.abs(dy)) + 12;
+              const seg = (d.extendLeft && d.extendRight)
+                ? clipInfiniteLineToBox(a1.x, a1.y, a2.x, a2.y, plot.left, plot.top, plot.right, plot.bottom, false, chPad)
+                : clipInfiniteLineToBox(d.extendLeft ? a2.x : a1.x, d.extendLeft ? a2.y : a1.y, d.extendLeft ? a1.x : a2.x, d.extendLeft ? a1.y : a2.y, plot.left, plot.top, plot.right, plot.bottom, true, chPad);
+              if (seg) {
+                if (d.extendLeft && !d.extendRight) a1 = { x: seg.ex, y: seg.ey };
+                else if (!d.extendLeft && d.extendRight) a2 = { x: seg.ex, y: seg.ey };
+                else {
+                  a1 = { x: seg.sx, y: seg.sy };
+                  a2 = { x: seg.ex, y: seg.ey };
+                }
+              }
+            }
+            const d1 = distPointToSegment(px, py, a1.x, a1.y, a2.x, a2.y);
+            const d2 = distPointToSegment(px, py, a1.x + dx, a1.y + dy, a2.x + dx, a2.y + dy);
             if (Math.min(d1, d2) <= tol) {
               return { drawing: d, handleIndex: -1 };
             }
@@ -16546,7 +16897,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           if (pixels.length >= 2) {
             const minX = Math.min(pixels[0].x, pixels[1].x);
             const maxX = d.extendRight ? plot.right : Math.max(pixels[0].x, pixels[1].x, minX + 90);
-            if (distPointToSegment(px, py, pixels[0].x, pixels[0].y, pixels[1].x, pixels[1].y) <= tol) {
+            if (d.showTrendLine === true && distPointToSegment(px, py, pixels[0].x, pixels[0].y, pixels[1].x, pixels[1].y) <= tol) {
               return { drawing: d, handleIndex: -1 };
             }
             if (px >= minX - 4 && px <= maxX + 4) {
@@ -16555,7 +16906,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               const endY = d.reverse ? pixels[0].y : pixels[1].y;
               for (const lvl of levels) {
                 const ly = startY + (endY - startY) * lvl.ratio;
-                if (Math.abs(py - ly) <= 6) {
+                if (Math.abs(py - ly) <= 7) {
                   return { drawing: d, handleIndex: -1 };
                 }
               }
@@ -16636,8 +16987,45 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       });
     }
 
+    function drawRpRoundedRectPath(ctx, x, y, w, h, r) {
+      const aw = Math.abs(w);
+      const ah = Math.abs(h);
+      const rx = w < 0 ? x + w : x;
+      const ry = h < 0 ? y + h : y;
+      const rad = Math.max(0, Math.min(Number(r) || 0, aw / 2, ah / 2));
+      ctx.beginPath();
+      if (rad <= 0.25) {
+        ctx.rect(rx, ry, aw, ah);
+        return;
+      }
+      ctx.moveTo(rx + rad, ry);
+      ctx.lineTo(rx + aw - rad, ry);
+      ctx.quadraticCurveTo(rx + aw, ry, rx + aw, ry + rad);
+      ctx.lineTo(rx + aw, ry + ah - rad);
+      ctx.quadraticCurveTo(rx + aw, ry + ah, rx + aw - rad, ry + ah);
+      ctx.lineTo(rx + rad, ry + ah);
+      ctx.quadraticCurveTo(rx, ry + ah, rx, ry + ah - rad);
+      ctx.lineTo(rx, ry + rad);
+      ctx.quadraticCurveTo(rx, ry, rx + rad, ry);
+      ctx.closePath();
+    }
+
+    function getRpContrastTextColor(hex, darkText = '#071022', lightText = '#F8FAFC') {
+      if (typeof hex !== 'string') return darkText;
+      let clean = hex.trim().replace(/^#/, '');
+      if (clean.length === 3) {
+        clean = clean.split('').map(c => c + c).join('');
+      }
+      if (!/^[0-9a-fA-F]{6}$/.test(clean)) return darkText;
+      const r = parseInt(clean.slice(0, 2), 16);
+      const g = parseInt(clean.slice(2, 4), 16);
+      const b = parseInt(clean.slice(4, 6), 16);
+      const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return lum > 0.56 ? darkText : lightText;
+    }
+
     function drawSingleRpShape(ctx, d, plot, isSelected, isLightTheme, isHovered = false) {
-      const pixels = getRpDrawingPixels(d);
+      const pixels = getRpDrawingPixels(d, plot);
       if (pixels.length === 0) return;
 
       const color = d.color || (RP_DRAW_TOOLS[d.type]?.defaultColor) || '#38BDF8';
@@ -16647,9 +17035,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const style = d.style || 'solid';
       const opacityRatio = Math.max(0.1, Math.min(1, (Number.isFinite(Number(d.opacity)) ? Number(d.opacity) : 100) / 100));
       const candles = getVisibleRpCandles();
+      const glassPillFill = isLightTheme ? 'rgba(255, 255, 255, 0.94)' : 'rgba(10, 16, 36, 0.90)';
+      const glassPillText = isLightTheme ? '#0F172A' : '#F8FAFC';
 
       ctx.save();
-      ctx.globalAlpha = (isHovered || isSelected) ? Math.max(opacityRatio, 0.92) : opacityRatio;
+      ctx.globalAlpha = (isHovered || isSelected) ? Math.max(opacityRatio, 0.94) : opacityRatio;
       ctx.strokeStyle = color;
       ctx.fillStyle = color;
       ctx.lineWidth = lineWidth;
@@ -16657,7 +17047,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       ctx.lineJoin = 'round';
       if (isHovered || isSelected) {
         ctx.shadowColor = color;
-        ctx.shadowBlur = isHovered && !isSelected ? 14 : 8;
+        ctx.shadowBlur = isHovered && !isSelected ? 14 : 9;
       }
       applyRpCanvasStrokeStyle(ctx, style, lineWidth);
 
@@ -16669,24 +17059,54 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         ctx.lineTo(plot.right, y);
         ctx.stroke();
         ctx.setLineDash([]);
+        if (d.type === 'hray') {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(startX, y, Math.max(3, lineWidth + 1.1), 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.lineWidth = 1.4;
+          ctx.strokeStyle = isLightTheme ? '#FFFFFF' : '#091124';
+          ctx.stroke();
+          ctx.restore();
+        }
         const customText = (d.label || '').trim();
         if (d.showLabel !== false) {
           const priceStr = formatRpPrice(d.points[0].price);
           const lbl = customText ? `${customText} · ${priceStr}` : priceStr;
+          ctx.save();
           ctx.font = '700 10.5px "Plus Jakarta Sans", system-ui, sans-serif';
-          const tw = ctx.measureText(lbl).width + 12;
+          const tw = ctx.measureText(lbl).width + 14;
+          const bx = plot.right - tw - 6;
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+          ctx.shadowBlur = 6;
+          drawRpRoundedRectPath(ctx, bx, y - 10, tw, 20, 6);
           ctx.fillStyle = color;
-          ctx.fillRect(plot.right - tw - 4, y - 9, tw, 18);
-          ctx.fillStyle = '#071022';
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = isLightTheme ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.22)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = getRpContrastTextColor(color);
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(lbl, plot.right - tw / 2 - 4, y);
+          ctx.fillText(lbl, bx + tw / 2, y + 0.5);
+          ctx.restore();
         } else if (customText) {
+          ctx.save();
           ctx.font = '700 10.5px "Plus Jakarta Sans", system-ui, sans-serif';
+          const tw = ctx.measureText(customText).width + 14;
+          drawRpRoundedRectPath(ctx, startX + 8, y - 24, tw, 18, 5);
+          ctx.fillStyle = glassPillFill;
+          ctx.fill();
+          ctx.strokeStyle = hexToRgba(color, 0.72);
+          ctx.lineWidth = 1;
+          ctx.stroke();
           ctx.fillStyle = color;
           ctx.textAlign = 'left';
-          ctx.textBaseline = 'bottom';
-          ctx.fillText(customText, startX + 8, y - 4);
+          ctx.textBaseline = 'middle';
+          ctx.fillText(customText, startX + 15, y - 15);
+          ctx.restore();
         }
       } else if (d.type === 'vline') {
         const x = pixels[0].x;
@@ -16703,15 +17123,24 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             : '';
           const lbl = customText ? (d.showLabel !== false && timeStr ? `${customText} (${timeStr})` : customText) : timeStr;
           if (lbl) {
+            ctx.save();
             ctx.font = '700 10px "Plus Jakarta Sans", system-ui, sans-serif';
-            const tw = ctx.measureText(lbl).width + 12;
+            const tw = ctx.measureText(lbl).width + 14;
             const bx = Math.max(plot.left + 4, Math.min(plot.right - tw - 4, x - tw / 2));
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+            ctx.shadowBlur = 6;
+            drawRpRoundedRectPath(ctx, bx, plot.bottom - 22, tw, 19, 6);
             ctx.fillStyle = color;
-            ctx.fillRect(bx, plot.bottom - 20, tw, 18);
-            ctx.fillStyle = '#071022';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = isLightTheme ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.22)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.fillStyle = getRpContrastTextColor(color);
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(lbl, bx + tw / 2, plot.bottom - 11);
+            ctx.fillText(lbl, bx + tw / 2, plot.bottom - 12);
+            ctx.restore();
           }
         }
       } else if (d.type === 'trendline' && pixels.length >= 2) {
@@ -16754,16 +17183,20 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           ctx.save();
           ctx.setLineDash([]);
           ctx.font = '700 10px "Plus Jakarta Sans", system-ui, sans-serif';
-          const tw = ctx.measureText(lbl).width + 12;
-          ctx.fillStyle = isLightTheme ? 'rgba(255, 255, 255, 0.92)' : 'rgba(10, 16, 36, 0.88)';
-          ctx.fillRect(mx - tw / 2, my - 22, tw, 18);
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 1;
-          ctx.strokeRect(mx - tw / 2, my - 22, tw, 18);
-          ctx.fillStyle = isLightTheme ? '#0F172A' : '#F8FAFC';
+          const tw = ctx.measureText(lbl).width + 14;
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+          ctx.shadowBlur = 8;
+          drawRpRoundedRectPath(ctx, mx - tw / 2, my - 24, tw, 20, 6);
+          ctx.fillStyle = glassPillFill;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = hexToRgba(color, 0.78);
+          ctx.lineWidth = 1.1;
+          ctx.stroke();
+          ctx.fillStyle = glassPillText;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(lbl, mx, my - 13);
+          ctx.fillText(lbl, mx, my - 14);
           ctx.restore();
         }
       } else if ((d.type === 'ray' || d.type === 'extended') && pixels.length >= 2) {
@@ -16774,6 +17207,18 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           ctx.lineTo(seg.ex, seg.ey);
           ctx.stroke();
         }
+        if (d.type === 'ray') {
+          ctx.save();
+          ctx.setLineDash([]);
+          ctx.beginPath();
+          ctx.arc(pixels[0].x, pixels[0].y, Math.max(3, lineWidth + 1), 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.lineWidth = 1.4;
+          ctx.strokeStyle = isLightTheme ? '#FFFFFF' : '#091124';
+          ctx.stroke();
+          ctx.restore();
+        }
         const customText = (d.label || '').trim();
         if (d.showLabel || customText) {
           const lbl = customText || formatRpPrice(d.points[1].price);
@@ -16782,38 +17227,85 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           ctx.save();
           ctx.setLineDash([]);
           ctx.font = '700 10px "Plus Jakarta Sans", system-ui, sans-serif';
-          const tw = ctx.measureText(lbl).width + 12;
-          ctx.fillStyle = isLightTheme ? 'rgba(255, 255, 255, 0.9)' : 'rgba(10, 16, 36, 0.86)';
-          ctx.fillRect(mx - tw / 2, my - 20, tw, 17);
-          ctx.fillStyle = color;
+          const tw = ctx.measureText(lbl).width + 14;
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+          ctx.shadowBlur = 8;
+          drawRpRoundedRectPath(ctx, mx - tw / 2, my - 23, tw, 19, 6);
+          ctx.fillStyle = glassPillFill;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = hexToRgba(color, 0.78);
+          ctx.lineWidth = 1.1;
+          ctx.stroke();
+          ctx.fillStyle = glassPillText;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(lbl, mx, my - 11.5);
+          ctx.fillText(lbl, mx, my - 13.5);
           ctx.restore();
         }
       } else if (d.type === 'arrow' && pixels.length >= 2) {
         const [p1, p2] = pixels;
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.stroke();
+        let drawP1 = p1;
+        let drawP2 = p2;
+        if (d.extendLeft || d.extendRight) {
+          if (d.extendLeft && d.extendRight) {
+            const seg = clipInfiniteLineToBox(p1.x, p1.y, p2.x, p2.y, plot.left, plot.top, plot.right, plot.bottom, false);
+            if (seg) {
+              drawP1 = { x: seg.sx, y: seg.sy };
+              drawP2 = { x: seg.ex, y: seg.ey };
+            }
+          } else {
+            const a = d.extendLeft ? p2 : p1;
+            const b = d.extendLeft ? p1 : p2;
+            const seg = clipInfiniteLineToBox(a.x, a.y, b.x, b.y, plot.left, plot.top, plot.right, plot.bottom, true);
+            if (seg) {
+              if (d.extendLeft) drawP1 = { x: seg.ex, y: seg.ey };
+              else drawP2 = { x: seg.ex, y: seg.ey };
+            }
+          }
+        }
         const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-        const headLen = 10 + lineWidth * 1.6;
+        const headLen = 11 + lineWidth * 1.8;
+        const notchDist = headLen * 0.72;
+        const shaftEndX = drawP2.x - notchDist * 0.78 * Math.cos(angle);
+        const shaftEndY = drawP2.y - notchDist * 0.78 * Math.sin(angle);
+        ctx.beginPath();
+        ctx.moveTo(drawP1.x, drawP1.y);
+        ctx.lineTo(shaftEndX, shaftEndY);
+        ctx.stroke();
         ctx.setLineDash([]);
         ctx.beginPath();
-        ctx.moveTo(p2.x, p2.y);
-        ctx.lineTo(p2.x - headLen * Math.cos(angle - Math.PI / 6), p2.y - headLen * Math.sin(angle - Math.PI / 6));
-        ctx.lineTo(p2.x - headLen * Math.cos(angle + Math.PI / 6), p2.y - headLen * Math.sin(angle + Math.PI / 6));
+        ctx.moveTo(drawP2.x, drawP2.y);
+        ctx.lineTo(drawP2.x - headLen * Math.cos(angle - Math.PI / 6.5), drawP2.y - headLen * Math.sin(angle - Math.PI / 6.5));
+        ctx.lineTo(drawP2.x - notchDist * Math.cos(angle), drawP2.y - notchDist * Math.sin(angle));
+        ctx.lineTo(drawP2.x - headLen * Math.cos(angle + Math.PI / 6.5), drawP2.y - headLen * Math.sin(angle + Math.PI / 6.5));
         ctx.closePath();
         ctx.fill();
-        if ((d.label || '').trim()) {
-          const lbl = d.label.trim();
+        const customText = (d.label || '').trim();
+        if (d.showLabel || customText) {
+          const dp = d.points[1].price - d.points[0].price;
+          const pct = d.points[0].price ? (dp / d.points[0].price) * 100 : 0;
+          const autoText = `${dp >= 0 ? '+' : ''}${formatRpPrice(dp)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+          const lbl = customText ? (d.showLabel ? `${customText} · ${autoText}` : customText) : autoText;
           const mx = (p1.x + p2.x) / 2;
-          const my = (p1.y + p2.y) / 2 - 12;
-          ctx.font = '700 10.5px "Plus Jakarta Sans", system-ui, sans-serif';
+          const my = (p1.y + p2.y) / 2;
+          ctx.save();
+          ctx.font = '700 10px "Plus Jakarta Sans", system-ui, sans-serif';
+          const tw = ctx.measureText(lbl).width + 14;
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+          ctx.shadowBlur = 8;
+          drawRpRoundedRectPath(ctx, mx - tw / 2, my - 24, tw, 20, 6);
+          ctx.fillStyle = glassPillFill;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = hexToRgba(color, 0.78);
+          ctx.lineWidth = 1.1;
+          ctx.stroke();
+          ctx.fillStyle = glassPillText;
           ctx.textAlign = 'center';
-          ctx.fillStyle = color;
-          ctx.fillText(lbl, mx, my);
+          ctx.textBaseline = 'middle';
+          ctx.fillText(lbl, mx, my - 14);
+          ctx.restore();
         }
       } else if (d.type === 'channel' && pixels.length >= 2) {
         const p1 = pixels[0];
@@ -16826,9 +17318,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         let a1 = { x: p1.x, y: p1.y };
         let a2 = { x: p2.x, y: p2.y };
         if (d.extendLeft || d.extendRight) {
+          const chPad = Math.max(Math.abs(dx), Math.abs(dy)) + 12;
           const seg = (d.extendLeft && d.extendRight)
-            ? clipInfiniteLineToBox(p1.x, p1.y, p2.x, p2.y, plot.left, plot.top, plot.right, plot.bottom, false)
-            : clipInfiniteLineToBox(d.extendLeft ? p2.x : p1.x, d.extendLeft ? p2.y : p1.y, d.extendLeft ? p1.x : p2.x, d.extendLeft ? p1.y : p2.y, plot.left, plot.top, plot.right, plot.bottom, true);
+            ? clipInfiniteLineToBox(p1.x, p1.y, p2.x, p2.y, plot.left, plot.top, plot.right, plot.bottom, false, chPad)
+            : clipInfiniteLineToBox(d.extendLeft ? p2.x : p1.x, d.extendLeft ? p2.y : p1.y, d.extendLeft ? p1.x : p2.x, d.extendLeft ? p1.y : p2.y, plot.left, plot.top, plot.right, plot.bottom, true, chPad);
           if (seg) {
             if (d.extendLeft && !d.extendRight) {
               a1 = { x: seg.ex, y: seg.ey };
@@ -16846,7 +17339,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         if (chFillOp > 0) {
           ctx.save();
           ctx.setLineDash([]);
-          ctx.fillStyle = hexToRgba(fillColor, chFillOp);
+          const midEdgeX = (a1.x + a2.x) / 2;
+          const midEdgeY = (a1.y + a2.y) / 2;
+          if (Math.hypot(dx, dy) > 2) {
+            const grad = ctx.createLinearGradient(midEdgeX, midEdgeY, midEdgeX + dx, midEdgeY + dy);
+            grad.addColorStop(0, hexToRgba(fillColor, chFillOp));
+            grad.addColorStop(0.5, hexToRgba(fillColor, chFillOp * 0.55));
+            grad.addColorStop(1, hexToRgba(fillColor, chFillOp));
+            ctx.fillStyle = grad;
+          } else {
+            ctx.fillStyle = hexToRgba(fillColor, chFillOp);
+          }
           ctx.beginPath();
           ctx.moveTo(a1.x, a1.y);
           ctx.lineTo(a2.x, a2.y);
@@ -16866,8 +17369,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
         ctx.save();
         ctx.setLineDash([4, 4]);
-        ctx.lineWidth = Math.max(1, lineWidth - 0.5);
-        ctx.globalAlpha = opacityRatio * 0.7;
+        ctx.lineWidth = Math.max(1, lineWidth * 0.72);
+        ctx.globalAlpha = opacityRatio * 0.72;
         ctx.beginPath();
         ctx.moveTo(a1.x + dx / 2, a1.y + dy / 2);
         ctx.lineTo(a2.x + dx / 2, a2.y + dy / 2);
@@ -16881,12 +17384,25 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const minY = Math.min(pixels[0].y, pixels[1].y);
         const w = Math.max(2, maxX - minX);
         const h = Math.abs(pixels[1].y - pixels[0].y);
+        const rectR = Math.min(4, w / 4, h / 4);
         const fillOp = Math.max(0, Math.min(0.85, (Number.isFinite(Number(d.fillOpacity)) ? Number(d.fillOpacity) : 16) / 100));
         if (fillOp > 0) {
-          ctx.fillStyle = hexToRgba(fillColor, fillOp);
-          ctx.fillRect(minX, minY, w, h);
+          ctx.save();
+          if (h > 4) {
+            const rGrad = ctx.createLinearGradient(minX, minY, minX, minY + h);
+            rGrad.addColorStop(0, hexToRgba(fillColor, Math.min(0.92, fillOp * 1.15)));
+            rGrad.addColorStop(0.5, hexToRgba(fillColor, fillOp * 0.85));
+            rGrad.addColorStop(1, hexToRgba(fillColor, Math.min(0.92, fillOp * 1.15)));
+            ctx.fillStyle = rGrad;
+          } else {
+            ctx.fillStyle = hexToRgba(fillColor, fillOp);
+          }
+          drawRpRoundedRectPath(ctx, minX, minY, w, h, rectR);
+          ctx.fill();
+          ctx.restore();
         }
-        ctx.strokeRect(minX, minY, w, h);
+        drawRpRoundedRectPath(ctx, minX, minY, w, h, rectR);
+        ctx.stroke();
         if (d.showMidline && h >= 8) {
           const midY = minY + h / 2;
           ctx.save();
@@ -16897,16 +17413,40 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           ctx.moveTo(minX, midY);
           ctx.lineTo(minX + w, midY);
           ctx.stroke();
+          if (w >= 58) {
+            ctx.setLineDash([]);
+            ctx.font = '700 9px "Plus Jakarta Sans", system-ui, sans-serif';
+            const eqTw = ctx.measureText('50%').width + 8;
+            drawRpRoundedRectPath(ctx, minX + w - eqTw - 4, midY - 8, eqTw, 16, 4);
+            ctx.fillStyle = glassPillFill;
+            ctx.fill();
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('50%', minX + w - eqTw / 2 - 4, midY + 0.5);
+          }
           ctx.restore();
         }
         if ((d.label || '').trim()) {
+          const lbl = d.label.trim();
           ctx.save();
           ctx.setLineDash([]);
           ctx.font = '700 10.5px "Plus Jakarta Sans", system-ui, sans-serif';
+          const tw = ctx.measureText(lbl).width + 14;
+          const bx = (minX < plot.left && maxX > plot.left + tw + 14)
+            ? Math.max(plot.left + 6, Math.min(maxX - tw - 6, minX + 6))
+            : (minX + 6);
+          const by = minY + 6;
+          drawRpRoundedRectPath(ctx, bx, by, tw, 19, 5);
+          ctx.fillStyle = glassPillFill;
+          ctx.fill();
+          ctx.strokeStyle = hexToRgba(color, 0.7);
+          ctx.lineWidth = 1;
+          ctx.stroke();
           ctx.fillStyle = color;
           ctx.textAlign = 'left';
-          ctx.textBaseline = 'top';
-          ctx.fillText(d.label.trim(), minX + 6, minY + 5);
+          ctx.textBaseline = 'middle';
+          ctx.fillText(lbl, bx + 7, by + 9.5);
           ctx.restore();
         }
       } else if (d.type === 'fib' && pixels.length >= 2) {
@@ -16919,17 +17459,21 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const endY = d.reverse ? p1.y : p2.y;
         const levels = getRpFibPriceLevels(d).sort((a, b) => a.ratio - b.ratio);
         const fillOp = Math.max(0, Math.min(0.45, (Number.isFinite(Number(d.fillOpacity)) ? Number(d.fillOpacity) : 8) / 100));
+        const showFibBg = (d.showBackground !== false) && fillOp > 0;
 
-        ctx.save();
-        ctx.setLineDash([3, 3]);
-        ctx.strokeStyle = hexToRgba(color, 0.65);
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.stroke();
-        ctx.restore();
+        if (d.showTrendLine === true) {
+          ctx.save();
+          ctx.setLineDash([4, 4]);
+          ctx.lineWidth = Math.max(1, lineWidth * 0.85);
+          ctx.strokeStyle = hexToRgba(color, 0.62);
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+          ctx.restore();
+        }
 
-        ctx.font = '700 10.5px "Plus Jakarta Sans", system-ui, sans-serif';
+        ctx.font = '700 10px "Plus Jakarta Sans", system-ui, sans-serif';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         levels.forEach((lvlObj, idx) => {
@@ -16937,13 +17481,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           const ly = startY + (endY - startY) * lvl;
           const lPrice = price1 + (price2 - price1) * lvl;
           const lc = lvlObj.color || color;
-          if (idx > 0 && fillOp > 0) {
+          if (idx > 0 && showFibBg) {
             const prevLy = startY + (endY - startY) * levels[idx - 1].ratio;
             ctx.fillStyle = hexToRgba(lc, fillOp);
             ctx.fillRect(minX, Math.min(ly, prevLy), maxX - minX, Math.abs(ly - prevLy));
           }
+          const isKeyLvl = (lvl === 0 || lvl === 0.5 || lvl === 0.618 || lvl === 0.705 || lvl === 1);
           ctx.strokeStyle = lc;
-          ctx.lineWidth = (lvl === 0.5 || lvl === 0.618 || lvl === 0.705) ? Math.max(1.5, lineWidth) : 1.1;
+          ctx.lineWidth = isKeyLvl
+            ? Math.min(7, Number((lineWidth * 1.15).toFixed(2)))
+            : lineWidth;
           applyRpCanvasStrokeStyle(ctx, style, lineWidth);
           ctx.beginPath();
           ctx.moveTo(minX, ly);
@@ -16956,15 +17503,28 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             const lbl = showRatio && showP
               ? `${lvl} (${formatRpPrice(lPrice)})`
               : (showRatio ? `${lvl}` : formatRpPrice(lPrice));
+            const tw = ctx.measureText(lbl).width + 14;
+            const badgeX = (minX < plot.left && maxX > plot.left + tw + 12)
+              ? Math.max(plot.left + 6, Math.min(maxX - tw - 4, minX + 4))
+              : (minX + 4);
+            const badgeY = ly - 17;
+            ctx.save();
+            drawRpRoundedRectPath(ctx, badgeX, badgeY, tw, 15, 4);
+            ctx.fillStyle = isLightTheme ? 'rgba(255, 255, 255, 0.88)' : 'rgba(9, 15, 34, 0.82)';
+            ctx.fill();
+            drawRpRoundedRectPath(ctx, badgeX, badgeY + 2, 2.5, 11, 1.5);
+            ctx.fillStyle = lc;
+            ctx.fill();
             ctx.fillStyle = isLightTheme ? '#0F172A' : '#F8FAFC';
-            ctx.fillText(lbl, minX + 4, ly - 8);
+            ctx.fillText(lbl, badgeX + 7, badgeY + 7.5);
+            ctx.restore();
           }
         });
       } else if ((d.type === 'longpos' || d.type === 'shortpos') && pixels.length >= 3) {
         const [pEntry, pTp, pSl] = pixels;
         const leftX = Math.min(pEntry.x, pTp.x);
         const rightX = Math.max(pEntry.x, pTp.x);
-        const boxW = Math.max(36, rightX - leftX);
+        const boxW = Math.max(8, rightX - leftX);
         const tpTop = Math.min(pEntry.y, pTp.y);
         const tpH = Math.abs(pTp.y - pEntry.y);
         const slTop = Math.min(pEntry.y, pSl.y);
@@ -16972,25 +17532,50 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const tpCol = d.tpColor || '#10B981';
         const slCol = d.slColor || '#F43F5E';
         const posFillOp = Math.max(0.05, Math.min(0.65, (Number.isFinite(Number(d.fillOpacity)) ? Number(d.fillOpacity) : 22) / 100));
+        const posStrokeW = Math.max(1, lineWidth * 0.85);
+        const factoryDefCol = (RP_DRAW_TOOLS[d.type]?.defaultColor || '').toUpperCase();
+        const hasCustomEntryColor = Boolean(d.color && d.color.toUpperCase() !== factoryDefCol);
+        const entryCol = hasCustomEntryColor ? color : (isLightTheme ? '#0F172A' : '#E2E8F0');
 
-        ctx.setLineDash([]);
-        ctx.fillStyle = hexToRgba(tpCol, posFillOp);
-        ctx.fillRect(leftX, tpTop, boxW, tpH);
+        applyRpCanvasStrokeStyle(ctx, style, posStrokeW);
+        ctx.save();
+        if (tpH > 2) {
+          const tpGrad = ctx.createLinearGradient(leftX, tpTop, leftX, tpTop + tpH);
+          const tpNearEntry = pTp.y < pEntry.y ? 1 : 0;
+          tpGrad.addColorStop(tpNearEntry, hexToRgba(tpCol, Math.max(0.04, posFillOp * 0.65)));
+          tpGrad.addColorStop(1 - tpNearEntry, hexToRgba(tpCol, Math.min(0.75, posFillOp * 1.15)));
+          ctx.fillStyle = tpGrad;
+        } else {
+          ctx.fillStyle = hexToRgba(tpCol, posFillOp);
+        }
+        drawRpRoundedRectPath(ctx, leftX, tpTop, boxW, tpH, Math.min(4, tpH / 3, boxW / 6));
+        ctx.fill();
         ctx.strokeStyle = hexToRgba(tpCol, 0.88);
-        ctx.lineWidth = Math.max(1.2, lineWidth * 0.7);
-        ctx.strokeRect(leftX, tpTop, boxW, tpH);
+        ctx.lineWidth = posStrokeW;
+        ctx.stroke();
 
-        ctx.fillStyle = hexToRgba(slCol, posFillOp);
-        ctx.fillRect(leftX, slTop, boxW, slH);
+        if (slH > 2) {
+          const slGrad = ctx.createLinearGradient(leftX, slTop, leftX, slTop + slH);
+          const slNearEntry = pSl.y < pEntry.y ? 1 : 0;
+          slGrad.addColorStop(slNearEntry, hexToRgba(slCol, Math.max(0.04, posFillOp * 0.65)));
+          slGrad.addColorStop(1 - slNearEntry, hexToRgba(slCol, Math.min(0.75, posFillOp * 1.15)));
+          ctx.fillStyle = slGrad;
+        } else {
+          ctx.fillStyle = hexToRgba(slCol, posFillOp);
+        }
+        drawRpRoundedRectPath(ctx, leftX, slTop, boxW, slH, Math.min(4, slH / 3, boxW / 6));
+        ctx.fill();
         ctx.strokeStyle = hexToRgba(slCol, 0.88);
-        ctx.strokeRect(leftX, slTop, boxW, slH);
+        ctx.stroke();
+        ctx.restore();
 
-        ctx.strokeStyle = isLightTheme ? '#0F172A' : '#E2E8F0';
-        ctx.lineWidth = 1.4;
+        ctx.strokeStyle = entryCol;
+        ctx.lineWidth = Math.max(1.4, lineWidth * 0.95);
         ctx.beginPath();
         ctx.moveTo(leftX, pEntry.y);
         ctx.lineTo(leftX + boxW, pEntry.y);
         ctx.stroke();
+        ctx.setLineDash([]);
 
         const entryP = d.points[0].price;
         const tpP = d.points[1].price;
@@ -17012,24 +17597,59 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           const cx = leftX + boxW / 2;
-          if (tpH > 16) {
+          const visLeft = Math.max(leftX, plot.left);
+          const visRight = Math.min(leftX + boxW, plot.right);
+          const textCx = visRight > visLeft + 24 ? (visLeft + visRight) / 2 : cx;
+          if (tpH > 18 && boxW >= 54) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(leftX + 3, tpTop, Math.max(0, boxW - 6), tpH);
+            ctx.clip();
             ctx.fillStyle = isLightTheme ? '#065F46' : '#A7F3D0';
             const tpDollarStr = tpDollar !== null ? ` · +$${tpDollar.toFixed(0)}` : '';
-            ctx.fillText(`Hedef: ${formatRpPrice(tpP)} (+${tpPct.toFixed(2)}%${tpDollarStr})`, cx, tpTop + tpH / 2);
+            const tpText = boxW >= 165
+              ? `Hedef: ${formatRpPrice(tpP)} (+${tpPct.toFixed(2)}%${tpDollarStr})`
+              : (boxW >= 95 ? `+${tpPct.toFixed(2)}%${tpDollarStr}` : `+${tpPct.toFixed(1)}%`);
+            ctx.fillText(tpText, textCx, tpTop + tpH / 2);
+            ctx.restore();
           }
-          if (slH > 16) {
+          if (slH > 18 && boxW >= 54) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(leftX + 3, slTop, Math.max(0, boxW - 6), slH);
+            ctx.clip();
             ctx.fillStyle = isLightTheme ? '#9F1239' : '#FECDD3';
             const slDollarStr = slDollar !== null ? ` · -$${slDollar.toFixed(0)}` : '';
-            ctx.fillText(`Stop: ${formatRpPrice(slP)} (-${slPct.toFixed(2)}%${slDollarStr})`, cx, slTop + slH / 2);
+            const slText = boxW >= 165
+              ? `Stop: ${formatRpPrice(slP)} (-${slPct.toFixed(2)}%${slDollarStr})`
+              : (boxW >= 95 ? `-${slPct.toFixed(2)}%${slDollarStr}` : `-${slPct.toFixed(1)}%`);
+            ctx.fillText(slText, textCx, slTop + slH / 2);
+            ctx.restore();
           }
-          const rrLabel = `${d.type === 'longpos' ? 'LONG' : 'SHORT'} · R:R 1:${rr.toFixed(2)}`;
-          const lblW = ctx.measureText(rrLabel).width + 14;
-          ctx.fillStyle = 'rgba(11, 18, 40, 0.9)';
-          ctx.fillRect(cx - lblW / 2, pEntry.y - 10, lblW, 20);
-          ctx.strokeStyle = 'rgba(56, 189, 248, 0.72)';
-          ctx.strokeRect(cx - lblW / 2, pEntry.y - 10, lblW, 20);
-          ctx.fillStyle = '#F8FAFC';
-          ctx.fillText(rrLabel, cx, pEntry.y);
+          if (boxW >= 34) {
+            const rrLabel = boxW >= 120
+              ? `${d.type === 'longpos' ? 'LONG' : 'SHORT'} · R:R 1:${rr.toFixed(2)}`
+              : `1:${rr.toFixed(2)}`;
+            const lblW = ctx.measureText(rrLabel).width + 24;
+            const badgeCx = Math.max(plot.left + lblW / 2 + 4, Math.min(plot.right - lblW / 2 - 4, textCx));
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+            ctx.shadowBlur = 10;
+            drawRpRoundedRectPath(ctx, badgeCx - lblW / 2, pEntry.y - 11, lblW, 22, 7);
+            ctx.fillStyle = isLightTheme ? 'rgba(15, 23, 42, 0.92)' : 'rgba(9, 15, 34, 0.94)';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = hasCustomEntryColor ? hexToRgba(color, 0.9) : hexToRgba(d.type === 'longpos' ? tpCol : slCol, 0.78);
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(badgeCx - lblW / 2 + 10, pEntry.y, 3.2, 0, Math.PI * 2);
+            ctx.fillStyle = d.type === 'longpos' ? tpCol : slCol;
+            ctx.fill();
+            ctx.fillStyle = '#F8FAFC';
+            ctx.fillText(rrLabel, badgeCx + 5, pEntry.y + 0.5);
+            ctx.restore();
+          }
         }
       } else if (d.type === 'measure' && pixels.length >= 2) {
         const [p1, p2] = pixels;
@@ -17038,23 +17658,50 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const w = Math.abs(p2.x - p1.x);
         const h = Math.abs(p2.y - p1.y);
         const isUp = d.points[1].price >= d.points[0].price;
-        const mColor = isUp ? '#10B981' : '#F43F5E';
+        const useCustomColor = Boolean(d.useCustomColor || (d.color && d.color.toUpperCase() !== '#38BDF8'));
+        const mColor = useCustomColor ? color : (isUp ? '#10B981' : '#F43F5E');
 
-        ctx.setLineDash([]);
-        ctx.fillStyle = hexToRgba(mColor, 0.16);
-        ctx.fillRect(minX, minY, w, h);
+        ctx.save();
+        drawRpRoundedRectPath(ctx, minX, minY, w, h, Math.min(5, w / 4, h / 4));
+        ctx.fillStyle = hexToRgba(mColor, 0.14);
+        ctx.fill();
         ctx.strokeStyle = mColor;
-        ctx.lineWidth = 1.4;
-        ctx.strokeRect(minX, minY, w, h);
+        ctx.lineWidth = lineWidth;
+        applyRpCanvasStrokeStyle(ctx, style, lineWidth);
+        ctx.stroke();
 
         const midY = minY + h / 2;
         const midX = minX + w / 2;
+        ctx.setLineDash([4, 3]);
+        ctx.lineWidth = Math.max(1, lineWidth * 0.75);
         ctx.beginPath();
         ctx.moveTo(p1.x, midY);
         ctx.lineTo(p2.x, midY);
         ctx.moveTo(midX, p1.y);
         ctx.lineTo(midX, p2.y);
         ctx.stroke();
+        ctx.setLineDash([]);
+
+        if (w >= 16) {
+          const xDir = p2.x >= p1.x ? 1 : -1;
+          ctx.beginPath();
+          ctx.moveTo(p2.x, midY);
+          ctx.lineTo(p2.x - 6 * xDir, midY - 4);
+          ctx.lineTo(p2.x - 6 * xDir, midY + 4);
+          ctx.closePath();
+          ctx.fillStyle = mColor;
+          ctx.fill();
+        }
+        if (h >= 16) {
+          const yDir = p2.y >= p1.y ? 1 : -1;
+          ctx.beginPath();
+          ctx.moveTo(midX, p2.y);
+          ctx.lineTo(midX - 4, p2.y - 6 * yDir);
+          ctx.lineTo(midX + 4, p2.y - 6 * yDir);
+          ctx.closePath();
+          ctx.fillStyle = mColor;
+          ctx.fill();
+        }
 
         const diff = d.points[1].price - d.points[0].price;
         const pct = d.points[0].price !== 0 ? (diff / d.points[0].price) * 100 : 0;
@@ -17065,15 +17712,23 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const dtText = dtSec >= 86400 ? `${Math.round(dtSec / 86400)}g` : (dtSec >= 3600 ? `${(dtSec / 3600).toFixed(1)}s` : `${Math.round(dtSec / 60)}dk`);
         const info = `${diff >= 0 ? '+' : ''}${formatRpPrice(diff)} (${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%) · ${bars} mum (${dtText})`;
         ctx.font = '700 10.5px "Plus Jakarta Sans", system-ui, sans-serif';
-        const tw = ctx.measureText(info).width + 16;
+        const tw = ctx.measureText(info).width + 18;
         const boxX = Math.max(plot.left + 4, Math.min(plot.right - tw - 4, midX - tw / 2));
-        const boxY = Math.max(plot.top + 4, Math.min(plot.bottom - 26, (p2.y < p1.y ? minY - 26 : minY + h + 6)));
+        const boxY = Math.max(plot.top + 4, Math.min(plot.bottom - 28, (p2.y < p1.y ? minY - 28 : minY + h + 6)));
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
+        ctx.shadowBlur = 8;
+        drawRpRoundedRectPath(ctx, boxX, boxY, tw, 23, 7);
         ctx.fillStyle = mColor;
-        ctx.fillRect(boxX, boxY, tw, 22);
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = getRpContrastTextColor(mColor, '#071022', '#FFFFFF');
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(info, boxX + tw / 2, boxY + 11);
+        ctx.fillText(info, boxX + tw / 2, boxY + 11.5);
+        ctx.restore();
         void candles;
       } else if ((d.type === 'brush' || d.type === 'highlighter') && pixels.length >= 2) {
         if (d.type === 'highlighter') {
@@ -17083,8 +17738,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         }
         ctx.beginPath();
         ctx.moveTo(pixels[0].x, pixels[0].y);
-        for (let i = 1; i < pixels.length; i++) {
-          ctx.lineTo(pixels[i].x, pixels[i].y);
+        if (pixels.length === 2) {
+          ctx.lineTo(pixels[1].x, pixels[1].y);
+        } else {
+          for (let i = 1; i < pixels.length - 1; i++) {
+            const mx = (pixels[i].x + pixels[i + 1].x) / 2;
+            const my = (pixels[i].y + pixels[i + 1].y) / 2;
+            ctx.quadraticCurveTo(pixels[i].x, pixels[i].y, mx, my);
+          }
+          const last = pixels[pixels.length - 1];
+          ctx.lineTo(last.x, last.y);
         }
         ctx.stroke();
       } else if (d.type === 'text') {
@@ -17092,65 +17755,95 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const txt = d.text || 'Not';
         const fs = Math.max(10, Math.min(26, Number(d.fontSize) || 12));
         const weight = d.bold !== false ? '700' : '500';
-        ctx.setLineDash([]);
         ctx.font = `${weight} ${fs}px "Plus Jakarta Sans", system-ui, sans-serif`;
-        const boxH = Math.round(fs * 1.9);
-        const tw = ctx.measureText(txt).width + 16;
+        const boxH = Math.round(fs * 1.95);
+        const tw = ctx.measureText(txt).width + 18;
         if (d.showBackground !== false) {
           const bgOp = Math.max(0, Math.min(0.98, (Number.isFinite(Number(d.fillOpacity)) ? Number(d.fillOpacity) : 88) / 100));
           const bgHex = d.fillColor || (isLightTheme ? '#FFFFFF' : '#0B1228');
+          ctx.save();
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.24)';
+          ctx.shadowBlur = 8;
+          drawRpRoundedRectPath(ctx, p.x - 4, p.y - boxH / 2, tw, boxH, 8);
           ctx.fillStyle = hexToRgba(bgHex, bgOp);
-          ctx.fillRect(p.x - 4, p.y - boxH / 2, tw, boxH);
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 1.2;
-          ctx.strokeRect(p.x - 4, p.y - boxH / 2, tw, boxH);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = hexToRgba(color, 0.85);
+          ctx.lineWidth = Math.max(1, lineWidth * 0.7);
+          applyRpCanvasStrokeStyle(ctx, style, lineWidth);
+          ctx.stroke();
+          ctx.restore();
         }
+        ctx.setLineDash([]);
         ctx.fillStyle = color;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
-        ctx.fillText(txt, p.x + 4, p.y);
+        ctx.fillText(txt, p.x + 5, p.y + 0.5);
       } else if (d.type === 'callout' && pixels.length >= 2) {
         const [pAnchor, pBox] = pixels;
         const txt = d.text || 'Not';
-        const fs = Math.max(10, Math.min(26, Number(d.fontSize) || 11.5));
+        const fs = Math.max(10, Math.min(26, Number(d.fontSize) || 12));
         const weight = d.bold !== false ? '700' : '500';
-        ctx.setLineDash([]);
+        applyRpCanvasStrokeStyle(ctx, style, lineWidth);
+        ctx.lineWidth = lineWidth;
         ctx.beginPath();
         ctx.moveTo(pAnchor.x, pAnchor.y);
         ctx.lineTo(pBox.x, pBox.y);
         ctx.stroke();
+        ctx.save();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.arc(pAnchor.x, pAnchor.y, Math.max(3.2, lineWidth + 1), 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.lineWidth = 1.4;
+        ctx.strokeStyle = isLightTheme ? '#FFFFFF' : '#091124';
+        ctx.stroke();
+        ctx.restore();
+
         ctx.font = `${weight} ${fs}px "Plus Jakarta Sans", system-ui, sans-serif`;
         const boxH = Math.round(fs * 2.15);
-        const tw = Math.max(48, ctx.measureText(txt).width + 18);
+        const tw = Math.max(52, ctx.measureText(txt).width + 20);
         if (d.showBackground !== false) {
           const bgOp = Math.max(0, Math.min(0.98, (Number.isFinite(Number(d.fillOpacity)) ? Number(d.fillOpacity) : 92) / 100));
           const bgHex = d.fillColor || (isLightTheme ? '#FFFFFF' : '#0E1734');
+          ctx.save();
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.28)';
+          ctx.shadowBlur = 10;
+          drawRpRoundedRectPath(ctx, pBox.x - tw / 2, pBox.y - boxH / 2, tw, boxH, 9);
           ctx.fillStyle = hexToRgba(bgHex, bgOp);
-          ctx.fillRect(pBox.x - tw / 2, pBox.y - boxH / 2, tw, boxH);
-          ctx.strokeStyle = color;
-          ctx.lineWidth = 1.4;
-          ctx.strokeRect(pBox.x - tw / 2, pBox.y - boxH / 2, tw, boxH);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = hexToRgba(color, 0.88);
+          ctx.lineWidth = Math.max(1, lineWidth * 0.75);
+          ctx.stroke();
+          ctx.restore();
         }
+        ctx.setLineDash([]);
         ctx.fillStyle = isLightTheme && d.showBackground !== false ? '#0F172A' : (d.showBackground === false ? color : '#F8FAFC');
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(txt, pBox.x, pBox.y);
+        ctx.fillText(txt, pBox.x, pBox.y + 0.5);
       }
 
       if (isSelected || isHovered) {
         const handles = getRpDrawingHandles(d, pixels);
-        ctx.globalAlpha = isSelected ? 1 : 0.88;
-        ctx.shadowBlur = isHovered && !isSelected ? 10 : 0;
-        ctx.shadowColor = '#38BDF8';
+        ctx.globalAlpha = isSelected ? 1 : 0.92;
         ctx.setLineDash([]);
         handles.forEach(h => {
+          const rad = h.isMidHandle ? (isSelected ? 4.4 : 3.9) : (isSelected ? 4.8 : 4.2);
+          ctx.save();
+          ctx.shadowBlur = isSelected ? 8 : 10;
+          ctx.shadowColor = d.locked ? '#FBBF24' : (h.isMidHandle ? '#22D3EE' : '#38BDF8');
           ctx.beginPath();
-          ctx.arc(h.x, h.y, isSelected ? 4.5 : 4, 0, Math.PI * 2);
-          ctx.fillStyle = '#FFFFFF';
+          ctx.arc(h.x, h.y, rad, 0, Math.PI * 2);
+          ctx.fillStyle = h.isMidHandle ? '#ECFEFF' : '#FFFFFF';
           ctx.fill();
+          ctx.shadowBlur = 0;
           ctx.lineWidth = 2;
-          ctx.strokeStyle = d.locked ? '#FBBF24' : '#38BDF8';
+          ctx.strokeStyle = d.locked ? '#FBBF24' : (h.isMidHandle ? '#06B6D4' : '#38BDF8');
           ctx.stroke();
+          ctx.restore();
         });
       }
 
@@ -17171,6 +17864,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (!rpChartInstance || !rpCandlestickSeries || getVisibleRpCandles().length === 0) return;
       const plot = getRpPlotRect();
       if (!plot) return;
+      rpLastViewportSig = getRpViewportSignature(plot);
 
       const isLightTheme = (document.documentElement.getAttribute('data-theme') === 'light');
 
@@ -17199,6 +17893,67 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
 
       ctx.restore();
+    }
+
+    function getRpViewportSignature(precomputedPlot = null) {
+      if (!rpChartInstance || !rpCandlestickSeries) return '';
+      const plot = precomputedPlot || getRpPlotRect();
+      if (!plot) return '';
+      let fromV = 'n';
+      let toV = 'n';
+      try {
+        const lr = rpChartInstance.timeScale().getVisibleLogicalRange();
+        if (lr && Number.isFinite(lr.from) && Number.isFinite(lr.to)) {
+          fromV = lr.from.toFixed(4);
+          toV = lr.to.toFixed(4);
+        }
+      } catch (_) {}
+      let pTop = 'n';
+      let pBot = 'n';
+      try {
+        const topPrice = rpCandlestickSeries.coordinateToPrice(0);
+        const botPrice = rpCandlestickSeries.coordinateToPrice(plot.height);
+        if (topPrice !== null && Number.isFinite(topPrice)) pTop = topPrice.toPrecision(8);
+        if (botPrice !== null && Number.isFinite(botPrice)) pBot = botPrice.toPrecision(8);
+      } catch (_) {}
+      return `${plot.left.toFixed(1)},${plot.top.toFixed(1)},${plot.width.toFixed(1)},${plot.height.toFixed(1)}|${fromV},${toV}|${pTop},${pBot}`;
+    }
+
+    function stopRpViewportSyncWatch() {
+      if (rpViewportSyncRafId !== null) {
+        cancelAnimationFrame(rpViewportSyncRafId);
+        rpViewportSyncRafId = null;
+      }
+      rpViewportSyncUntil = 0;
+    }
+
+    function startRpViewportSyncWatch(durationMs = 550) {
+      if (!rpChartInstance || !rpCandlestickSeries) return;
+      const section = document.getElementById('sec-chart');
+      if (!section || !section.classList.contains('active')) return;
+      const now = performance.now();
+      const targetUntil = now + Math.max(120, Number(durationMs) || 550);
+      if (targetUntil > rpViewportSyncUntil) {
+        rpViewportSyncUntil = targetUntil;
+      }
+      if (rpViewportSyncRafId !== null) return;
+      const tick = (ts) => {
+        rpViewportSyncRafId = null;
+        if (!rpChartInstance || !rpCandlestickSeries || !section.classList.contains('active')) {
+          rpViewportSyncUntil = 0;
+          return;
+        }
+        const sig = getRpViewportSignature();
+        if (sig && sig !== rpLastViewportSig) {
+          rpLastViewportSig = sig;
+          rpViewportSyncUntil = Math.max(rpViewportSyncUntil, ts + 220);
+          renderRpDrawings();
+        }
+        if (ts < rpViewportSyncUntil) {
+          rpViewportSyncRafId = requestAnimationFrame(tick);
+        }
+      };
+      rpViewportSyncRafId = requestAnimationFrame(tick);
     }
 
     function syncRpDrawPropsBar() {
@@ -17692,10 +18447,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     function closeRpDrawSettingsModal() {
+      const ae = document.activeElement;
+      const bodyEl = document.getElementById('rp-draw-set-body');
+      if (ae && bodyEl && bodyEl.contains(ae) && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT')) {
+        try { ae.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+      }
       const d = rpSettingsTargetId ? rpDrawings.find(item => item.id === rpSettingsTargetId) : null;
       if (d) {
         saveRpDrawingsToStorage();
         saveDrawingStyleToToolDefault(d, false);
+        flushPreferencesCloudSyncNow();
       }
       const modal = document.getElementById('rp-draw-settings-modal');
       if (modal) modal.classList.remove('visible');
@@ -17744,9 +18505,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     function saveCurrentDrawingAsToolDefault() {
+      const ae = document.activeElement;
+      const bodyEl = document.getElementById('rp-draw-set-body');
+      if (ae && bodyEl && bodyEl.contains(ae) && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT')) {
+        try { ae.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+      }
       const d = rpSettingsTargetId ? rpDrawings.find(item => item.id === rpSettingsTargetId) : null;
       if (!d) return;
       saveDrawingStyleToToolDefault(d, true);
+      flushPreferencesCloudSyncNow();
     }
 
     function resetCurrentDrawingSettingsToFactory() {
@@ -17760,9 +18527,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
       if (!rpDrawPrefs) loadRpDrawPrefs();
       if (rpDrawPrefs.toolDefaults && typeof rpDrawPrefs.toolDefaults === 'object') {
-        rpDrawPrefs.toolDefaults[d.type] = null;
+        delete rpDrawPrefs.toolDefaults[d.type];
       }
       saveRpDrawPrefs(true);
+      flushPreferencesCloudSyncNow();
       saveRpDrawingsToStorage();
       syncRpDrawPropsBar();
       renderRpDrawings();
@@ -17823,6 +18591,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         wrap.appendChild(cb);
         wrap.appendChild(sp);
         sec.appendChild(wrap);
+        return cb;
       };
 
       // 1. Stil & Görünüm Bölümü
@@ -17832,8 +18601,20 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       colorInp.className = 'rp-draw-set-color';
       colorInp.value = d.color || meta.defaultColor || '#38BDF8';
       colorInp.addEventListener('input', () => {
+        const prevColor = d.color || meta.defaultColor || '#38BDF8';
         d.color = colorInp.value;
+        if ((d.type === 'rect' || d.type === 'channel') && (!d.fillColor || String(d.fillColor).toLowerCase() === String(prevColor).toLowerCase())) {
+          d.fillColor = colorInp.value;
+          const fillColEl = styleSec.querySelector('input[data-rp-fill-color="1"]');
+          if (fillColEl) fillColEl.value = colorInp.value;
+        }
+        if (d.type === 'measure') {
+          d.useCustomColor = true;
+        }
         commitUpdate();
+      });
+      colorInp.addEventListener('change', () => {
+        flushPreferencesCloudSyncNow();
       });
       makeRow(styleSec, 'Ana Renk', colorInp);
 
@@ -17850,29 +18631,31 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         widthSel.addEventListener('change', () => {
           d.lineWidth = Number(widthSel.value) || 2;
           commitUpdate();
+          flushPreferencesCloudSyncNow();
         });
         makeRow(styleSec, 'Çizgi Kalınlığı', widthSel);
+      }
 
-        if (d.type !== 'longpos' && d.type !== 'shortpos' && d.type !== 'measure' && d.type !== 'brush' && d.type !== 'highlighter' && d.type !== 'callout') {
-          const styleSel = document.createElement('select');
-          styleSel.className = 'rp-draw-set-input short';
-          [
-            { v: 'solid', t: 'Düz' },
-            { v: 'dashed', t: 'Kesikli' },
-            { v: 'dotted', t: 'Noktalı' }
-          ].forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item.v;
-            opt.textContent = item.t;
-            styleSel.appendChild(opt);
-          });
-          styleSel.value = d.style || 'solid';
-          styleSel.addEventListener('change', () => {
-            d.style = styleSel.value;
-            commitUpdate();
-          });
-          makeRow(styleSec, 'Çizgi Stili', styleSel);
-        }
+      if (d.type !== 'brush' && d.type !== 'highlighter') {
+        const styleSel = document.createElement('select');
+        styleSel.className = 'rp-draw-set-input short';
+        [
+          { v: 'solid', t: 'Düz' },
+          { v: 'dashed', t: 'Kesikli' },
+          { v: 'dotted', t: 'Noktalı' }
+        ].forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item.v;
+          opt.textContent = item.t;
+          styleSel.appendChild(opt);
+        });
+        styleSel.value = d.style || 'solid';
+        styleSel.addEventListener('change', () => {
+          d.style = styleSel.value;
+          commitUpdate();
+          flushPreferencesCloudSyncNow();
+        });
+        makeRow(styleSec, 'Çizgi Stili', styleSel);
       }
 
       const opWrap = document.createElement('div');
@@ -17901,10 +18684,14 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const fillColInp = document.createElement('input');
         fillColInp.type = 'color';
         fillColInp.className = 'rp-draw-set-color';
+        fillColInp.setAttribute('data-rp-fill-color', '1');
         fillColInp.value = d.fillColor || d.color || '#3B82F6';
         fillColInp.addEventListener('input', () => {
           d.fillColor = fillColInp.value;
           commitUpdate();
+        });
+        fillColInp.addEventListener('change', () => {
+          flushPreferencesCloudSyncNow();
         });
         makeRow(styleSec, 'Dolgu Rengi', fillColInp);
 
@@ -17948,15 +18735,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           });
           makeRow(optSec, 'Özel Etiket', lblInp);
         }
-        if (d.type === 'trendline' || d.type === 'rect' || d.type === 'channel') {
+        if (d.type === 'trendline' || d.type === 'arrow' || d.type === 'rect' || d.type === 'channel') {
           makeCheckbox(optSec, 'Sola Uzat', !!d.extendLeft, (v) => { d.extendLeft = v; });
           makeCheckbox(optSec, 'Sağa Uzat', !!d.extendRight, (v) => { d.extendRight = v; });
         }
         if (d.type === 'rect') {
           makeCheckbox(optSec, 'Orta Çizgi (%50 EQ)', !!d.showMidline, (v) => { d.showMidline = v; });
         }
-        if (d.type === 'trendline' || d.type === 'ray' || d.type === 'extended') {
-          makeCheckbox(optSec, 'Fiyat / % / Açı Bilgisi Göster', !!d.showLabel, (v) => { d.showLabel = v; });
+        if (d.type === 'trendline' || d.type === 'ray' || d.type === 'extended' || d.type === 'arrow') {
+          makeCheckbox(optSec, d.type === 'arrow' ? 'Fiyat / % Bilgisi Göster' : 'Fiyat / % / Açı Bilgisi Göster', !!d.showLabel, (v) => { d.showLabel = v; });
         }
         if (d.type === 'hline' || d.type === 'hray' || d.type === 'vline') {
           makeCheckbox(optSec, d.type === 'vline' ? 'Alt Tarih Rozetini Göster' : 'Sağ Fiyat Rozetini Göster', d.showLabel !== false, (v) => { d.showLabel = v; });
@@ -18006,7 +18793,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         makeCheckbox(fibOptSec, 'Ters Çevir (0 ↔ 1)', !!d.reverse, (v) => { d.reverse = v; });
         makeCheckbox(fibOptSec, 'Oranları Göster', d.showLevels !== false, (v) => { d.showLevels = v; });
         makeCheckbox(fibOptSec, 'Fiyatları Göster', d.showPrices !== false, (v) => { d.showPrices = v; });
+        makeCheckbox(fibOptSec, 'İç Çapraz Çizgiyi Göster', d.showTrendLine === true, (v) => { d.showTrendLine = v; });
 
+        const fBgVal = Number.isFinite(Number(d.fillOpacity)) ? Number(d.fillOpacity) : 8;
+        const isFibBgOn = (d.showBackground !== false) && fBgVal > 0;
         const fBgWrap = document.createElement('div');
         fBgWrap.className = 'rp-draw-set-ctrl';
         const fBgRange = document.createElement('input');
@@ -18015,14 +18805,27 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         fBgRange.max = '40';
         fBgRange.step = '2';
         fBgRange.className = 'rp-draw-set-range';
-        const fBgVal = Number.isFinite(Number(d.fillOpacity)) ? Number(d.fillOpacity) : 8;
-        fBgRange.value = String(fBgVal);
+        fBgRange.value = String(isFibBgOn ? fBgVal : 0);
         const fBgTxt = document.createElement('span');
         fBgTxt.className = 'rp-draw-set-val';
-        fBgTxt.textContent = `${fBgVal}%`;
+        fBgTxt.textContent = `${isFibBgOn ? fBgVal : 0}%`;
+
+        const showFibBgCb = makeCheckbox(fibOptSec, 'Arka Plan Dolgusunu Göster', isFibBgOn, (v) => {
+          d.showBackground = v;
+          if (v && (Number(d.fillOpacity) || 0) <= 0) {
+            d.fillOpacity = 8;
+          }
+          const displayOp = v ? (Number.isFinite(Number(d.fillOpacity)) ? Number(d.fillOpacity) : 8) : 0;
+          fBgRange.value = String(displayOp);
+          fBgTxt.textContent = `${displayOp}%`;
+        });
+
         fBgRange.addEventListener('input', () => {
-          d.fillOpacity = Number(fBgRange.value);
-          fBgTxt.textContent = `${d.fillOpacity}%`;
+          const val = Number(fBgRange.value);
+          d.fillOpacity = val;
+          d.showBackground = val > 0;
+          showFibBgCb.checked = val > 0;
+          fBgTxt.textContent = `${val}%`;
           commitUpdate();
         });
         fBgWrap.appendChild(fBgRange);
@@ -18598,6 +19401,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         });
       }
       syncRpFullscreenTopbar();
+      renderRpTfBarButtons();
 
       const balInput = document.getElementById('rp-balance-input');
       const riskInput = document.getElementById('rp-risk-input');
@@ -19122,6 +19926,18 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const propLock = document.getElementById('rp-draw-prop-lock');
       const propDelete = document.getElementById('rp-draw-prop-delete');
       const getPropsBarTargetId = () => rpSelectedDrawingId || rpHoveredDrawingId;
+      const lockHoveredTargetOnPropsBar = () => {
+        rpIsPointerOverPropsBar = true;
+        if (rpHoverClearTimer) {
+          clearTimeout(rpHoverClearTimer);
+          rpHoverClearTimer = null;
+        }
+        if (!rpSelectedDrawingId && rpHoveredDrawingId) {
+          rpSelectedDrawingId = rpHoveredDrawingId;
+          syncRpDrawPropsBar();
+          scheduleRpDrawRender();
+        }
+      };
       if (propsBarEl) {
         propsBarEl.addEventListener('mouseenter', () => {
           rpIsPointerOverPropsBar = true;
@@ -19130,13 +19946,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             rpHoverClearTimer = null;
           }
         });
+        propsBarEl.addEventListener('pointerdown', lockHoveredTargetOnPropsBar);
+        propsBarEl.addEventListener('mousedown', lockHoveredTargetOnPropsBar);
+        propsBarEl.addEventListener('focusin', lockHoveredTargetOnPropsBar);
         propsBarEl.addEventListener('mouseleave', () => {
           rpIsPointerOverPropsBar = false;
+          if (propsBarEl.contains(document.activeElement)) return;
           if (!rpSelectedDrawingId && rpHoveredDrawingId) {
             if (rpHoverClearTimer) clearTimeout(rpHoverClearTimer);
             rpHoverClearTimer = setTimeout(() => {
               rpHoverClearTimer = null;
-              if (!rpIsPointerOverPropsBar && !rpSelectedDrawingId && rpHoveredDrawingId) {
+              if (!rpIsPointerOverPropsBar && !propsBarEl.contains(document.activeElement) && !rpSelectedDrawingId && rpHoveredDrawingId) {
                 rpHoveredDrawingId = null;
                 const w = document.getElementById('rp-chart-wrap');
                 if (w) w.classList.remove('rp-drawing-hover');
@@ -19147,7 +19967,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           }
         });
       }
-      const updateSelectedDrawProp = (fn, syncTemplate = false) => {
+      const updateSelectedDrawProp = (fn, syncTemplate = false, flushCloud = false) => {
         const targetId = getPropsBarTargetId();
         const sel = targetId ? rpDrawings.find(d => d.id === targetId) : null;
         if (!sel) return;
@@ -19157,12 +19977,30 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         if (syncTemplate) {
           saveDrawingStyleToToolDefault(sel, false);
         }
+        if (flushCloud) {
+          flushPreferencesCloudSyncNow();
+        }
         syncRpDrawPropsBar();
         renderRpDrawings();
       };
-      if (propColor) propColor.addEventListener('input', () => updateSelectedDrawProp(d => { d.color = propColor.value; }, true));
-      if (propWidth) propWidth.addEventListener('change', () => updateSelectedDrawProp(d => { d.lineWidth = Number(propWidth.value) || 2; }, true));
-      if (propStyle) propStyle.addEventListener('change', () => updateSelectedDrawProp(d => { d.style = propStyle.value || 'solid'; }, true));
+      if (propColor) {
+        const applyPropColor = (flushCloud) => {
+          updateSelectedDrawProp(d => {
+            const prevColor = d.color || (RP_DRAW_TOOLS[d.type]?.defaultColor) || '#38BDF8';
+            d.color = propColor.value;
+            if ((d.type === 'rect' || d.type === 'channel') && (!d.fillColor || String(d.fillColor).toLowerCase() === String(prevColor).toLowerCase())) {
+              d.fillColor = propColor.value;
+            }
+            if (d.type === 'measure') {
+              d.useCustomColor = true;
+            }
+          }, true, flushCloud);
+        };
+        propColor.addEventListener('input', () => applyPropColor(false));
+        propColor.addEventListener('change', () => applyPropColor(true));
+      }
+      if (propWidth) propWidth.addEventListener('change', () => updateSelectedDrawProp(d => { d.lineWidth = Number(propWidth.value) || 2; }, true, true));
+      if (propStyle) propStyle.addEventListener('change', () => updateSelectedDrawProp(d => { d.style = propStyle.value || 'solid'; }, true, true));
       if (propSettings) {
         propSettings.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -19802,6 +20640,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                     drawing: drawHit.drawing,
                     handleIndex: drawHit.handleIndex,
                     handleMode: drawHit.handleMode || 'xy',
+                    handleTimeIndex: drawHit.handleTimeIndex,
+                    handlePriceIndex: drawHit.handlePriceIndex,
+                    handleCursor: drawHit.handleCursor || 'pointer',
                     lastPt: startPt
                   };
                   rpChartInstance.applyOptions({ handleScroll: false, handleScale: false });
@@ -19881,6 +20722,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               if (pt && d.points[rpDrawingDragState.handleIndex]) {
                 if (rpDrawingDragState.handleMode === 'priceOnly') {
                   d.points[rpDrawingDragState.handleIndex].price = pt.price;
+                } else if (rpDrawingDragState.handleMode === 'timeOnly') {
+                  d.points[rpDrawingDragState.handleIndex].time = pt.time;
+                } else if (rpDrawingDragState.handleMode === 'rectCorner') {
+                  if (d.points[rpDrawingDragState.handleTimeIndex]) {
+                    d.points[rpDrawingDragState.handleTimeIndex].time = pt.time;
+                  }
+                  if (d.points[rpDrawingDragState.handlePriceIndex]) {
+                    d.points[rpDrawingDragState.handlePriceIndex].price = pt.price;
+                  }
                 } else {
                   if (shiftHeld && d.points.length >= 2 && angleSnapEligible(d.type)) {
                     const otherIdx = rpDrawingDragState.handleIndex === 0 ? 1 : 0;
@@ -19970,6 +20820,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             rpDrawingDragState = null;
             rpHoverMagnetPx = null;
             chartWrap.classList.remove('rp-drawing-grabbing');
+            chartWrap.style.removeProperty('--rp-draw-cursor');
             if (rpChartInstance) rpChartInstance.applyOptions({ handleScroll: true, handleScale: true });
             saveRpDrawingsToStorage();
             renderRpDrawings();
@@ -20063,9 +20914,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                     drawing: drawHit.drawing,
                     handleIndex: drawHit.handleIndex,
                     handleMode: drawHit.handleMode || 'xy',
+                    handleTimeIndex: drawHit.handleTimeIndex,
+                    handlePriceIndex: drawHit.handlePriceIndex,
+                    handleCursor: drawHit.handleCursor || 'pointer',
                     lastPt: startPt
                   };
-                  chartWrap.classList.add('rp-drawing-grabbing');
+                  if (drawHit.handleIndex >= 0) {
+                    chartWrap.style.setProperty('--rp-draw-cursor', drawHit.handleCursor || 'pointer');
+                    chartWrap.classList.add('rp-drawing-hover');
+                  } else {
+                    chartWrap.classList.add('rp-drawing-grabbing');
+                  }
                   rpChartInstance.applyOptions({ handleScroll: false, handleScale: false });
                 }
               }
@@ -20081,6 +20940,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               rpSelectedDrawingId = null;
               rpHoveredDrawingId = null;
               chartWrap.classList.remove('rp-drawing-hover');
+              chartWrap.style.removeProperty('--rp-draw-cursor');
               syncRpDrawPropsBar();
               renderRpDrawings();
             }
@@ -20089,9 +20949,23 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           if (isRpContextPanelOpen()) {
             closeRpContextPanel();
           }
+          startRpViewportSyncWatch(600);
         }, true);
 
+        chartWrap.addEventListener('wheel', () => {
+          startRpViewportSyncWatch(650);
+        }, { capture: true, passive: true });
+
+        chartWrap.addEventListener('touchstart', () => {
+          startRpViewportSyncWatch(650);
+        }, { capture: true, passive: true });
+
+        chartWrap.addEventListener('touchmove', () => {
+          startRpViewportSyncWatch(650);
+        }, { capture: true, passive: true });
+
         chartWrap.addEventListener('dblclick', (e) => {
+          startRpViewportSyncWatch(600);
           if (e.target && e.target.closest(rpChartControlSelector)) return;
           if (rpActiveDrawTool !== 'cursor') return;
           const rect = chartWrap.getBoundingClientRect();
@@ -20135,6 +21009,19 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           if (rpDrawingDragState || rpDraftDrawing) {
             clearRpHoverTimerNow();
             handleRpDrawingPointerMove(e.clientX, e.clientY, e.shiftKey);
+            return;
+          }
+          if ((e.buttons & 1) !== 0) {
+            clearRpHoverTimerNow();
+            chartWrap.style.cursor = '';
+            chartWrap.style.removeProperty('--rp-draw-cursor');
+            chartWrap.classList.remove('rp-line-hover', 'rp-drawing-hover');
+            if (rpHoveredDrawingId) {
+              rpHoveredDrawingId = null;
+              syncRpDrawPropsBar();
+              renderRpDrawings();
+            }
+            startRpViewportSyncWatch(600);
             return;
           }
           if (e.target && e.target.closest('#rp-draw-props-bar')) {
@@ -20182,7 +21069,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           chartWrap.classList.remove('rp-line-hover');
           const drawHit = hitTestRpDrawing(x, y);
           const nextHoverId = (drawHit && drawHit.drawing) ? drawHit.drawing.id : null;
-          chartWrap.style.cursor = nextHoverId ? 'pointer' : '';
+          const hoverCursor = drawHit ? (drawHit.handleIndex >= 0 ? (drawHit.handleCursor || 'pointer') : 'grab') : '';
+          if (hoverCursor) {
+            chartWrap.style.setProperty('--rp-draw-cursor', hoverCursor);
+          } else {
+            chartWrap.style.removeProperty('--rp-draw-cursor');
+          }
+          chartWrap.style.cursor = hoverCursor;
           chartWrap.classList.toggle('rp-drawing-hover', !!nextHoverId);
           if (nextHoverId) {
             clearRpHoverTimerNow();
@@ -20207,8 +21100,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             handleRpDrawingPointerMove(e.clientX, e.clientY, e.shiftKey);
             return;
           }
-          if (!rpDraggingLine) return;
-          handleRpPriceLineDragMove(e.clientY);
+          if (rpDraggingLine) {
+            handleRpPriceLineDragMove(e.clientY);
+            return;
+          }
+          if ((e.buttons & 1) !== 0 && rpChartInstance && document.getElementById('sec-chart')?.classList.contains('active')) {
+            startRpViewportSyncWatch(500);
+          }
         });
 
         window.addEventListener('mouseup', (e) => {
@@ -20216,6 +21114,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             finishRpDrawingPointerAction(e.clientX, e.clientY);
           }
           finishRpPriceLineDrag();
+          if (rpChartInstance && document.getElementById('sec-chart')?.classList.contains('active')) {
+            startRpViewportSyncWatch(600);
+          }
         });
       }
     }
@@ -20273,7 +21174,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         rpChartInstance.subscribeClick(rpChartClickHandler);
         rpChartInstance.timeScale().subscribeVisibleLogicalRangeChange(() => {
           updateRpChartOverlay();
-          scheduleRpDrawRender();
+          renderRpDrawings();
+          startRpViewportSyncWatch(450);
         });
 
         if (typeof ResizeObserver === 'function') {
@@ -20281,7 +21183,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             resizeRpChart();
             updateRpChartOverlay();
             positionRpFullscreenBtn();
-            scheduleRpDrawRender();
+            renderRpDrawings();
           });
           rpChartResizeObserver.observe(container);
           const wrapEl = document.getElementById('rp-chart-wrap');
