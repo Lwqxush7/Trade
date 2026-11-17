@@ -7739,7 +7739,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       const editJournalId = document.getElementById('editTradeId')?.value;
       const fRiskEl = document.getElementById('f-risk');
-      if (fRiskEl && !editJournalId && Number.isFinite(Number(AppState.settings.defaultRisk))) {
+      if (fRiskEl && !editJournalId && fRiskEl.dataset.userEdited !== 'true' && Number.isFinite(Number(AppState.settings.defaultRisk))) {
         fRiskEl.value = String(AppState.settings.defaultRisk);
       }
       const fTfEl = document.getElementById('f-timeframe');
@@ -7749,7 +7749,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       const editBtId = document.getElementById('editBacktestTradeId')?.value;
       const btRiskEl = document.getElementById('bt-risk');
-      if (btRiskEl && !editBtId && Number.isFinite(Number(AppState.settings.defaultRisk))) {
+      if (btRiskEl && !editBtId && btRiskEl.dataset.userEdited !== 'true' && Number.isFinite(Number(AppState.settings.defaultRisk))) {
         btRiskEl.value = String(AppState.settings.defaultRisk);
       }
       const btTfEl = document.getElementById('bt-timeframe');
@@ -10986,11 +10986,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         return parsePositiveBalance(AppState.settings[cfg.balanceKey]);
       }
 
+      function getEffectiveRiskPct() {
+        return parsePositiveBalance(riskEl?.value) || parsePositiveBalance(AppState.settings.defaultRisk) || 1.0;
+      }
+
       function renderBanner(overrideState = null) {
         if (!bannerEl) return;
         const curr = AppState.settings.currency || '$';
         const balance = getAccountBalance();
-        const riskPct = parsePositiveBalance(riskEl?.value) || parsePositiveBalance(AppState.settings.defaultRisk) || 1.0;
+        const riskPct = getEffectiveRiskPct();
         const entry = parseOptionalNumber(entryEl?.value);
         const exit = parseOptionalNumber(exitEl?.value);
         const sl = parseOptionalNumber(slEl?.value);
@@ -11073,7 +11077,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const exit = parseOptionalNumber(exitEl?.value);
         const sl = parseOptionalNumber(slEl?.value);
         const dir = dirEl?.value || 'Long';
-        const riskPct = parsePositiveBalance(riskEl?.value);
+        const riskPct = getEffectiveRiskPct();
         const balance = getAccountBalance();
         const priceR = computeRealizedRFromPrices(entry, exit, sl, dir);
 
@@ -11110,12 +11114,31 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           preserveChartSource = false;
           const res = resultEl.value;
           const val = parseFloat(pnlEl.value);
-          if (!Number.isNaN(val)) {
+          if (res === 'BE') {
+            pnlEl.value = '0';
+          } else if (!manualPnlOverride) {
+            const entry = parseOptionalNumber(entryEl?.value);
+            const exit = parseOptionalNumber(exitEl?.value);
+            const sl = parseOptionalNumber(slEl?.value);
+            const dir = dirEl?.value || 'Long';
+            const priceR = computeRealizedRFromPrices(entry, exit, sl, dir);
+            const balance = getAccountBalance();
+            const riskPct = getEffectiveRiskPct();
+            if (priceR !== null && balance && riskPct) {
+              const rawComputed = Math.abs(Number((balance * (riskPct / 100) * priceR).toFixed(2)));
+              if (rawComputed > 0) {
+                pnlEl.value = String(res === 'Loss' ? -rawComputed : rawComputed);
+                renderBanner();
+                return;
+              }
+            }
+            if (!Number.isNaN(val)) {
+              if (res === 'Loss' && val > 0) pnlEl.value = String(-val);
+              else if (res === 'Win' && val < 0) pnlEl.value = String(Math.abs(val));
+            }
+          } else if (!Number.isNaN(val)) {
             if (res === 'Loss' && val > 0) pnlEl.value = String(-val);
             else if (res === 'Win' && val < 0) pnlEl.value = String(Math.abs(val));
-            else if (res === 'BE') pnlEl.value = '0';
-          } else if (res === 'BE') {
-            pnlEl.value = '0';
           }
           renderBanner();
         });
@@ -11147,13 +11170,18 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       [entryEl, exitEl, slEl, riskEl].forEach(el => {
         if (!el) return;
-        el.addEventListener('input', () => {
+        const onFieldUpdate = () => {
+          if (el === riskEl) {
+            el.dataset.userEdited = 'true';
+          }
           manualPnlOverride = false;
           preserveChartSource = false;
           preservedChartR = null;
           preservedChartPnl = null;
           syncResultAndPnlFromPrices(true);
-        });
+        };
+        el.addEventListener('input', onFieldUpdate);
+        el.addEventListener('change', onFieldUpdate);
       });
 
       if (dirEl) {
@@ -11176,6 +11204,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             ? Number(trade.rMultiple)
             : null;
           preservedChartPnl = trade ? (parseFloat(trade.pnl) || 0) : null;
+          if (riskEl) delete riskEl.dataset.userEdited;
           renderBanner();
         },
         resetState() {
@@ -11183,8 +11212,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           preserveChartSource = false;
           preservedChartR = null;
           preservedChartPnl = null;
-          if (riskEl && Number.isFinite(Number(AppState.settings.defaultRisk))) {
-            riskEl.value = String(AppState.settings.defaultRisk);
+          if (riskEl) {
+            delete riskEl.dataset.userEdited;
+            if (Number.isFinite(Number(AppState.settings.defaultRisk))) {
+              riskEl.value = String(AppState.settings.defaultRisk);
+            }
           }
           renderBanner();
         },
@@ -12899,10 +12931,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const balEl = document.getElementById('rp-balance-input');
         if (balEl) {
           balEl.value = String(btBal || 10000);
-          if (typeof updateRpPanelDollarHints === 'function') updateRpPanelDollarHints();
           if (typeof syncRpLotFromRisk === 'function' && !rpOpenTrade && !rpPendingOrder) {
             syncRpLotFromRisk();
           }
+          if (typeof updateRpPanelDollarHints === 'function') updateRpPanelDollarHints();
+          if (typeof updateRpPriceLineLabels === 'function') updateRpPriceLineLabels();
+          if (typeof renderRpDrawings === 'function') renderRpDrawings();
         }
       } catch (_) {}
     }
@@ -12922,6 +12956,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           }
           if (tfEl && fsTfEl) fsTfEl.value = tfEl.value || 'M15';
           if (typeof renderRpTfBarButtons === 'function') renderRpTfBarButtons();
+          if (typeof syncRpLotFromRisk === 'function' && !rpOpenTrade && !rpPendingOrder) syncRpLotFromRisk();
+          if (typeof updateRpPanelDollarHints === 'function') updateRpPanelDollarHints();
+          if (typeof updateRpPriceLineLabels === 'function') updateRpPriceLineLabels();
+          if (typeof renderRpDrawings === 'function') renderRpDrawings();
           return;
         }
         const parsed = JSON.parse(raw);
@@ -12954,7 +12992,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           rpLastActiveTf = normTf;
         }
         if (typeof renderRpTfBarButtons === 'function') renderRpTfBarButtons();
+        if (typeof syncRpLotFromRisk === 'function' && !rpOpenTrade && !rpPendingOrder) syncRpLotFromRisk();
         if (typeof updateRpPanelDollarHints === 'function') updateRpPanelDollarHints();
+        if (typeof updateRpPriceLineLabels === 'function') updateRpPriceLineLabels();
+        if (typeof renderRpDrawings === 'function') renderRpDrawings();
       } catch (_) {}
     }
 
@@ -14046,6 +14087,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           rpPreviewOrder.sl = clampedSl;
           rpPreviewOrder.tp = nextTp;
         }
+        syncRpLotFromRisk();
         drawRpPreviewPriceLines();
       }
     }
@@ -14118,6 +14160,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         rpPreviewOrder.rrRatio = rpPreviewRrRatio;
         rpPreviewOrder.tp = clampedTp;
       }
+      syncRpLotFromRisk();
       syncRpDirectionAndRrUi();
       drawRpPreviewPriceLines();
     }
@@ -18603,18 +18646,36 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           const cx = leftX + boxW / 2;
           const visLeft = Math.max(leftX, plot.left);
           const visRight = Math.min(leftX + boxW, plot.right);
-          const textCx = visRight > visLeft + 24 ? (visLeft + visRight) / 2 : cx;
+          const hasPartialClip = visRight > visLeft + 24;
+          const textCx = hasPartialClip ? (visLeft + visRight) / 2 : cx;
+          const availTextW = Math.max(0, (hasPartialClip ? (visRight - visLeft) : boxW) - 8);
+          const pickFittingLabel = (candidates) => {
+            for (let i = 0; i < candidates.length; i++) {
+              if (ctx.measureText(candidates[i]).width <= availTextW) return candidates[i];
+            }
+            return candidates[candidates.length - 1];
+          };
           if (tpH > 18 && boxW >= 54) {
             ctx.save();
             ctx.beginPath();
             ctx.rect(leftX + 3, tpTop, Math.max(0, boxW - 6), tpH);
             ctx.clip();
             ctx.fillStyle = isLightTheme ? '#065F46' : '#A7F3D0';
-            const tpDollarStr = tpDollar !== null ? ` · +$${tpDollar.toFixed(0)}` : '';
-            const tpText = boxW >= 165
-              ? `Hedef: ${formatRpPrice(tpP)} (+${tpPct.toFixed(2)}%${tpDollarStr})`
-              : (boxW >= 95 ? `+${tpPct.toFixed(2)}%${tpDollarStr}` : `+${tpPct.toFixed(1)}%`);
-            ctx.fillText(tpText, textCx, tpTop + tpH / 2);
+            const tpDollarVal = tpDollar !== null ? `+$${tpDollar.toFixed(0)}` : '';
+            const tpDollarStr = tpDollar !== null ? ` · ${tpDollarVal}` : '';
+            const tpCandidates = tpDollar !== null
+              ? [
+                  `Hedef: ${formatRpPrice(tpP)} (+${tpPct.toFixed(2)}%${tpDollarStr})`,
+                  `+${tpPct.toFixed(2)}%${tpDollarStr}`,
+                  tpDollarVal,
+                  `+${tpPct.toFixed(1)}%`
+                ]
+              : [
+                  `Hedef: ${formatRpPrice(tpP)} (+${tpPct.toFixed(2)}%)`,
+                  `+${tpPct.toFixed(2)}%`,
+                  `+${tpPct.toFixed(1)}%`
+                ];
+            ctx.fillText(pickFittingLabel(tpCandidates), textCx, tpTop + tpH / 2);
             ctx.restore();
           }
           if (slH > 18 && boxW >= 54) {
@@ -18623,11 +18684,21 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             ctx.rect(leftX + 3, slTop, Math.max(0, boxW - 6), slH);
             ctx.clip();
             ctx.fillStyle = isLightTheme ? '#9F1239' : '#FECDD3';
-            const slDollarStr = slDollar !== null ? ` · -$${slDollar.toFixed(0)}` : '';
-            const slText = boxW >= 165
-              ? `Stop: ${formatRpPrice(slP)} (-${slPct.toFixed(2)}%${slDollarStr})`
-              : (boxW >= 95 ? `-${slPct.toFixed(2)}%${slDollarStr}` : `-${slPct.toFixed(1)}%`);
-            ctx.fillText(slText, textCx, slTop + slH / 2);
+            const slDollarVal = slDollar !== null ? `-$${slDollar.toFixed(0)}` : '';
+            const slDollarStr = slDollar !== null ? ` · ${slDollarVal}` : '';
+            const slCandidates = slDollar !== null
+              ? [
+                  `Stop: ${formatRpPrice(slP)} (-${slPct.toFixed(2)}%${slDollarStr})`,
+                  `-${slPct.toFixed(2)}%${slDollarStr}`,
+                  slDollarVal,
+                  `-${slPct.toFixed(1)}%`
+                ]
+              : [
+                  `Stop: ${formatRpPrice(slP)} (-${slPct.toFixed(2)}%)`,
+                  `-${slPct.toFixed(2)}%`,
+                  `-${slPct.toFixed(1)}%`
+                ];
+            ctx.fillText(pickFittingLabel(slCandidates), textCx, slTop + slH / 2);
             ctx.restore();
           }
           if (boxW >= 34) {
@@ -20423,6 +20494,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           syncRpLotFromRisk();
           updateRpPanelDollarHints();
           updateRpPriceLineLabels();
+        }
+        if (typeof renderRpDrawings === 'function') {
+          renderRpDrawings();
         }
       };
       if (balInput) {
