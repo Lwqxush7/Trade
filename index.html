@@ -12632,6 +12632,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     let rpIsPickingStart = false;
     let rpReplayActive = false;
     let rpReplayIndex = -1;
+    let rpReplayClockSec = null;
+    let rpVisibleReplayCandles = [];
     let rpReplayTimer = null;
     let rpChartClickHandler = null;
     let rpCurrentPrecision = 2;
@@ -13434,14 +13436,20 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       return Number(Number(val).toFixed(rpCurrentPrecision));
     }
 
-    function getRpCurrentMarketPrice() {
-      if (rpReplayActive && rpReplayIndex >= 0 && rpReplayIndex < rpLoadedCandles.length) {
-        return roundRpPrice(rpLoadedCandles[rpReplayIndex].close);
+    function getRpCurrentActiveCandle() {
+      if (rpReplayActive) {
+        const vis = getVisibleRpCandles();
+        if (vis && vis.length > 0) return vis[vis.length - 1];
       }
       if (rpLoadedCandles.length > 0) {
-        return roundRpPrice(rpLoadedCandles[rpLoadedCandles.length - 1].close);
+        return rpLoadedCandles[rpLoadedCandles.length - 1];
       }
       return null;
+    }
+
+    function getRpCurrentMarketPrice() {
+      const cur = getRpCurrentActiveCandle();
+      return cur ? roundRpPrice(cur.close) : null;
     }
 
     function getRpPreviewEntryRef() {
@@ -14207,11 +14215,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           : `${activeItem.direction} ${lotStr} lot`;
       }
       if (subEl) {
-        if (isPending || !rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) {
+        const currentCandle = rpReplayActive ? getRpCurrentActiveCandle() : null;
+        if (isPending || !rpReplayActive || !currentCandle) {
           subEl.textContent = `@ ${formatRpPrice(isPending ? activeItem.orderPrice : activeItem.entryPrice)}`;
           subEl.classList.remove('pos', 'neg');
         } else {
-          const currentCandle = rpLoadedCandles[rpReplayIndex];
           const diff = activeItem.direction === 'Buy'
             ? (currentCandle.close - activeItem.entryPrice)
             : (activeItem.entryPrice - currentCandle.close);
@@ -14274,9 +14282,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     function reverseRpOpenTrade() {
-      if (!rpOpenTrade || !rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) return;
+      const currentCandle = rpReplayActive ? getRpCurrentActiveCandle() : null;
+      if (!rpOpenTrade || !rpReplayActive || !currentCandle) return;
       const t = rpOpenTrade;
-      const currentCandle = rpLoadedCandles[rpReplayIndex];
       const exitPrice = roundRpPrice(currentCandle.close);
       const priceDiff = t.direction === 'Buy' ? (exitPrice - t.entryPrice) : (t.entryPrice - exitPrice);
 
@@ -14292,7 +14300,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           rMultiple = priceDiff / slDistance;
         }
       }
-      const durationCandles = Math.max(0, rpReplayIndex - t.entryIndex);
+      const visCandles = getVisibleRpCandles();
+      const curIdx = Math.max(0, visCandles.length - 1);
+      const durationCandles = Math.max(0, curIdx - t.entryIndex);
       const pair = (document.getElementById('rp-pair-input')?.value || '').trim().toUpperCase();
       const timeframe = document.getElementById('rp-tf-select')?.value || 'M15';
 
@@ -14329,8 +14339,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       rpOpenTrade = {
         direction: nextDir,
         entryPrice: exitPrice,
-        entryIndex: rpReplayIndex,
+        entryIndex: curIdx,
         entryTime: currentCandle.time,
+        entryClockSec: rpReplayClockSec,
         lot: t.lot,
         contractSize: t.contractSize,
         sl: nextSl,
@@ -14386,11 +14397,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
 
       if (pnlEl) {
-        if (isPending || !rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) {
+        const currentCandle = rpReplayActive ? getRpCurrentActiveCandle() : null;
+        if (isPending || !rpReplayActive || !currentCandle) {
           pnlEl.textContent = 'Bekliyor';
           pnlEl.classList.remove('pos', 'neg');
         } else {
-          const currentCandle = rpLoadedCandles[rpReplayIndex];
           const diff = activeItem.direction === 'Buy'
             ? (currentCandle.close - activeItem.entryPrice)
             : (activeItem.entryPrice - currentCandle.close);
@@ -14586,7 +14597,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       updateRpTradeActionMenuLive();
 
       const activeItem = rpOpenTrade || rpPendingOrder;
-      if (!activeItem || !rpCandlestickSeries || !rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) {
+      const currentActiveCandle = rpReplayActive ? getRpCurrentActiveCandle() : null;
+      if (!activeItem || !rpCandlestickSeries || !rpReplayActive || !currentActiveCandle) {
         tagEl.classList.remove('visible', 'pending');
         return;
       }
@@ -14620,10 +14632,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         pnlEl.textContent = `@ ${formatRpPrice(activeItem.orderPrice)}`;
         pnlEl.classList.remove('pos', 'neg');
       } else {
-        const currentCandle = rpLoadedCandles[rpReplayIndex];
         const diff = activeItem.direction === 'Buy'
-          ? (currentCandle.close - activeItem.entryPrice)
-          : (activeItem.entryPrice - currentCandle.close);
+          ? (currentActiveCandle.close - activeItem.entryPrice)
+          : (activeItem.entryPrice - currentActiveCandle.close);
         const livePnl = diff * activeItem.lot * activeItem.contractSize;
         const sign = livePnl > 0 ? '+' : (livePnl < 0 ? '-' : '');
         sideEl.textContent = `${activeItem.direction} ${lotStr}`;
@@ -15066,7 +15077,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const calcBtn = document.getElementById('rp-calc-lot-btn');
       const replayWarn = document.getElementById('rp-ctx-replay-warn');
 
-      const canTrade = rpReplayActive && rpReplayIndex >= 0 && rpReplayIndex < rpLoadedCandles.length;
+      const canTrade = rpReplayActive && !!getRpCurrentActiveCandle();
       const hasActive = rpOpenTrade !== null || rpPendingOrder !== null;
 
       if (buyBtn) buyBtn.disabled = !canTrade || hasActive || rpIsPickingStart;
@@ -15086,13 +15097,14 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     function openRpVirtualTrade(direction) {
-      if (!rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) return;
+      const currentCandle = rpReplayActive ? getRpCurrentActiveCandle() : null;
+      if (!rpReplayActive || !currentCandle) return;
       if (rpOpenTrade !== null || rpPendingOrder !== null) {
         showToast('Aynı anda yalnızca bir açık pozisyon veya bekleyen emir bulunabilir.', 'error');
         return;
       }
 
-      const currentCandle = rpLoadedCandles[rpReplayIndex];
+      const curIdx = Math.max(0, getVisibleRpCandles().length - 1);
       const orderType = document.getElementById('rp-order-type-select')?.value || 'Market';
       const lotVal = parseOptionalRpInputNumber('rp-lot-input');
       const contractVal = parseOptionalRpInputNumber('rp-contract-size-input');
@@ -15174,8 +15186,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           direction,
           orderType,
           orderPrice: entryPrice,
-          createdIndex: rpReplayIndex,
+          createdIndex: curIdx,
           createdTime: currentCandle.time,
+          createdClockSec: rpReplayClockSec,
           lot: lotVal,
           contractSize: contractVal,
           sl,
@@ -15194,8 +15207,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       rpOpenTrade = {
         direction,
         entryPrice,
-        entryIndex: rpReplayIndex,
+        entryIndex: curIdx,
         entryTime: currentCandle.time,
+        entryClockSec: rpReplayClockSec,
         lot: lotVal,
         contractSize: contractVal,
         sl,
@@ -15239,7 +15253,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         }
       }
 
-      const durationCandles = Math.max(0, rpReplayIndex - t.entryIndex);
+      const visLen = getVisibleRpCandles().length;
+      const curIdx = visLen > 0 ? (visLen - 1) : Math.max(0, rpReplayIndex);
+      const durationCandles = Math.max(0, curIdx - t.entryIndex);
       const pair = (document.getElementById('rp-pair-input')?.value || '').trim().toUpperCase();
       const timeframe = document.getElementById('rp-tf-select')?.value || 'M15';
 
@@ -15299,7 +15315,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       openRpResultModal(closedRecord, compressedImg);
     }
 
-    function checkRpPendingOrderOnCandle(candle) {
+    function checkRpPendingOrderOnCandle(candle, clockOverride = null) {
       if (!rpPendingOrder || !candle) return false;
       const o = rpPendingOrder;
       let triggered = false;
@@ -15314,12 +15330,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       if (!triggered) return false;
 
+      const vis = getVisibleRpCandles();
+      const curIdx = vis.length > 0 ? (vis.length - 1) : Math.max(0, rpReplayIndex);
       rpPendingOrder = null;
       rpOpenTrade = {
         direction: o.direction,
         entryPrice: o.orderPrice,
-        entryIndex: rpReplayIndex,
+        entryIndex: curIdx,
         entryTime: candle.time,
+        entryClockSec: clockOverride !== null ? clockOverride : rpReplayClockSec,
         lot: o.lot,
         contractSize: o.contractSize,
         sl: o.sl,
@@ -15335,7 +15354,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     function checkRpOpenTradeOnCandle(candle) {
-      if (!rpOpenTrade || !candle) return;
+      if (!rpOpenTrade || !candle) return false;
       const t = rpOpenTrade;
       let slHit = false;
       let tpHit = false;
@@ -15352,9 +15371,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (slHit) {
         const isBeLevel = t.sl !== null && Math.abs(t.sl - t.entryPrice) <= Math.max(1e-10, getRpMinPriceStep() * 0.25);
         closeRpOpenTrade(t.sl, isBeLevel ? 'BE' : 'SL');
+        return true;
       } else if (tpHit) {
         closeRpOpenTrade(t.tp, 'TP');
+        return true;
       }
+      return false;
     }
 
     function pauseRpReplay() {
@@ -15399,7 +15421,25 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       rpIsPickingStart = false;
       rpReplayActive = false;
       rpReplayIndex = -1;
+      rpReplayClockSec = null;
+      rpVisibleReplayCandles = [];
       updateRpReplayControls();
+    }
+
+    function canStepRpReplayForward() {
+      if (!rpReplayActive || rpLoadedCandles.length === 0) return false;
+      if (rpHasTimeframeData && rpLoadedCandlesByTf.size > 0 && Number.isFinite(rpReplayClockSec)) {
+        const tf = getRpCurrentReplayTf();
+        const maxClock = getRpMaxReplayClockSec(tf);
+        return rpReplayClockSec < maxClock;
+      }
+      return rpReplayIndex < rpLoadedCandles.length - 1;
+    }
+
+    function canStepRpReplayBackward() {
+      if (!rpReplayActive || rpLoadedCandles.length === 0) return false;
+      const vis = getVisibleRpCandles();
+      return vis.length > 1;
     }
 
     function updateRpReplayControls() {
@@ -15437,15 +15477,19 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         return;
       }
 
-      if (playBtn) playBtn.disabled = isPlaying || rpReplayIndex >= total - 1;
+      const canFwd = canStepRpReplayForward();
+      const canBack = canStepRpReplayBackward();
+      const displayIdx = Math.max(0, (getVisibleRpCandles().length || (rpReplayIndex + 1)) - 1);
+
+      if (playBtn) playBtn.disabled = isPlaying || !canFwd;
       if (pauseBtn) pauseBtn.disabled = !isPlaying;
-      if (fwdBtn) fwdBtn.disabled = rpReplayIndex >= total - 1;
-      if (backBtn) backBtn.disabled = rpReplayIndex <= 0;
+      if (fwdBtn) fwdBtn.disabled = !canFwd;
+      if (backBtn) backBtn.disabled = !canBack;
 
       if (statusEl) {
         statusEl.textContent = rpIsPickingStart
           ? 'Muma tıklayın'
-          : `${rpReplayIndex + 1}/${total}`;
+          : `${displayIdx + 1}/${total}`;
       }
       updateRpTradeControls();
       updateRpChartOverlay();
@@ -15457,24 +15501,43 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       return Math.max(50, Math.round(1000 / speed));
     }
 
-    function stepRpReplayForward() {
-      if (!rpReplayActive || !rpCandlestickSeries || rpLoadedCandles.length === 0) return false;
-      if (rpReplayIndex >= rpLoadedCandles.length - 1) {
-        pauseRpReplay();
-        return false;
+    function advanceRpTradeSimulationWindow(prevClockSec, nextClockSec, fallbackCandle) {
+      if (!rpOpenTrade && !rpPendingOrder) return;
+      if (
+        rpHasTimeframeData &&
+        rpLoadedCandlesByTf.size > 0 &&
+        Number.isFinite(prevClockSec) &&
+        Number.isFinite(nextClockSec) &&
+        nextClockSec > prevClockSec
+      ) {
+        const subCandles = collectRpCoveringBarsForWindow(rpLoadedCandlesByTf, null, prevClockSec, nextClockSec);
+        if (subCandles && subCandles.length > 0) {
+          for (const sc of subCandles) {
+            const scEnd = Number.isFinite(sc._endSec) ? sc._endSec : nextClockSec;
+            const justActivated = checkRpPendingOrderOnCandle(sc, scEnd);
+            if (!justActivated) {
+              const closed = checkRpOpenTradeOnCandle(sc);
+              if (closed) break;
+            }
+          }
+          return;
+        }
       }
-      rpReplayIndex += 1;
-      const nextCandle = rpLoadedCandles[rpReplayIndex];
-      rpCandlestickSeries.update(nextCandle);
-      const justActivated = checkRpPendingOrderOnCandle(nextCandle);
-      if (!justActivated) {
-        checkRpOpenTradeOnCandle(nextCandle);
+      if (fallbackCandle) {
+        const justActivated = checkRpPendingOrderOnCandle(fallbackCandle, nextClockSec);
+        if (!justActivated) {
+          checkRpOpenTradeOnCandle(fallbackCandle);
+        }
       }
+    }
+
+    function syncRpPreviewOnStep(activeCandle) {
+      if (!activeCandle) return;
       if (!rpOpenTrade && !rpPendingOrder && rpPreviewOrder && rpPreviewOrder.active) {
         const orderType = document.getElementById('rp-order-type-select')?.value || 'Market';
         if (orderType === 'Market') {
           const oldEntry = rpPreviewOrder.entry;
-          const nextEntry = roundRpPrice(nextCandle.close);
+          const nextEntry = roundRpPrice(activeCandle.close);
           rpPreviewOrder.entry = nextEntry;
           if (oldEntry !== null && Number.isFinite(oldEntry)) {
             const delta = nextEntry - oldEntry;
@@ -15494,9 +15557,84 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           drawRpPreviewPriceLines();
         }
       }
-      if (rpReplayIndex >= rpLoadedCandles.length - 1) {
+    }
+
+    function stepRpReplayForward() {
+      if (!rpReplayActive || !rpCandlestickSeries || rpLoadedCandles.length === 0) return false;
+      if (!canStepRpReplayForward()) {
         pauseRpReplay();
-        updateRpChartOverlay();
+        return false;
+      }
+
+      const tf = getRpCurrentReplayTf();
+      const isMultiTf = Boolean(rpHasTimeframeData && rpLoadedCandlesByTf.size > 0 && Number.isFinite(rpReplayClockSec));
+      let nextCandle = null;
+      let prevClock = rpReplayClockSec;
+      let nextClock = rpReplayClockSec;
+
+      if (isMultiTf) {
+        const prevVisible = getVisibleRpCandles();
+        const prevLast = prevVisible.length > 0 ? prevVisible[prevVisible.length - 1] : null;
+        const prevLastEnd = prevLast ? getRpBucketEndSec(prevLast.time, tf) : 0;
+        const isLastForming = Boolean(prevLast && prevClock < prevLastEnd);
+
+        if (isLastForming) {
+          nextClock = prevLastEnd;
+        } else {
+          let nextIdx = -1;
+          if (prevLast) {
+            nextIdx = findRpCandleIndexAfterTime(rpLoadedCandles, prevLast.time);
+          } else {
+            nextIdx = findRpCandleIndexAfterTime(rpLoadedCandles, prevClock - 1);
+          }
+          if (nextIdx === -1 || nextIdx >= rpLoadedCandles.length) {
+            pauseRpReplay();
+            updateRpReplayControls();
+            return false;
+          }
+          nextClock = getRpBucketEndSec(rpLoadedCandles[nextIdx].time, tf);
+        }
+
+        const maxClock = getRpMaxReplayClockSec(tf);
+        if (nextClock > maxClock) nextClock = maxClock;
+        if (nextClock <= prevClock) {
+          pauseRpReplay();
+          updateRpReplayControls();
+          return false;
+        }
+
+        rpReplayClockSec = nextClock;
+        rpVisibleReplayCandles = buildRpVisibleCandlesForTf(tf, rpReplayClockSec);
+        rpReplayIndex = rpVisibleReplayCandles.length - 1;
+        nextCandle = rpVisibleReplayCandles[rpReplayIndex] || null;
+
+        if (nextCandle && prevLast && nextCandle.time >= prevLast.time && rpVisibleReplayCandles.length === (isLastForming ? prevVisible.length : prevVisible.length + 1)) {
+          rpCandlestickSeries.update(nextCandle);
+        } else {
+          rpCandlestickSeries.setData(rpVisibleReplayCandles);
+        }
+        advanceRpTradeSimulationWindow(prevClock, nextClock, nextCandle);
+      } else {
+        if (rpReplayIndex >= rpLoadedCandles.length - 1) {
+          pauseRpReplay();
+          return false;
+        }
+        rpReplayIndex += 1;
+        nextCandle = rpLoadedCandles[rpReplayIndex];
+        rpVisibleReplayCandles = rpLoadedCandles.slice(0, rpReplayIndex + 1);
+        rpCandlestickSeries.update(nextCandle);
+        const justActivated = checkRpPendingOrderOnCandle(nextCandle);
+        if (!justActivated) {
+          checkRpOpenTradeOnCandle(nextCandle);
+        }
+      }
+
+      syncRpPreviewOnStep(nextCandle);
+
+      if (!canStepRpReplayForward()) {
+        pauseRpReplay();
+        updateRpReplayControls();
+        if (typeof renderRpDrawings === 'function') renderRpDrawings();
         showToast('Replay tamamlandı.', 'info');
         return false;
       }
@@ -15509,39 +15647,46 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function stepRpReplayBackward() {
       if (!rpReplayActive || !rpCandlestickSeries || rpLoadedCandles.length === 0) return;
       pauseRpReplay();
-      if (rpReplayIndex <= 0) return;
-      rpReplayIndex -= 1;
-      if (rpOpenTrade && rpReplayIndex < rpOpenTrade.entryIndex) {
-        clearRpOpenTrade();
-      }
-      if (rpPendingOrder && rpReplayIndex < rpPendingOrder.createdIndex) {
-        clearRpPendingOrder(false);
-      }
-      rpCandlestickSeries.setData(rpLoadedCandles.slice(0, rpReplayIndex + 1));
-      if (!rpOpenTrade && !rpPendingOrder && rpPreviewOrder && rpPreviewOrder.active) {
-        const orderType = document.getElementById('rp-order-type-select')?.value || 'Market';
-        if (orderType === 'Market' && rpLoadedCandles[rpReplayIndex]) {
-          const oldEntry = rpPreviewOrder.entry;
-          const nextEntry = roundRpPrice(rpLoadedCandles[rpReplayIndex].close);
-          rpPreviewOrder.entry = nextEntry;
-          if (oldEntry !== null && Number.isFinite(oldEntry)) {
-            const delta = nextEntry - oldEntry;
-            const minStep = getRpMinPriceStep();
-            if (rpPreviewOrder.sl !== null && Number.isFinite(rpPreviewOrder.sl)) {
-              rpPreviewOrder.sl = Math.max(minStep, roundRpPrice(rpPreviewOrder.sl + delta));
-              const slEl = document.getElementById('rp-sl-input');
-              if (slEl) slEl.value = rpPreviewOrder.sl.toFixed(rpCurrentPrecision);
-            }
-            if (rpPreviewOrder.tp !== null && Number.isFinite(rpPreviewOrder.tp)) {
-              rpPreviewOrder.tp = Math.max(minStep, roundRpPrice(rpPreviewOrder.tp + delta));
-              const tpEl = document.getElementById('rp-tp-input');
-              if (tpEl) tpEl.value = rpPreviewOrder.tp.toFixed(rpCurrentPrecision);
-            }
-          }
-          syncRpLotFromRisk();
-          drawRpPreviewPriceLines();
+      if (!canStepRpReplayBackward()) return;
+
+      const tf = getRpCurrentReplayTf();
+      const isMultiTf = Boolean(rpHasTimeframeData && rpLoadedCandlesByTf.size > 0 && Number.isFinite(rpReplayClockSec));
+
+      if (isMultiTf) {
+        const prevVisible = getVisibleRpCandles();
+        if (prevVisible.length <= 1) return;
+        const targetPrevBar = prevVisible[prevVisible.length - 2];
+        rpReplayClockSec = getRpBucketEndSec(targetPrevBar.time, tf);
+        rpVisibleReplayCandles = buildRpVisibleCandlesForTf(tf, rpReplayClockSec);
+        rpReplayIndex = rpVisibleReplayCandles.length - 1;
+        if (rpOpenTrade) {
+          const shouldRollback = Number.isFinite(rpOpenTrade.entryClockSec)
+            ? rpReplayClockSec < rpOpenTrade.entryClockSec
+            : rpReplayIndex < rpOpenTrade.entryIndex;
+          if (shouldRollback) clearRpOpenTrade();
         }
+        if (rpPendingOrder) {
+          const shouldRollback = Number.isFinite(rpPendingOrder.createdClockSec)
+            ? rpReplayClockSec < rpPendingOrder.createdClockSec
+            : rpReplayIndex < rpPendingOrder.createdIndex;
+          if (shouldRollback) clearRpPendingOrder(false);
+        }
+        rpCandlestickSeries.setData(rpVisibleReplayCandles);
+        syncRpPreviewOnStep(rpVisibleReplayCandles[rpReplayIndex]);
+      } else {
+        if (rpReplayIndex <= 0) return;
+        rpReplayIndex -= 1;
+        if (rpOpenTrade && rpReplayIndex < rpOpenTrade.entryIndex) {
+          clearRpOpenTrade();
+        }
+        if (rpPendingOrder && rpReplayIndex < rpPendingOrder.createdIndex) {
+          clearRpPendingOrder(false);
+        }
+        rpVisibleReplayCandles = rpLoadedCandles.slice(0, rpReplayIndex + 1);
+        rpCandlestickSeries.setData(rpVisibleReplayCandles);
+        syncRpPreviewOnStep(rpLoadedCandles[rpReplayIndex]);
       }
+
       updateRpReplayControls();
       if (typeof renderRpDrawings === 'function') renderRpDrawings();
       if (typeof startRpViewportSyncWatch === 'function') startRpViewportSyncWatch(320);
@@ -15549,7 +15694,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     function startRpReplay() {
       if (!rpReplayActive || !rpCandlestickSeries || rpLoadedCandles.length === 0) return;
-      if (rpReplayIndex >= rpLoadedCandles.length - 1) {
+      if (!canStepRpReplayForward()) {
         pauseRpReplay();
         return;
       }
@@ -15565,8 +15710,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     function getVisibleRpCandles() {
-      if (rpReplayActive && rpReplayIndex >= 0 && rpLoadedCandles.length > 0) {
-        return rpLoadedCandles.slice(0, rpReplayIndex + 1);
+      if (rpReplayActive && rpLoadedCandles.length > 0) {
+        if (rpVisibleReplayCandles.length > 0) return rpVisibleReplayCandles;
+        if (rpReplayIndex >= 0) {
+          return rpLoadedCandles.slice(0, rpReplayIndex + 1);
+        }
       }
       return rpLoadedCandles;
     }
@@ -15581,8 +15729,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (pickedIndex === -1 && param && param.point) {
         const logical = rpChartInstance.timeScale().coordinateToLogical(param.point.x);
         if (logical !== null && Number.isFinite(logical)) {
-          const maxVisible = rpReplayActive && rpReplayIndex >= 0 ? rpReplayIndex : rpLoadedCandles.length - 1;
-          pickedIndex = Math.max(0, Math.min(maxVisible, Math.round(logical)));
+          pickedIndex = Math.max(0, Math.min(rpLoadedCandles.length - 1, Math.round(logical)));
         }
       }
 
@@ -15593,9 +15740,21 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       clearRpOpenTrade();
       rpIsPickingStart = false;
       rpReplayActive = true;
-      rpReplayIndex = pickedIndex;
-      rpCandlestickSeries.setData(rpLoadedCandles.slice(0, rpReplayIndex + 1));
+      const tf = getRpCurrentReplayTf();
+      if (rpHasTimeframeData && rpLoadedCandlesByTf.size > 0) {
+        const pickedEnd = getRpBucketEndSec(rpLoadedCandles[pickedIndex].time, tf);
+        const maxClock = getRpMaxReplayClockSec(tf);
+        rpReplayClockSec = maxClock > 0 ? Math.min(pickedEnd, maxClock) : pickedEnd;
+        rpVisibleReplayCandles = buildRpVisibleCandlesForTf(tf, rpReplayClockSec);
+        rpReplayIndex = Math.max(0, rpVisibleReplayCandles.length - 1);
+      } else {
+        rpReplayClockSec = null;
+        rpReplayIndex = pickedIndex;
+        rpVisibleReplayCandles = rpLoadedCandles.slice(0, rpReplayIndex + 1);
+      }
+      rpCandlestickSeries.setData(rpVisibleReplayCandles);
       updateRpReplayControls();
+      if (typeof renderRpDrawings === 'function') renderRpDrawings();
       showToast(`Replay ${rpReplayIndex + 1}. mumdan başlatıldı.`, 'info');
     }
 
@@ -16018,6 +16177,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         return a.localeCompare(b);
       });
 
+      if (hasTimeframeColumn && availableTfs.length > 1) {
+        reconcileRpMultiTfCandles(candlesByTf, availableTfs);
+      }
+
       allCandles.sort((a, b) => a.time - b.time);
       const flatMap = new Map();
       for (const c of allCandles) flatMap.set(c.time, c);
@@ -16041,6 +16204,273 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         return parsed.candlesByTf.get(parsed.availableTfs[0]) || [];
       }
       return parsed.flatCandles;
+    }
+
+    const RP_TF_HIERARCHY_ORDER = ['M1', 'M3', 'M5', 'M15', 'M30', 'H1', 'H2', 'H4', 'D1', 'W1', 'MN1'];
+
+    function getRpTimeframePeriodSec(tf) {
+      const norm = normalizeRpTimeframe(tf) || String(tf || '').toUpperCase();
+      const fixed = {
+        M1: 60, M3: 180, M5: 300, M15: 900, M30: 1800,
+        H1: 3600, H2: 7200, H4: 14400, D1: 86400, W1: 604800, MN1: 2592000
+      };
+      if (fixed[norm]) return fixed[norm];
+      const m = norm.match(/^M(\d+)$/);
+      if (m) return Number(m[1]) * 60;
+      const h = norm.match(/^H(\d+)$/);
+      if (h) return Number(h[1]) * 3600;
+      const d = norm.match(/^D(\d+)$/);
+      if (d) return Number(d[1]) * 86400;
+      const w = norm.match(/^W(\d+)$/);
+      if (w) return Number(w[1]) * 604800;
+      return 900;
+    }
+
+    function getRpBucketStartSec(timeSec, tf) {
+      const norm = normalizeRpTimeframe(tf) || tf;
+      if (norm === 'MN1') {
+        const d = new Date(timeSec * 1000);
+        return Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1) / 1000);
+      }
+      if (norm === 'W1') {
+        const d = new Date(timeSec * 1000);
+        const monOffset = (d.getUTCDay() + 6) % 7;
+        return Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - monOffset) / 1000);
+      }
+      const p = getRpTimeframePeriodSec(norm);
+      return Math.floor(timeSec / p) * p;
+    }
+
+    function getRpBucketEndSec(timeSec, tf) {
+      const norm = normalizeRpTimeframe(tf) || tf;
+      if (norm === 'MN1') {
+        const d = new Date(timeSec * 1000);
+        return Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1) / 1000);
+      }
+      const start = getRpBucketStartSec(timeSec, norm);
+      return start + getRpTimeframePeriodSec(norm);
+    }
+
+    function getRpCurrentReplayTf() {
+      const val = document.getElementById('rp-tf-select')?.value || rpLastActiveTf || 'M15';
+      return normalizeRpTimeframe(val) || val || 'M15';
+    }
+
+    function reconcileRpMultiTfCandles(candlesByTf, availableTfs) {
+      const childSources = {
+        M3: ['M1'],
+        M5: ['M1'],
+        M15: ['M5', 'M1'],
+        M30: ['M15', 'M5', 'M1'],
+        H1: ['M30', 'M15', 'M5', 'M1'],
+        H2: ['H1', 'M30', 'M15', 'M5', 'M1'],
+        H4: ['H2', 'H1', 'M30', 'M15', 'M5', 'M1'],
+        D1: ['H4', 'H2', 'H1', 'M30', 'M15', 'M5', 'M1'],
+        W1: ['D1', 'H4', 'H2', 'H1'],
+        MN1: ['D1', 'H4', 'H2', 'H1']
+      };
+      const parents = ['M3', 'M5', 'M15', 'M30', 'H1', 'H2', 'H4', 'D1', 'W1', 'MN1'];
+      for (const tf of parents) {
+        if (!candlesByTf.has(tf)) continue;
+        const orig = candlesByTf.get(tf) || [];
+        const srcTf = (childSources[tf] || []).find(s => candlesByTf.has(s) && (candlesByTf.get(s)?.length || 0) > 0);
+        if (!srcTf) continue;
+        const srcList = candlesByTf.get(srcTf);
+        const merged = new Map();
+        for (const c of orig) {
+          merged.set(c.time, { ...c });
+        }
+        const agg = new Map();
+        for (let i = 0; i < srcList.length; i++) {
+          const sc = srcList[i];
+          const bStart = getRpBucketStartSec(sc.time, tf);
+          let cur = agg.get(bStart);
+          if (!cur) {
+            agg.set(bStart, { time: bStart, open: sc.open, high: sc.high, low: sc.low, close: sc.close });
+          } else {
+            if (sc.high > cur.high) cur.high = sc.high;
+            if (sc.low < cur.low) cur.low = sc.low;
+            cur.close = sc.close;
+          }
+        }
+        for (const [bStart, cur] of agg.entries()) {
+          merged.set(bStart, cur);
+        }
+        candlesByTf.set(tf, Array.from(merged.values()).sort((a, b) => a.time - b.time));
+      }
+      if (Array.isArray(availableTfs)) {
+        availableTfs.sort((a, b) => {
+          const ia = RP_TF_HIERARCHY_ORDER.indexOf(a);
+          const ib = RP_TF_HIERARCHY_ORDER.indexOf(b);
+          if (ia !== -1 && ib !== -1) return ia - ib;
+          if (ia !== -1) return -1;
+          if (ib !== -1) return 1;
+          return a.localeCompare(b);
+        });
+      }
+    }
+
+    function rpLowerBoundTime(candles, targetTime) {
+      let lo = 0;
+      let hi = candles.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (candles[mid].time < targetTime) lo = mid + 1;
+        else hi = mid;
+      }
+      return lo;
+    }
+
+    function findRpCandleIndexAfterTime(candles, targetTime) {
+      const idx = rpLowerBoundTime(candles, targetTime + 1);
+      return idx < candles.length ? idx : -1;
+    }
+
+    function findRpCompletedEndIndexBeforeClock(candles, tf, clockSec) {
+      if (!Array.isArray(candles) || candles.length === 0 || !Number.isFinite(clockSec)) return -1;
+      let lo = 0;
+      let hi = candles.length - 1;
+      let ans = -1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (getRpBucketEndSec(candles[mid].time, tf) <= clockSec) {
+          ans = mid;
+          lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
+      }
+      return ans;
+    }
+
+    function collectRpCoveringBarsForWindow(byTf, ceilingTf, winStart, winEnd) {
+      if (!byTf || winStart >= winEnd) return [];
+      const ceilingPeriod = ceilingTf ? getRpTimeframePeriodSec(ceilingTf) : Infinity;
+      const subTfsDesc = ['MN1', 'W1', 'D1', 'H4', 'H2', 'H1', 'M30', 'M15', 'M5', 'M3', 'M1']
+        .filter(tf => {
+          if (!byTf.has(tf) || (byTf.get(tf)?.length || 0) === 0) return false;
+          if (ceilingTf) {
+            return getRpTimeframePeriodSec(tf) < ceilingPeriod && tf !== ceilingTf;
+          }
+          return true;
+        });
+      if (subTfsDesc.length === 0) return [];
+
+      const collect = (wStart, wEnd, candIdx) => {
+        if (wStart >= wEnd || candIdx >= subTfsDesc.length) return [];
+        const subTf = subTfsDesc[candIdx];
+        const arr = byTf.get(subTf);
+        if (!arr || arr.length === 0) return collect(wStart, wEnd, candIdx + 1);
+
+        let idx = rpLowerBoundTime(arr, wStart);
+        const out = [];
+        let cursor = wStart;
+
+        while (idx < arr.length) {
+          const c = arr[idx];
+          if (c.time >= wEnd) break;
+          const cEnd = getRpBucketEndSec(c.time, subTf);
+          if (cEnd <= wEnd) {
+            if (c.time > cursor) {
+              const gapBars = collect(cursor, c.time, candIdx + 1);
+              for (let g = 0; g < gapBars.length; g++) out.push(gapBars[g]);
+            }
+            out.push({ ...c, _endSec: cEnd });
+            cursor = Math.max(cursor, cEnd);
+            idx++;
+          } else {
+            break;
+          }
+        }
+        if (cursor < wEnd) {
+          const tailBars = collect(cursor, wEnd, candIdx + 1);
+          for (let t = 0; t < tailBars.length; t++) out.push(tailBars[t]);
+        }
+        return out;
+      };
+
+      return collect(winStart, winEnd, 0);
+    }
+
+    function buildRpVisibleCandlesForTf(tf, clockSec) {
+      const fullCandles = (rpLoadedCandlesByTf && rpLoadedCandlesByTf.get(tf)) || rpLoadedCandles || [];
+      if (fullCandles.length === 0 || !Number.isFinite(clockSec)) return [];
+
+      const completedIdx = findRpCompletedEndIndexBeforeClock(fullCandles, tf, clockSec);
+      const visible = completedIdx >= 0 ? fullCandles.slice(0, completedIdx + 1) : [];
+
+      const formingStart = getRpBucketStartSec(clockSec - 1, tf);
+      const formingEnd = getRpBucketEndSec(formingStart, tf);
+
+      if (formingStart < clockSec && clockSec < formingEnd && rpLoadedCandlesByTf && rpLoadedCandlesByTf.size > 1) {
+        const subBars = collectRpCoveringBarsForWindow(rpLoadedCandlesByTf, tf, formingStart, clockSec);
+        if (subBars.length > 0) {
+          let high = -Infinity;
+          let low = Infinity;
+          for (let i = 0; i < subBars.length; i++) {
+            if (subBars[i].high > high) high = subBars[i].high;
+            if (subBars[i].low < low) low = subBars[i].low;
+          }
+          const formingBar = {
+            time: formingStart,
+            open: subBars[0].open,
+            high,
+            low,
+            close: subBars[subBars.length - 1].close
+          };
+          if (visible.length === 0 || formingBar.time > visible[visible.length - 1].time) {
+            visible.push(formingBar);
+          }
+        }
+      }
+
+      return visible;
+    }
+
+    function getRpFinestDataCeilingSec() {
+      if (!rpHasTimeframeData || !rpLoadedCandlesByTf || rpLoadedCandlesByTf.size === 0) {
+        return 0;
+      }
+      let latestBarStart = -Infinity;
+      rpLoadedCandlesByTf.forEach(arr => {
+        if (arr && arr.length > 0) {
+          const t = arr[arr.length - 1].time;
+          if (t > latestBarStart) latestBarStart = t;
+        }
+      });
+      if (!Number.isFinite(latestBarStart)) return 0;
+
+      for (const tfKey of RP_TF_HIERARCHY_ORDER) {
+        const arr = rpLoadedCandlesByTf.get(tfKey);
+        if (!arr || arr.length === 0) continue;
+        const lastTime = arr[arr.length - 1].time;
+        const tfEnd = getRpBucketEndSec(lastTime, tfKey);
+        if (lastTime >= latestBarStart - getRpTimeframePeriodSec(tfKey)) {
+          return tfEnd;
+        }
+      }
+      let fallbackEnd = -Infinity;
+      rpLoadedCandlesByTf.forEach((arr, tfKey) => {
+        if (arr && arr.length > 0) {
+          const end = getRpBucketEndSec(arr[arr.length - 1].time, tfKey);
+          if (end > fallbackEnd) fallbackEnd = end;
+        }
+      });
+      return Number.isFinite(fallbackEnd) ? fallbackEnd : 0;
+    }
+
+    function getRpMaxReplayClockSec(tf = getRpCurrentReplayTf()) {
+      const candles = (rpHasTimeframeData && rpLoadedCandlesByTf && rpLoadedCandlesByTf.get(tf)) || rpLoadedCandles || [];
+      const tfEnd = candles.length > 0 ? getRpBucketEndSec(candles[candles.length - 1].time, tf) : 0;
+      if (!rpHasTimeframeData || !rpLoadedCandlesByTf || rpLoadedCandlesByTf.size <= 1) {
+        return tfEnd;
+      }
+      const ceiling = getRpFinestDataCeilingSec();
+      if (ceiling > 0) {
+        const lastTime = candles.length > 0 ? candles[candles.length - 1].time : 0;
+        return Math.min(tfEnd, Math.max(ceiling, lastTime + 1));
+      }
+      return tfEnd;
     }
 
     function findRpCandleIndexAtOrBeforeTime(candles, targetTime) {
@@ -16108,11 +16538,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           return diffs[Math.floor(diffs.length / 2)];
         }
       }
-      const tfMap = {
-        M1: 60, M3: 180, M5: 300, M15: 900, M30: 1800,
-        H1: 3600, H2: 7200, H4: 14400, D1: 86400, W1: 604800, MN1: 2592000
-      };
-      return tfMap[tfFallback] || 900;
+      return getRpTimeframePeriodSec(tfFallback);
     }
 
     function rpLogicalIdxToTimeForCandles(candles, barSec, logicalIdx) {
@@ -16165,8 +16591,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (!nextCandles || nextCandles.length === 0) return;
 
       // Önceki görünüm aralığını ve zaman pozisyonunu yakala
+      const prevTf = rpLastActiveTf;
       const prevVisibleCandles = getVisibleRpCandles();
-      const prevBarSec = getRpCandlesIntervalSec(prevVisibleCandles, rpLastActiveTf);
+      const prevBarSec = getRpCandlesIntervalSec(prevVisibleCandles, prevTf);
       let prevLogicalRange = null;
       try {
         if (rpChartInstance && prevVisibleCandles.length > 0) {
@@ -16180,26 +16607,29 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const toT = rpLogicalIdxToTimeForCandles(prevVisibleCandles, prevBarSec, prevLogicalRange.to);
         if (fromT !== null && toT !== null) {
           const prevRightEdgeIdx = prevVisibleCandles.length - 1;
-          const prevBarsVisible = Math.max(4, prevLogicalRange.to - prevLogicalRange.from);
-          const spanSec = Math.max(prevBarSec, toT - fromT);
-          const atRightEdge = prevLogicalRange.to >= (prevRightEdgeIdx - 1.5);
+          const prevBarsVisible = Math.max(8, prevLogicalRange.to - prevLogicalRange.from);
+          const centerIdxClamped = Math.max(0, Math.min(prevRightEdgeIdx, Math.round((prevLogicalRange.from + prevLogicalRange.to) / 2)));
+          const centerCandleTime = prevVisibleCandles[centerIdxClamped].time;
+          const atRightEdge = prevLogicalRange.to >= (prevRightEdgeIdx - 2.5);
           const rightPadBars = Math.max(0, prevLogicalRange.to - prevRightEdgeIdx);
-          const anchorTime = (fromT + toT) / 2;
           viewportSnapshot = {
             prevBarSec,
             prevBarsVisible,
-            spanSec,
+            tradingSpanSec: prevBarsVisible * prevBarSec,
             atRightEdge,
             rightPadBars,
-            anchorTime,
+            anchorTime: centerCandleTime,
             fromT,
             toT
           };
         }
       }
 
-      const wasReplayActive = rpReplayActive && rpReplayIndex >= 0 && rpLoadedCandles.length > 0;
-      const prevReplayTime = wasReplayActive ? rpLoadedCandles[rpReplayIndex].time : null;
+      const wasReplayActive = rpReplayActive && rpLoadedCandles.length > 0 && (Number.isFinite(rpReplayClockSec) || rpReplayIndex >= 0);
+      if (wasReplayActive && !Number.isFinite(rpReplayClockSec)) {
+        const curBar = rpLoadedCandles[Math.max(0, Math.min(rpLoadedCandles.length - 1, rpReplayIndex))];
+        rpReplayClockSec = curBar ? getRpBucketEndSec(curBar.time, prevTf) : null;
+      }
       pauseRpReplay();
 
       rpLoadedCandles = nextCandles;
@@ -16219,66 +16649,73 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         fileNameEl.textContent = `${rpLoadedFileName} · ${normalizedNext} (${rpLoadedCandles.length} mum)`;
       }
 
-      if (wasReplayActive && prevReplayTime !== null) {
-        rpReplayIndex = findRpCandleIndexAtOrBeforeTime(rpLoadedCandles, prevReplayTime);
+      let hasCsvGapWarning = false;
+      if (wasReplayActive && Number.isFinite(rpReplayClockSec)) {
+        rpVisibleReplayCandles = buildRpVisibleCandlesForTf(normalizedNext, rpReplayClockSec);
+        if (rpVisibleReplayCandles.length === 0 && rpLoadedCandles.length > 0) {
+          rpVisibleReplayCandles = [rpLoadedCandles[0]];
+          hasCsvGapWarning = true;
+        } else if (rpVisibleReplayCandles.length > 0) {
+          const lastBar = rpVisibleReplayCandles[rpVisibleReplayCandles.length - 1];
+          const lastEnd = getRpBucketEndSec(lastBar.time, normalizedNext);
+          const isAtDatasetEnd = rpVisibleReplayCandles.length >= rpLoadedCandles.length;
+          if (!isAtDatasetEnd && rpReplayClockSec - lastEnd >= getRpTimeframePeriodSec(normalizedNext)) {
+            hasCsvGapWarning = true;
+          }
+        }
+        rpReplayIndex = Math.max(0, rpVisibleReplayCandles.length - 1);
         if (rpOpenTrade && Number.isFinite(rpOpenTrade.entryTime)) {
-          const mappedEntryIdx = findRpCandleIndexAtOrBeforeTime(rpLoadedCandles, rpOpenTrade.entryTime);
+          const mappedEntryIdx = findRpCandleIndexAtOrBeforeTime(rpVisibleReplayCandles, rpOpenTrade.entryTime);
           rpOpenTrade.entryIndex = Math.min(rpReplayIndex, Math.max(0, mappedEntryIdx));
         }
         if (rpPendingOrder && Number.isFinite(rpPendingOrder.createdTime)) {
-          const mappedCreatedIdx = findRpCandleIndexAtOrBeforeTime(rpLoadedCandles, rpPendingOrder.createdTime);
+          const mappedCreatedIdx = findRpCandleIndexAtOrBeforeTime(rpVisibleReplayCandles, rpPendingOrder.createdTime);
           rpPendingOrder.createdIndex = Math.min(rpReplayIndex, Math.max(0, mappedCreatedIdx));
         }
+      } else {
+        rpVisibleReplayCandles = [];
       }
 
       initOrResizeRpChart();
       if (rpCandlestickSeries && rpChartInstance) {
         rpCandlestickSeries.applyOptions({ priceFormat: getRpPriceFormatForCandles(rpLoadedCandles) });
         const nextVisible = (wasReplayActive && !rpIsPickingStart)
-          ? rpLoadedCandles.slice(0, rpReplayIndex + 1)
+          ? rpVisibleReplayCandles
           : rpLoadedCandles;
         rpCandlestickSeries.setData(nextVisible);
 
         if (viewportSnapshot && nextVisible.length > 0) {
           const nextBarSec = getRpCandlesIntervalSec(nextVisible, normalizedNext);
-          const timeCalculatedBars = viewportSnapshot.spanSec / Math.max(1, nextBarSec);
+          const ratioScaledBars = viewportSnapshot.tradingSpanSec / Math.max(1, nextBarSec);
+          const baseBars = (nextBarSec >= viewportSnapshot.prevBarSec)
+            ? Math.max(24, Math.min(viewportSnapshot.prevBarsVisible, Math.max(ratioScaledBars, 36)))
+            : Math.min(180, Math.max(viewportSnapshot.prevBarsVisible, Math.min(160, ratioScaledBars)));
           const targetBars = Math.max(
-            14,
-            Math.min(
-              Math.max(24, nextVisible.length + 12),
-              Math.min(220, Math.max(timeCalculatedBars, Math.min(viewportSnapshot.prevBarsVisible, 24)))
-            )
+            18,
+            Math.min(Math.max(24, nextVisible.length + 12), Math.min(180, baseBars))
           );
 
           let nextFrom = 0;
           let nextTo = nextVisible.length - 1;
 
           if (viewportSnapshot.atRightEdge) {
-            const pad = Math.min(24, Math.max(0, viewportSnapshot.rightPadBars));
+            const pad = Math.min(20, Math.max(2, viewportSnapshot.rightPadBars));
             nextTo = (nextVisible.length - 1) + pad;
             nextFrom = nextTo - targetBars;
           } else {
-            const mappedFrom = rpLogicalFromTime(viewportSnapshot.fromT);
-            const mappedTo = rpLogicalFromTime(viewportSnapshot.toT);
             const mappedAnchor = rpLogicalFromTime(viewportSnapshot.anchorTime);
             let centerIdx = (mappedAnchor !== null && Number.isFinite(mappedAnchor))
               ? mappedAnchor
               : findRpCandleIndexAtOrBeforeTime(nextVisible, viewportSnapshot.anchorTime);
-
-            if (mappedFrom !== null && mappedTo !== null && (mappedTo - mappedFrom) >= 10 && (mappedTo - mappedFrom) <= 220) {
-              nextFrom = mappedFrom;
-              nextTo = mappedTo;
-            } else {
-              centerIdx = Math.max(0, Math.min(nextVisible.length - 1, centerIdx));
-              nextFrom = centerIdx - targetBars / 2;
-              nextTo = centerIdx + targetBars / 2;
-            }
+            centerIdx = Math.max(0, Math.min(nextVisible.length - 1, centerIdx));
+            nextFrom = centerIdx - targetBars / 2;
+            nextTo = centerIdx + targetBars / 2;
 
             if (nextTo < 2) {
               nextFrom = -1;
               nextTo = targetBars - 1;
             } else if (nextFrom > nextVisible.length - 3) {
-              nextTo = (nextVisible.length - 1) + 2;
+              nextTo = (nextVisible.length - 1) + 4;
               nextFrom = nextTo - targetBars;
             }
           }
@@ -16302,6 +16739,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       updateRpPriceLineLabels();
       if (typeof scheduleRpDrawRender === 'function') scheduleRpDrawRender();
       if (typeof syncRpTfQuickChips === 'function') syncRpTfQuickChips();
+      if (hasCsvGapWarning) {
+        showToast(`${normalizedNext} zaman diliminde bu tarihte CSV verisi eksik; en yakın önceki mum gösteriliyor.`, 'info');
+      }
       requestAnimationFrame(() => {
         updateRpChartOverlay();
         positionRpFullscreenBtn();
@@ -16775,11 +17215,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const barSec = getRpBarIntervalSec();
       if (candles.length === 0 || !Number.isFinite(timeVal)) return null;
       const n = candles.length;
+      const activeTf = getRpCurrentReplayTf();
       if (timeVal <= candles[0].time) {
         return (timeVal - candles[0].time) / barSec;
       }
       if (timeVal >= candles[n - 1].time) {
-        return (n - 1) + (timeVal - candles[n - 1].time) / barSec;
+        const lastStart = candles[n - 1].time;
+        const lastEnd = getRpBucketEndSec(lastStart, activeTf);
+        const span = Math.max(barSec, lastEnd - lastStart);
+        return (n - 1) + (timeVal - lastStart) / span;
       }
       let lo = 0;
       let hi = n - 1;
@@ -16795,7 +17239,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const t0 = candles[leftIdx].time;
       const t1 = candles[rightIdx].time;
       if (t1 === t0) return leftIdx;
-      return leftIdx + (timeVal - t0) / (t1 - t0);
+      const t0End = getRpBucketEndSec(t0, activeTf);
+      if (t1 <= t0End * 1.1) {
+        return leftIdx + (timeVal - t0) / (t1 - t0);
+      }
+      if (timeVal < t0End) {
+        const insideSpan = Math.max(1, t0End - t0);
+        return leftIdx + Math.min(0.9, ((timeVal - t0) / insideSpan) * 0.9);
+      }
+      const gapSpan = Math.max(1, t1 - t0End);
+      return leftIdx + 0.9 + Math.min(0.1, ((timeVal - t0End) / gapSpan) * 0.1);
     }
 
     function rpTimeFromLogical(logical) {
@@ -16803,16 +17256,29 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const barSec = getRpBarIntervalSec();
       if (candles.length === 0 || !Number.isFinite(logical)) return null;
       const n = candles.length;
+      const activeTf = getRpCurrentReplayTf();
       if (logical <= 0) {
         return candles[0].time + logical * barSec;
       }
       if (logical >= n - 1) {
-        return candles[n - 1].time + (logical - (n - 1)) * barSec;
+        const lastStart = candles[n - 1].time;
+        const lastEnd = getRpBucketEndSec(lastStart, activeTf);
+        const span = Math.max(barSec, lastEnd - lastStart);
+        return lastStart + (logical - (n - 1)) * span;
       }
       const i0 = Math.floor(logical);
       const i1 = Math.min(n - 1, i0 + 1);
       const frac = logical - i0;
-      return candles[i0].time + frac * (candles[i1].time - candles[i0].time);
+      const t0 = candles[i0].time;
+      const t1 = candles[i1].time;
+      const t0End = getRpBucketEndSec(t0, activeTf);
+      if (t1 <= t0End * 1.1) {
+        return t0 + frac * (t1 - t0);
+      }
+      if (frac <= 0.9) {
+        return t0 + (frac / 0.9) * Math.max(1, t0End - t0);
+      }
+      return t0End + ((frac - 0.9) / 0.1) * Math.max(1, t1 - t0End);
     }
 
     function rpPointToPixel(pt, cachedPlot = null) {
@@ -19568,8 +20034,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
       if (closeTradeBtn) {
         closeTradeBtn.addEventListener('click', () => {
-          if (!rpOpenTrade || !rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) return;
-          const currentCandle = rpLoadedCandles[rpReplayIndex];
+          const currentCandle = rpReplayActive ? getRpCurrentActiveCandle() : null;
+          if (!rpOpenTrade || !rpReplayActive || !currentCandle) return;
           closeRpOpenTrade(currentCandle.close, 'Manuel');
         });
       }
@@ -19889,8 +20355,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         overlayXBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           if (rpOpenTrade) {
-            if (!rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) return;
-            const currentCandle = rpLoadedCandles[rpReplayIndex];
+            const currentCandle = rpReplayActive ? getRpCurrentActiveCandle() : null;
+            if (!rpReplayActive || !currentCandle) return;
             closeRpOpenTrade(currentCandle.close, 'Manuel');
           } else if (rpPendingOrder) {
             clearRpPendingOrder(true);
@@ -19950,8 +20416,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           e.stopPropagation();
           closeRpTradeActionMenu();
           if (rpOpenTrade) {
-            if (!rpReplayActive || rpReplayIndex < 0 || rpReplayIndex >= rpLoadedCandles.length) return;
-            const currentCandle = rpLoadedCandles[rpReplayIndex];
+            const currentCandle = rpReplayActive ? getRpCurrentActiveCandle() : null;
+            if (!rpReplayActive || !currentCandle) return;
             closeRpOpenTrade(currentCandle.close, 'Manuel');
           } else if (rpPendingOrder) {
             clearRpPendingOrder(true);
