@@ -7605,10 +7605,77 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     function computeRealizedRFromPrices(entry, exit, sl, direction) {
       if (!Number.isFinite(entry) || !Number.isFinite(exit) || !Number.isFinite(sl)) return null;
-      const slDist = Math.abs(entry - sl);
-      if (!(slDist > 0)) return null;
+      const riskDist = direction === 'Short' ? (sl - entry) : (entry - sl);
+      if (!(riskDist > 0)) return null;
       const diff = direction === 'Short' ? (entry - exit) : (exit - entry);
-      return diff / slDist;
+      return diff / riskDist;
+    }
+
+    function validateTradeDirectionLevelsData({ entry, exit, sl, direction, result }) {
+      const dir = direction === 'Short' ? 'Short' : 'Long';
+      const hasEntry = Number.isFinite(entry);
+      const hasSl = Number.isFinite(sl);
+      const hasExit = Number.isFinite(exit);
+      const isEqualSl = hasEntry && hasSl && Math.abs(entry - sl) === 0;
+
+      if (hasEntry && hasSl) {
+        if (dir === 'Long' && sl > entry) {
+          return {
+            valid: false,
+            field: 'sl',
+            message: 'Long pozisyonda Stop Loss giriş fiyatının üstünde olamaz.',
+            isEqualSl: false
+          };
+        }
+        if (dir === 'Short' && sl < entry) {
+          return {
+            valid: false,
+            field: 'sl',
+            message: 'Short pozisyonda Stop Loss giriş fiyatının altında olamaz.',
+            isEqualSl: false
+          };
+        }
+      }
+
+      if (hasEntry && hasExit) {
+        if (result === 'Win') {
+          if (dir === 'Long' && exit <= entry) {
+            return {
+              valid: false,
+              field: 'exit',
+              message: 'Long kazanılan işlemde Çıkış (TP) giriş fiyatının üstünde olmalıdır.',
+              isEqualSl
+            };
+          }
+          if (dir === 'Short' && exit >= entry) {
+            return {
+              valid: false,
+              field: 'exit',
+              message: 'Short kazanılan işlemde Çıkış (TP) giriş fiyatının altında olmalıdır.',
+              isEqualSl
+            };
+          }
+        } else if (result === 'Loss') {
+          if (dir === 'Long' && exit >= entry) {
+            return {
+              valid: false,
+              field: 'exit',
+              message: 'Long kaybedilen işlemde Çıkış fiyatı giriş fiyatının altında olmalıdır.',
+              isEqualSl
+            };
+          }
+          if (dir === 'Short' && exit <= entry) {
+            return {
+              valid: false,
+              field: 'exit',
+              message: 'Short kaybedilen işlemde Çıkış fiyatı giriş fiyatının üstünde olmalıdır.',
+              isEqualSl
+            };
+          }
+        }
+      }
+
+      return { valid: true, field: null, message: '', isEqualSl };
     }
 
     function resolveTradeRMultiple(trade, fallbackAccountBalance = null) {
@@ -10692,11 +10759,31 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       return true;
     }
 
+    function validateTradeDirectionLevels(prefix) {
+      const direction = document.getElementById(`${prefix}direction`)?.value || 'Long';
+      const result = document.getElementById(`${prefix}result`)?.value || 'Win';
+      const entry = parseOptionalNumber(document.getElementById(`${prefix}entry`)?.value);
+      const exit = parseOptionalNumber(document.getElementById(`${prefix}exit`)?.value);
+      const sl = parseOptionalNumber(document.getElementById(`${prefix}sl`)?.value);
+      const check = validateTradeDirectionLevelsData({ entry, exit, sl, direction, result });
+      if (!check.valid) {
+        showToast(check.message, 'error');
+        const targetEl = document.getElementById(`${prefix}${check.field || 'sl'}`);
+        if (targetEl) {
+          targetEl.focus();
+          if (typeof targetEl.select === 'function') targetEl.select();
+        }
+        return false;
+      }
+      return true;
+    }
+
     if (backtestTradeForm) {
       backtestTradeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         if (!ensureAccountBalanceForTradeSave('backtest')) return;
+        if (!validateTradeDirectionLevels('bt-')) return;
         if (!validateTradeFormRequiredFields('bt-')) return;
         if (!verifyTradePnlConsistency('backtest')) return;
         if (isSubmittingBacktest) return;
@@ -10908,15 +10995,24 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const exit = parseOptionalNumber(exitEl?.value);
         const sl = parseOptionalNumber(slEl?.value);
         const dir = dirEl?.value || 'Long';
+        const resVal = resultEl?.value || 'Win';
         const pnlVal = parseOptionalNumber(pnlEl?.value);
 
-        const slEqualWarn = entry !== null && sl !== null && Math.abs(entry - sl) === 0;
-        const priceR = computeRealizedRFromPrices(entry, exit, sl, dir);
+        const dirCheck = validateTradeDirectionLevelsData({
+          entry,
+          exit,
+          sl,
+          direction: dir,
+          result: resVal
+        });
+        const priceR = dirCheck.valid ? computeRealizedRFromPrices(entry, exit, sl, dir) : null;
         const oneR = balance ? balance * (riskPct / 100) : null;
 
         let displayR = null;
         if (preserveChartSource) {
           displayR = preservedChartR;
+        } else if (!dirCheck.valid) {
+          displayR = null;
         } else if (!manualPnlOverride && priceR !== null) {
           displayR = priceR;
         } else if (pnlVal !== null && oneR && oneR > 0) {
@@ -10949,11 +11045,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
         let modeText = 'Hesap × Risk';
         let modeWarn = false;
-        if (preserveChartSource) {
-          modeText = 'Chart verisi korunuyor';
-        } else if (slEqualWarn) {
-          modeText = 'Stop Loss giriş fiyatıyla aynı olamaz';
+        if (!dirCheck.valid) {
+          modeText = dirCheck.message;
           modeWarn = true;
+        } else if (preserveChartSource) {
+          modeText = 'Chart verisi korunuyor';
+        } else if (dirCheck.isEqualSl) {
+          modeText = 'Başabaş Stop (SL = Entry)';
         } else if (!balance) {
           modeText = 'Hesap büyüklüğünü Ayarlar’dan tanımlayın';
           modeWarn = true;
@@ -11343,6 +11441,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       e.preventDefault();
 
       if (!ensureAccountBalanceForTradeSave('journal')) return;
+      if (!validateTradeDirectionLevels('f-')) return;
       if (!validateTradeFormRequiredFields('f-')) return;
       if (!verifyTradePnlConsistency('journal')) return;
       if (isSubmittingTrade) return;
@@ -16273,6 +16372,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       for (const tf of parents) {
         if (!candlesByTf.has(tf)) continue;
         const orig = candlesByTf.get(tf) || [];
+        // D1/W1 gibi üst zaman dilimleri CSV'de broker oturum saatine göre (örn. D1 04:00Z/05:00Z) geldiyse
+        // UTC 00:00Z kova agregasyonu yapıp aynı güne ikinci mum eklemeyelim.
+        if (orig.length > 0 && (tf === 'D1' || tf === 'W1' || tf === 'MN1')) {
+          const hasCustomSessionOffset = orig.some(c => getRpBucketStartSec(c.time, tf) !== c.time);
+          if (hasCustomSessionOffset) {
+            candlesByTf.set(tf, orig.slice().sort((a, b) => a.time - b.time));
+            continue;
+          }
+        }
         const srcTf = (childSources[tf] || []).find(s => candlesByTf.has(s) && (candlesByTf.get(s)?.length || 0) > 0);
         if (!srcTf) continue;
         const srcList = candlesByTf.get(srcTf);
@@ -16527,29 +16635,64 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     function getRpCandlesIntervalSec(candles, tfFallback = '') {
       if (Array.isArray(candles) && candles.length >= 2) {
-        const diffs = [];
-        const limit = Math.min(candles.length - 1, 24);
-        for (let i = 1; i <= limit; i++) {
+        const freq = new Map();
+        const total = candles.length - 1;
+        const maxSamples = 120;
+        const step = Math.max(1, Math.floor(total / maxSamples));
+        for (let i = 1; i < candles.length; i += step) {
           const dt = Number(candles[i].time) - Number(candles[i - 1].time);
-          if (Number.isFinite(dt) && dt > 0) diffs.push(dt);
+          if (Number.isFinite(dt) && dt > 0) {
+            freq.set(dt, (freq.get(dt) || 0) + 1);
+          }
         }
-        if (diffs.length > 0) {
-          diffs.sort((a, b) => a - b);
-          return diffs[Math.floor(diffs.length / 2)];
+        if (freq.size > 0) {
+          let bestDt = 0;
+          let bestCount = -1;
+          for (const [dt, count] of freq.entries()) {
+            if (count > bestCount || (count === bestCount && dt < bestDt)) {
+              bestDt = dt;
+              bestCount = count;
+            }
+          }
+          if (bestDt > 0) return bestDt;
         }
       }
       return getRpTimeframePeriodSec(tfFallback);
     }
 
-    function rpLogicalIdxToTimeForCandles(candles, barSec, logicalIdx) {
+    function getRpCandleSpanEndSec(candles, idx, activeTf = '', barSec = 900) {
+      const t0 = candles[idx].time;
+      const normTf = normalizeRpTimeframe(activeTf) || activeTf;
+      if (normTf === 'MN1') {
+        const mEnd = getRpBucketEndSec(t0, 'MN1');
+        if (mEnd > t0) return mEnd;
+      }
+      const expectedSpan = Math.max(1, normTf ? getRpTimeframePeriodSec(normTf) : (barSec || 900));
+      if (idx + 1 < candles.length) {
+        const dt = candles[idx + 1].time - t0;
+        if (dt > 0 && dt <= expectedSpan * 1.15) {
+          return candles[idx + 1].time;
+        }
+      }
+      return t0 + expectedSpan;
+    }
+
+    function rpLogicalIdxToTimeForCandles(candles, barSec, logicalIdx, tf = '') {
       if (!Array.isArray(candles) || candles.length === 0 || !Number.isFinite(logicalIdx)) return null;
       const n = candles.length;
-      if (logicalIdx <= 0) return candles[0].time + logicalIdx * barSec;
-      if (logicalIdx >= n - 1) return candles[n - 1].time + (logicalIdx - (n - 1)) * barSec;
-      const i0 = Math.floor(logicalIdx);
-      const i1 = Math.min(n - 1, i0 + 1);
-      const frac = logicalIdx - i0;
-      return candles[i0].time + frac * (candles[i1].time - candles[i0].time);
+      const step = Math.max(1, barSec || getRpCandlesIntervalSec(candles, tf));
+      if (logicalIdx <= -0.5) return candles[0].time + (logicalIdx + 0.5) * step;
+      const lastIdx = n - 1;
+      const lastStart = candles[lastIdx].time;
+      const lastEnd = getRpCandleSpanEndSec(candles, lastIdx, tf, step);
+      if (logicalIdx >= lastIdx + 0.5) {
+        return lastEnd + (logicalIdx - (lastIdx + 0.5)) * Math.max(1, lastEnd - lastStart);
+      }
+      const idx = Math.max(0, Math.min(lastIdx, Math.floor(logicalIdx + 0.5)));
+      const t0 = candles[idx].time;
+      const t0End = getRpCandleSpanEndSec(candles, idx, tf, step);
+      const localFrac = Math.max(0, Math.min(1, logicalIdx - (idx - 0.5)));
+      return t0 + localFrac * Math.max(1, t0End - t0);
     }
 
     function switchRpTimeframe(nextTf) {
@@ -16603,13 +16746,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       let viewportSnapshot = null;
       if (prevLogicalRange && Number.isFinite(prevLogicalRange.from) && Number.isFinite(prevLogicalRange.to) && prevVisibleCandles.length > 0) {
-        const fromT = rpLogicalIdxToTimeForCandles(prevVisibleCandles, prevBarSec, prevLogicalRange.from);
-        const toT = rpLogicalIdxToTimeForCandles(prevVisibleCandles, prevBarSec, prevLogicalRange.to);
+        const fromT = rpLogicalIdxToTimeForCandles(prevVisibleCandles, prevBarSec, prevLogicalRange.from, prevTf);
+        const toT = rpLogicalIdxToTimeForCandles(prevVisibleCandles, prevBarSec, prevLogicalRange.to, prevTf);
         if (fromT !== null && toT !== null) {
           const prevRightEdgeIdx = prevVisibleCandles.length - 1;
           const prevBarsVisible = Math.max(8, prevLogicalRange.to - prevLogicalRange.from);
-          const centerIdxClamped = Math.max(0, Math.min(prevRightEdgeIdx, Math.round((prevLogicalRange.from + prevLogicalRange.to) / 2)));
-          const centerCandleTime = prevVisibleCandles[centerIdxClamped].time;
+          const centerLogical = Math.max(-0.49, Math.min(prevRightEdgeIdx + 0.49, (prevLogicalRange.from + prevLogicalRange.to) / 2));
+          const centerCandleTime = rpLogicalIdxToTimeForCandles(prevVisibleCandles, prevBarSec, centerLogical, prevTf) ?? prevVisibleCandles[Math.max(0, Math.min(prevRightEdgeIdx, Math.round(centerLogical)))].time;
           const atRightEdge = prevLogicalRange.to >= (prevRightEdgeIdx - 2.5);
           const rightPadBars = Math.max(0, prevLogicalRange.to - prevRightEdgeIdx);
           viewportSnapshot = {
@@ -16737,6 +16880,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       updateRpChartOverlay();
       updateRpPanelDollarHints();
       updateRpPriceLineLabels();
+      if (typeof renderRpDrawings === 'function') renderRpDrawings();
       if (typeof scheduleRpDrawRender === 'function') scheduleRpDrawRender();
       if (typeof syncRpTfQuickChips === 'function') syncRpTfQuickChips();
       if (hasCsvGapWarning) {
@@ -16746,7 +16890,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         updateRpChartOverlay();
         positionRpFullscreenBtn();
         if (typeof renderRpDrawings === 'function') renderRpDrawings();
-        if (typeof startRpViewportSyncWatch === 'function') startRpViewportSyncWatch(360);
+        if (typeof startRpViewportSyncWatch === 'function') startRpViewportSyncWatch(650);
       });
     }
 
@@ -17156,24 +17300,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     function getRpBarIntervalSec() {
-      const candles = getVisibleRpCandles();
-      if (candles.length >= 2) {
-        const diffs = [];
-        const limit = Math.min(candles.length - 1, 24);
-        for (let i = 1; i <= limit; i++) {
-          const dt = Number(candles[i].time) - Number(candles[i - 1].time);
-          if (Number.isFinite(dt) && dt > 0) diffs.push(dt);
-        }
-        if (diffs.length > 0) {
-          diffs.sort((a, b) => a - b);
-          return diffs[Math.floor(diffs.length / 2)];
+      if (rpHasTimeframeData && rpLastActiveTf) {
+        const normTf = normalizeRpTimeframe(rpLastActiveTf) || rpLastActiveTf;
+        if (rpLoadedCandlesByTf && rpLoadedCandlesByTf.has(normTf)) {
+          return getRpTimeframePeriodSec(normTf);
         }
       }
-      const tfMap = {
-        M1: 60, M3: 180, M5: 300, M15: 900, M30: 1800,
-        H1: 3600, H2: 7200, H4: 14400, D1: 86400, W1: 604800, MN1: 2592000
-      };
-      return tfMap[rpLastActiveTf] || 900;
+      return getRpCandlesIntervalSec(getVisibleRpCandles(), rpLastActiveTf);
     }
 
     function getRpPlotRect() {
@@ -17216,39 +17349,30 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (candles.length === 0 || !Number.isFinite(timeVal)) return null;
       const n = candles.length;
       const activeTf = getRpCurrentReplayTf();
+      const step = Math.max(1, barSec || getRpTimeframePeriodSec(activeTf));
       if (timeVal <= candles[0].time) {
-        return (timeVal - candles[0].time) / barSec;
+        return -0.5 + (timeVal - candles[0].time) / step;
       }
-      if (timeVal >= candles[n - 1].time) {
-        const lastStart = candles[n - 1].time;
-        const lastEnd = getRpBucketEndSec(lastStart, activeTf);
-        const span = Math.max(barSec, lastEnd - lastStart);
-        return (n - 1) + (timeVal - lastStart) / span;
+      const lastIdx = n - 1;
+      const lastStart = candles[lastIdx].time;
+      const lastEnd = getRpCandleSpanEndSec(candles, lastIdx, activeTf, step);
+      if (timeVal >= lastEnd) {
+        return (lastIdx + 0.5) + (timeVal - lastEnd) / Math.max(1, lastEnd - lastStart);
       }
       let lo = 0;
-      let hi = n - 1;
+      let hi = lastIdx;
       while (lo <= hi) {
         const mid = (lo + hi) >> 1;
-        const mt = candles[mid].time;
-        if (mt === timeVal) return mid;
-        if (mt < timeVal) lo = mid + 1;
+        if (candles[mid].time <= timeVal) lo = mid + 1;
         else hi = mid - 1;
       }
-      const leftIdx = Math.max(0, hi);
-      const rightIdx = Math.min(n - 1, lo);
-      const t0 = candles[leftIdx].time;
-      const t1 = candles[rightIdx].time;
-      if (t1 === t0) return leftIdx;
-      const t0End = getRpBucketEndSec(t0, activeTf);
-      if (t1 <= t0End * 1.1) {
-        return leftIdx + (timeVal - t0) / (t1 - t0);
+      const idx = Math.max(0, hi);
+      const t0 = candles[idx].time;
+      const t0End = getRpCandleSpanEndSec(candles, idx, activeTf, step);
+      if (timeVal <= t0End) {
+        return (idx - 0.5) + (timeVal - t0) / Math.max(1, t0End - t0);
       }
-      if (timeVal < t0End) {
-        const insideSpan = Math.max(1, t0End - t0);
-        return leftIdx + Math.min(0.9, ((timeVal - t0) / insideSpan) * 0.9);
-      }
-      const gapSpan = Math.max(1, t1 - t0End);
-      return leftIdx + 0.9 + Math.min(0.1, ((timeVal - t0End) / gapSpan) * 0.1);
+      return idx + 0.5;
     }
 
     function rpTimeFromLogical(logical) {
@@ -17257,28 +17381,79 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (candles.length === 0 || !Number.isFinite(logical)) return null;
       const n = candles.length;
       const activeTf = getRpCurrentReplayTf();
-      if (logical <= 0) {
-        return candles[0].time + logical * barSec;
+      const step = Math.max(1, barSec || getRpTimeframePeriodSec(activeTf));
+      if (logical <= -0.5) {
+        return candles[0].time + (logical + 0.5) * step;
       }
-      if (logical >= n - 1) {
-        const lastStart = candles[n - 1].time;
-        const lastEnd = getRpBucketEndSec(lastStart, activeTf);
-        const span = Math.max(barSec, lastEnd - lastStart);
-        return lastStart + (logical - (n - 1)) * span;
+      const lastIdx = n - 1;
+      const lastStart = candles[lastIdx].time;
+      const lastEnd = getRpCandleSpanEndSec(candles, lastIdx, activeTf, step);
+      if (logical >= lastIdx + 0.5) {
+        return lastEnd + (logical - (lastIdx + 0.5)) * Math.max(1, lastEnd - lastStart);
       }
-      const i0 = Math.floor(logical);
-      const i1 = Math.min(n - 1, i0 + 1);
-      const frac = logical - i0;
-      const t0 = candles[i0].time;
-      const t1 = candles[i1].time;
-      const t0End = getRpBucketEndSec(t0, activeTf);
-      if (t1 <= t0End * 1.1) {
-        return t0 + frac * (t1 - t0);
+      const idx = Math.max(0, Math.min(lastIdx, Math.floor(logical + 0.5)));
+      const t0 = candles[idx].time;
+      const t0End = getRpCandleSpanEndSec(candles, idx, activeTf, step);
+      const localFrac = Math.max(0, Math.min(1, logical - (idx - 0.5)));
+      return t0 + localFrac * Math.max(1, t0End - t0);
+    }
+
+    function rpGetTimeScaleBarGeometry(timeScale) {
+      if (!timeScale) return null;
+      let refIdx = 0;
+      try {
+        const vr = timeScale.getVisibleLogicalRange();
+        if (vr && Number.isFinite(vr.from) && Number.isFinite(vr.to)) {
+          refIdx = Math.round((vr.from + vr.to) / 2);
+        }
+      } catch (_) {}
+      const x0 = timeScale.logicalToCoordinate(refIdx);
+      const x1 = timeScale.logicalToCoordinate(refIdx + 1);
+      if (x0 !== null && x1 !== null && Number.isFinite(x0) && Number.isFinite(x1) && x1 > x0) {
+        return { refIdx, refX: x0, spacing: x1 - x0 };
       }
-      if (frac <= 0.9) {
-        return t0 + (frac / 0.9) * Math.max(1, t0End - t0);
+      const fx0 = timeScale.logicalToCoordinate(0);
+      const fx1 = timeScale.logicalToCoordinate(1);
+      if (fx0 !== null && fx1 !== null && Number.isFinite(fx0) && Number.isFinite(fx1) && fx1 > fx0) {
+        return { refIdx: 0, refX: fx0, spacing: fx1 - fx0 };
       }
-      return t0End + ((frac - 0.9) / 0.1) * Math.max(1, t1 - t0End);
+      return null;
+    }
+
+    function rpContinuousLogicalToCoordinate(timeScale, logical) {
+      if (!timeScale || !Number.isFinite(logical)) return null;
+      const fl = Math.floor(logical);
+      const frac = logical - fl;
+      if (Math.abs(frac) < 1e-6) {
+        const exact = timeScale.logicalToCoordinate(Math.round(logical));
+        if (exact !== null && Number.isFinite(exact)) return exact;
+      }
+      const x0 = timeScale.logicalToCoordinate(fl);
+      const x1 = timeScale.logicalToCoordinate(fl + 1);
+      if (x0 !== null && x1 !== null && Number.isFinite(x0) && Number.isFinite(x1) && x1 > x0) {
+        return x0 + frac * (x1 - x0);
+      }
+      const geom = rpGetTimeScaleBarGeometry(timeScale);
+      if (!geom) return null;
+      return geom.refX + (logical - geom.refIdx) * geom.spacing;
+    }
+
+    function rpCoordinateToContinuousLogical(timeScale, localX) {
+      if (!timeScale || !Number.isFinite(localX)) return null;
+      const approx = timeScale.coordinateToLogical(localX);
+      if (approx !== null && Number.isFinite(approx)) {
+        const refIdx = Math.round(approx);
+        const x0 = timeScale.logicalToCoordinate(refIdx);
+        const x1 = timeScale.logicalToCoordinate(refIdx + 1);
+        if (x0 !== null && x1 !== null && Number.isFinite(x0) && Number.isFinite(x1) && x1 > x0) {
+          return refIdx + (localX - x0) / (x1 - x0);
+        }
+      }
+      const geom = rpGetTimeScaleBarGeometry(timeScale);
+      if (geom) {
+        return geom.refIdx + (localX - geom.refX) / geom.spacing;
+      }
+      return (approx !== null && Number.isFinite(approx)) ? approx : null;
     }
 
     function rpPointToPixel(pt, cachedPlot = null) {
@@ -17289,7 +17464,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       let x = null;
       const logical = rpLogicalFromTime(pt.time);
       if (logical !== null && Number.isFinite(logical)) {
-        const lx = timeScale.logicalToCoordinate(logical);
+        const lx = rpContinuousLogicalToCoordinate(timeScale, logical);
         if (lx !== null && Number.isFinite(lx)) {
           x = lx + plot.left;
         }
@@ -17314,7 +17489,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const localX = wrapX - plot.left;
       const localY = wrapY - plot.top;
       const timeScale = rpChartInstance.timeScale();
-      const logical = timeScale.coordinateToLogical(localX);
+      const logical = rpCoordinateToContinuousLogical(timeScale, localX);
       const price = rpCandlestickSeries.coordinateToPrice(localY);
       if (logical === null || price === null || !Number.isFinite(logical) || !Number.isFinite(price)) {
         return null;
@@ -17337,7 +17512,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             }
           }
           if (bestDist <= 28) {
-            return { time: c.time, price: bestPrice, snapped: true };
+            const activeTf = getRpCurrentReplayTf();
+            const spanEnd = getRpCandleSpanEndSec(candles, idx, activeTf, getRpBarIntervalSec());
+            const centerTime = c.time + Math.max(1, spanEnd - c.time) * 0.5;
+            return { time: centerTime, price: bestPrice, snapped: true };
           }
         }
       }
@@ -19161,12 +19339,20 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const slDist = Math.max(getRpMinPriceStep() * 4, span * 0.6);
       const tpDist = slDist * 2;
       const isLong = type === 'longpos';
+      const entryLogical = rpLogicalFromTime(entryPt.time);
+      let endTime = entryPt.time + barSec * 14;
+      if (entryLogical !== null && Number.isFinite(entryLogical)) {
+        const mappedEnd = rpTimeFromLogical(entryLogical + 14);
+        if (mappedEnd !== null && Number.isFinite(mappedEnd) && mappedEnd > entryPt.time) {
+          endTime = mappedEnd;
+        }
+      }
       const tpPt = {
-        time: entryPt.time + barSec * 14,
+        time: endTime,
         price: roundRpPrice(isLong ? entryPt.price + tpDist : Math.max(getRpMinPriceStep(), entryPt.price - tpDist))
       };
       const slPt = {
-        time: entryPt.time + barSec * 14,
+        time: endTime,
         price: roundRpPrice(isLong ? Math.max(getRpMinPriceStep(), entryPt.price - slDist) : entryPt.price + slDist)
       };
       return applyDefaultsToNewDrawing(type, {
@@ -21544,7 +21730,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               if (wasSelected) {
                 if (!drawHit.drawing.locked && rpChartInstance) {
                   const plot = getRpPlotRect();
-                  const startLogical = plot ? rpChartInstance.timeScale().coordinateToLogical(x - plot.left) : null;
+                  const startLogical = plot ? rpCoordinateToContinuousLogical(rpChartInstance.timeScale(), x - plot.left) : null;
                   const startPrice = plot ? rpCandlestickSeries.coordinateToPrice(y - plot.top) : null;
                   const startPt = rpPixelToPoint(x, y, false);
                   if (startPt && startLogical !== null && startPrice !== null) {
@@ -21678,7 +21864,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               }
             } else {
               const plot = getRpPlotRect();
-              const curLogical = (plot && rpChartInstance) ? rpChartInstance.timeScale().coordinateToLogical(x - plot.left) : null;
+              const curLogical = (plot && rpChartInstance) ? rpCoordinateToContinuousLogical(rpChartInstance.timeScale(), x - plot.left) : null;
               const curPrice = (plot && rpCandlestickSeries) ? rpCandlestickSeries.coordinateToPrice(y - plot.top) : null;
               if (
                 curLogical !== null && Number.isFinite(curLogical) &&
@@ -21925,7 +22111,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 syncRpDrawPropsBar();
                 if (!drawHit.drawing.locked && rpChartInstance) {
                   const plot = getRpPlotRect();
-                  const startLogical = plot ? rpChartInstance.timeScale().coordinateToLogical(x - plot.left) : null;
+                  const startLogical = plot ? rpCoordinateToContinuousLogical(rpChartInstance.timeScale(), x - plot.left) : null;
                   const startPrice = plot ? rpCandlestickSeries.coordinateToPrice(y - plot.top) : null;
                   const startPt = rpPixelToPoint(x, y, false);
                   if (startPt && startLogical !== null && startPrice !== null) {
