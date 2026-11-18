@@ -15,7 +15,7 @@ import {
   formatFriendlyGeminiError,
   runWithModelFallback,
   MODEL_ATTEMPTS,
-} from './server';
+} from './server.ts';
 
 test('normalizePair strips exchange prefixes and futures suffix', () => {
   assert.equal(normalizePair('NASDAQ:NAS100'), 'NAS100');
