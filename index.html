@@ -1247,6 +1247,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   .dashboard-charts-grid { grid-template-columns: 1fr; }
   .dashboard-secondary-grid { grid-template-columns: 1fr; }
   .form-grid-layout { grid-template-columns: 1fr; }
+  .upload-column-wrap { height: auto; }
 }
 
 .sidebar-mobile-overlay {
@@ -4991,6 +4992,102 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 }
 
 /* Görsel Otomatik Okuma & Hızlı Tamamlama Modalı */
+.upload-column-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  height: 100%;
+}
+.upload-column-wrap > .upload-box {
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 280px;
+}
+@media (max-width: 1200px) {
+  .upload-column-wrap > .upload-box {
+    flex: none;
+  }
+}
+@media (max-width: 540px) {
+  .upload-column-wrap > .upload-box {
+    min-height: 200px;
+  }
+}
+.upload-box.analyzing {
+  cursor: wait;
+  border-color: rgba(56, 189, 248, 0.72);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.18);
+}
+.upload-box.analyzing > svg,
+.upload-box.analyzing > .upload-title,
+.upload-box.analyzing > .upload-subtitle {
+  opacity: 0.68;
+}
+.upload-auto-scan-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.auto-scan-toggle-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 14px;
+  border-radius: 14px;
+  background: var(--glass-inset);
+  border: 1px solid rgba(56, 189, 248, 0.34);
+  color: var(--text-main);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.auto-scan-toggle-btn:hover {
+  border-color: rgba(56, 189, 248, 0.62);
+  background: var(--glass-hover-fill);
+}
+.auto-scan-toggle-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.auto-scan-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-neon-green);
+  box-shadow: 0 0 8px var(--color-neon-green);
+}
+.auto-scan-state-pill {
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: rgba(85, 229, 177, 0.16);
+  color: var(--color-neon-green);
+  border: 1px solid rgba(85, 229, 177, 0.35);
+  white-space: nowrap;
+}
+.auto-scan-toggle-btn.is-off {
+  border-color: var(--glass-border);
+  color: var(--text-secondary);
+}
+.auto-scan-toggle-btn.is-off .auto-scan-dot {
+  background: var(--text-muted);
+  box-shadow: none;
+}
+.auto-scan-toggle-btn.is-off .auto-scan-state-pill {
+  background: rgba(148, 163, 184, 0.14);
+  color: var(--text-muted);
+  border-color: rgba(148, 163, 184, 0.28);
+}
 .upload-scan-bar {
   display: none;
   align-items: center;
@@ -5027,6 +5124,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   background: rgba(244, 63, 94, 0.13);
   border-color: rgba(244, 63, 94, 0.42);
 }
+.upload-scan-bar.idle {
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.32);
+}
 [data-theme="light"] .upload-scan-bar {
   background: rgba(14, 165, 233, 0.1);
 }
@@ -5038,6 +5139,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 }
 [data-theme="light"] .upload-scan-bar.error {
   background: rgba(244, 63, 94, 0.1);
+}
+[data-theme="light"] .upload-scan-bar.idle {
+  background: rgba(100, 116, 139, 0.1);
 }
 .upload-scan-left {
   display: flex;
@@ -5137,6 +5241,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   background: rgba(245, 158, 11, 0.14);
   border-color: rgba(245, 158, 11, 0.45);
 }
+.trade-scan-banner.has-error {
+  background: rgba(244, 63, 94, 0.14);
+  border-color: rgba(244, 63, 94, 0.48);
+}
 .trade-scan-preview-row {
   display: flex;
   align-items: center;
@@ -5184,11 +5292,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   color: var(--color-neon-green);
 }
 .trade-scan-badge.miss {
+  background: rgba(244, 63, 94, 0.16);
+  border-color: rgba(244, 63, 94, 0.46);
+  color: var(--color-danger);
+}
+.trade-scan-badge.uncertain {
   background: rgba(245, 158, 11, 0.16);
   border-color: rgba(245, 158, 11, 0.44);
   color: #FBBF24;
 }
-[data-theme="light"] .trade-scan-badge.miss {
+[data-theme="light"] .trade-scan-badge.uncertain {
   color: #B45309;
 }
 .trade-scan-grid {
@@ -5200,23 +5313,105 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 .trade-scan-grid.two {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
+.trade-scan-panel .form-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.trade-scan-flag-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.trade-scan-confirm-all-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 1px solid rgba(85, 229, 177, 0.45);
+  background: rgba(85, 229, 177, 0.16);
+  color: var(--color-neon-green);
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+.trade-scan-confirm-all-btn:hover {
+  background: rgba(85, 229, 177, 0.28);
+  border-color: rgba(85, 229, 177, 0.78);
+  transform: translateY(-1px);
+}
+[data-theme="light"] .trade-scan-confirm-all-btn {
+  background: rgba(5, 150, 105, 0.12);
+  border-color: rgba(5, 150, 105, 0.42);
+  color: #047857;
+}
+[data-theme="light"] .trade-scan-confirm-all-btn:hover {
+  background: rgba(5, 150, 105, 0.22);
+}
 .trade-scan-field-missing {
+  border-color: rgba(244, 63, 94, 0.88) !important;
+  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.25) !important;
+}
+.trade-scan-field-uncertain {
   border-color: rgba(245, 158, 11, 0.85) !important;
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.24) !important;
 }
 .trade-scan-missing-tag {
   display: none;
-  margin-left: 6px;
   font-size: 0.68rem;
   font-weight: 800;
-  color: #FBBF24;
+  color: var(--color-danger);
   text-transform: none;
+}
+.trade-scan-missing-tag.uncertain {
+  color: #FBBF24;
 }
 .trade-scan-missing-tag.visible {
   display: inline;
 }
-[data-theme="light"] .trade-scan-missing-tag {
+[data-theme="light"] .trade-scan-missing-tag.uncertain {
   color: #B45309;
+}
+.trade-scan-confirm-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  font-family: inherit;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+  border: 1px solid rgba(85, 229, 177, 0.46);
+  background: rgba(85, 229, 177, 0.16);
+  color: var(--color-neon-green);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.trade-scan-confirm-btn.visible {
+  display: inline-flex;
+}
+.trade-scan-confirm-btn:hover {
+  background: rgba(85, 229, 177, 0.3);
+  border-color: rgba(85, 229, 177, 0.82);
+}
+[data-theme="light"] .trade-scan-confirm-btn {
+  background: rgba(5, 150, 105, 0.12);
+  border-color: rgba(5, 150, 105, 0.42);
+  color: #047857;
+}
+[data-theme="light"] .trade-scan-confirm-btn:hover {
+  background: rgba(5, 150, 105, 0.22);
 }
 .trade-scan-calc-hint {
   padding: 8px 12px;
@@ -5673,27 +5868,38 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 20px;" id="journalFormHeading">Yeni İşlem Kaydı</h3>
             
             <form id="tradeForm" class="form-grid-layout" novalidate>
-              <div class="upload-box" id="tradeDropzone">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                  <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-                <div class="upload-title">Grafik Ekran Görüntüleri Yükleyin</div>
-                <div class="upload-subtitle">Görselleri sürükleyin veya seçin (PNG, JPG, WEBP - Maks 5MB)</div>
-                
-                <div class="trade-images-strip" id="tradeImagesStrip"></div>
-                <div class="upload-scan-bar" id="tradeScanStatus">
-                  <div class="upload-scan-left">
-                    <span class="upload-scan-spinner" aria-hidden="true"></span>
-                    <span class="upload-scan-text" id="tradeScanStatusText"></span>
+              <div class="upload-column-wrap">
+                <div class="upload-box" id="tradeDropzone">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                  <div class="upload-title">Grafik Ekran Görüntüleri Yükleyin</div>
+                  <div class="upload-subtitle">Görselleri sürükleyin veya seçin (PNG, JPG, WEBP - Maks 5MB)</div>
+                  
+                  <div class="trade-images-strip" id="tradeImagesStrip"></div>
+                  <div class="upload-scan-bar" id="tradeScanStatus">
+                    <div class="upload-scan-left">
+                      <span class="upload-scan-spinner" aria-hidden="true"></span>
+                      <span class="upload-scan-text" id="tradeScanStatusText"></span>
+                    </div>
+                    <div class="upload-scan-actions">
+                      <button type="button" class="upload-scan-action-btn retry" id="tradeScanRetryBtn" style="display: none;">Tekrar Dene</button>
+                      <button type="button" class="upload-scan-action-btn" id="tradeScanOpenBtn" style="display: none;">Düzenle / Kaydet</button>
+                    </div>
                   </div>
-                  <div class="upload-scan-actions">
-                    <button type="button" class="upload-scan-action-btn retry" id="tradeScanRetryBtn" style="display: none;">Tekrar Dene</button>
-                    <button type="button" class="upload-scan-action-btn" id="tradeScanOpenBtn" style="display: none;">Düzenle / Kaydet</button>
-                  </div>
+                  <input type="file" id="tradeFileInput" multiple accept="image/*" style="display: none;">
                 </div>
-                <input type="file" id="tradeFileInput" multiple accept="image/*" style="display: none;">
+                <div class="upload-auto-scan-row">
+                  <button type="button" class="auto-scan-toggle-btn" id="journalAutoScanToggleBtn" aria-pressed="true">
+                    <span class="auto-scan-toggle-left">
+                      <span class="auto-scan-dot" aria-hidden="true"></span>
+                      <span class="auto-scan-label">Otomatik İncelemeyi Kapat</span>
+                    </span>
+                    <span class="auto-scan-state-pill">Açık</span>
+                  </button>
+                </div>
               </div>
 
               <div class="form-fields-container">
@@ -6086,27 +6292,38 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             </div>
             
             <form id="backtestTradeForm" class="form-grid-layout" novalidate>
-              <div class="upload-box" id="backtestDropzone">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                  <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-                <div class="upload-title">Backtest Grafiği Yükleyin</div>
-                <div class="upload-subtitle">Görselleri sürükleyin veya seçin (Yalnızca bu sayfada görünür)</div>
-                
-                <div class="trade-images-strip" id="backtestImagesStrip"></div>
-                <div class="upload-scan-bar" id="backtestScanStatus">
-                  <div class="upload-scan-left">
-                    <span class="upload-scan-spinner" aria-hidden="true"></span>
-                    <span class="upload-scan-text" id="backtestScanStatusText"></span>
+              <div class="upload-column-wrap">
+                <div class="upload-box" id="backtestDropzone">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                  </svg>
+                  <div class="upload-title">Backtest Grafiği Yükleyin</div>
+                  <div class="upload-subtitle">Görselleri sürükleyin veya seçin (Yalnızca bu sayfada görünür)</div>
+                  
+                  <div class="trade-images-strip" id="backtestImagesStrip"></div>
+                  <div class="upload-scan-bar" id="backtestScanStatus">
+                    <div class="upload-scan-left">
+                      <span class="upload-scan-spinner" aria-hidden="true"></span>
+                      <span class="upload-scan-text" id="backtestScanStatusText"></span>
+                    </div>
+                    <div class="upload-scan-actions">
+                      <button type="button" class="upload-scan-action-btn retry" id="backtestScanRetryBtn" style="display: none;">Tekrar Dene</button>
+                      <button type="button" class="upload-scan-action-btn" id="backtestScanOpenBtn" style="display: none;">Düzenle / Kaydet</button>
+                    </div>
                   </div>
-                  <div class="upload-scan-actions">
-                    <button type="button" class="upload-scan-action-btn retry" id="backtestScanRetryBtn" style="display: none;">Tekrar Dene</button>
-                    <button type="button" class="upload-scan-action-btn" id="backtestScanOpenBtn" style="display: none;">Düzenle / Kaydet</button>
-                  </div>
+                  <input type="file" id="backtestFileInput" multiple accept="image/*" style="display: none;">
                 </div>
-                <input type="file" id="backtestFileInput" multiple accept="image/*" style="display: none;">
+                <div class="upload-auto-scan-row">
+                  <button type="button" class="auto-scan-toggle-btn" id="backtestAutoScanToggleBtn" aria-pressed="true">
+                    <span class="auto-scan-toggle-left">
+                      <span class="auto-scan-dot" aria-hidden="true"></span>
+                      <span class="auto-scan-label">Otomatik İncelemeyi Kapat</span>
+                    </span>
+                    <span class="auto-scan-state-pill">Açık</span>
+                  </button>
+                </div>
               </div>
 
               <div class="form-fields-container">
@@ -7341,29 +7558,30 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           <img id="tradeScanThumbImg" class="trade-scan-thumb" src="" alt="Yüklenen İşlem Görseli">
         </button>
         <div class="trade-scan-status-badges" id="tradeScanBadges"></div>
+        <button type="button" class="trade-scan-confirm-all-btn" id="tradeScanConfirmAllBtn" style="display: none;">Tümünü Onayla</button>
       </div>
 
       <div class="trade-scan-grid">
         <div class="form-group">
-          <label class="form-label" for="scan-pair">Parite <span class="trade-scan-missing-tag" id="scan-miss-pair">Okunamadı</span></label>
+          <label class="form-label" for="scan-pair"><span>Parite</span><span class="trade-scan-flag-actions"><span class="trade-scan-missing-tag" id="scan-miss-pair">Okunamadı</span><button type="button" class="trade-scan-confirm-btn" data-confirm-field="pair" id="scan-confirm-pair">Onayla</button></span></label>
           <input type="text" id="scan-pair" class="input-glass" placeholder="Örn: NAS100, XAUUSD">
         </div>
         <div class="form-group">
-          <label class="form-label" for="scan-direction">Yön <span class="trade-scan-missing-tag" id="scan-miss-direction">Okunamadı</span></label>
+          <label class="form-label" for="scan-direction"><span>Yön</span><span class="trade-scan-flag-actions"><span class="trade-scan-missing-tag" id="scan-miss-direction">Okunamadı</span><button type="button" class="trade-scan-confirm-btn" data-confirm-field="direction" id="scan-confirm-direction">Onayla</button></span></label>
           <select id="scan-direction" class="input-glass">
             <option value="Long">Long (Alış)</option>
             <option value="Short">Short (Satış)</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label" for="scan-datetime">Tarih &amp; Saat <span class="trade-scan-missing-tag" id="scan-miss-datetime">Okunamadı</span></label>
+          <label class="form-label" for="scan-datetime"><span>Tarih &amp; Saat</span><span class="trade-scan-flag-actions"><span class="trade-scan-missing-tag" id="scan-miss-datetime">Okunamadı</span><button type="button" class="trade-scan-confirm-btn" data-confirm-field="datetime" id="scan-confirm-datetime">Onayla</button></span></label>
           <input type="datetime-local" id="scan-datetime" class="input-glass">
         </div>
       </div>
 
       <div class="trade-scan-grid">
         <div class="form-group">
-          <label class="form-label" for="scan-timeframe">Timeframe <span class="trade-scan-missing-tag" id="scan-miss-timeframe">Okunamadı</span></label>
+          <label class="form-label" for="scan-timeframe"><span>Timeframe</span><span class="trade-scan-flag-actions"><span class="trade-scan-missing-tag" id="scan-miss-timeframe">Okunamadı</span><button type="button" class="trade-scan-confirm-btn" data-confirm-field="timeframe" id="scan-confirm-timeframe">Onayla</button></span></label>
           <select id="scan-timeframe" class="input-glass">
             <option value="M1">M1</option>
             <option value="M3">M3</option>
@@ -7379,7 +7597,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label" for="scan-session">Seans <span class="trade-scan-missing-tag" id="scan-miss-session">Okunamadı</span></label>
+          <label class="form-label" for="scan-session"><span>Seans</span><span class="trade-scan-flag-actions"><span class="trade-scan-missing-tag" id="scan-miss-session">Okunamadı</span><button type="button" class="trade-scan-confirm-btn" data-confirm-field="session" id="scan-confirm-session">Onayla</button></span></label>
           <select id="scan-session" class="input-glass">
             <option value="London">London</option>
             <option value="New York">New York</option>
@@ -7388,7 +7606,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label" for="scan-strategy">Strateji / Model</label>
+          <label class="form-label" for="scan-strategy"><span>Strateji / Model</span><span class="trade-scan-flag-actions"><span class="trade-scan-missing-tag uncertain" id="scan-miss-strategy">Seç / Onayla</span><button type="button" class="trade-scan-confirm-btn" data-confirm-field="strategy" id="scan-confirm-strategy">Onayla</button></span></label>
           <select id="scan-strategy" class="input-glass">
             <option value="Varsayılan Setup">Varsayılan Setup</option>
           </select>
@@ -7397,30 +7615,30 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       <div class="trade-scan-grid">
         <div class="form-group">
-          <label class="form-label" for="scan-entry">Giriş (Entry) <span class="trade-scan-missing-tag" id="scan-miss-entry">Okunamadı</span></label>
+          <label class="form-label" for="scan-entry"><span>Giriş (Entry)</span><span class="trade-scan-flag-actions"><span class="trade-scan-missing-tag" id="scan-miss-entry">Okunamadı</span><button type="button" class="trade-scan-confirm-btn" data-confirm-field="entry" id="scan-confirm-entry">Onayla</button></span></label>
           <input type="number" step="any" id="scan-entry" class="input-glass" placeholder="Fiyat">
         </div>
         <div class="form-group">
-          <label class="form-label" for="scan-exit">Çıkış (Exit) <span class="trade-scan-missing-tag" id="scan-miss-exit">Okunamadı</span></label>
+          <label class="form-label" for="scan-exit"><span>Çıkış (Exit)</span><span class="trade-scan-flag-actions"><span class="trade-scan-missing-tag" id="scan-miss-exit">Okunamadı</span><button type="button" class="trade-scan-confirm-btn" data-confirm-field="exit" id="scan-confirm-exit">Onayla</button></span></label>
           <input type="number" step="any" id="scan-exit" class="input-glass" placeholder="Fiyat">
         </div>
         <div class="form-group">
-          <label class="form-label" for="scan-sl">Stop Loss <span class="trade-scan-missing-tag" id="scan-miss-sl">Okunamadı</span></label>
+          <label class="form-label" for="scan-sl"><span>Stop Loss</span><span class="trade-scan-flag-actions"><span class="trade-scan-missing-tag" id="scan-miss-sl">Okunamadı</span><button type="button" class="trade-scan-confirm-btn" data-confirm-field="sl" id="scan-confirm-sl">Onayla</button></span></label>
           <input type="number" step="any" id="scan-sl" class="input-glass" placeholder="Fiyat">
         </div>
       </div>
 
       <div class="trade-scan-grid">
         <div class="form-group">
-          <label class="form-label" for="scan-risk">Risk (%)</label>
+          <label class="form-label" for="scan-risk"><span>Risk (%)</span><span class="trade-scan-flag-actions"><span class="trade-scan-missing-tag uncertain" id="scan-miss-risk">Kontrol Et</span><button type="button" class="trade-scan-confirm-btn" data-confirm-field="risk" id="scan-confirm-risk">Onayla</button></span></label>
           <input type="number" step="any" id="scan-risk" class="input-glass" value="1.0">
         </div>
         <div class="form-group">
-          <label class="form-label" for="scan-pnl">Kâr / Zarar ($) <span class="trade-scan-missing-tag" id="scan-miss-pnl">Okunamadı</span></label>
+          <label class="form-label" for="scan-pnl"><span>Kâr / Zarar ($)</span><span class="trade-scan-flag-actions"><span class="trade-scan-missing-tag" id="scan-miss-pnl">Okunamadı</span><button type="button" class="trade-scan-confirm-btn" data-confirm-field="pnl" id="scan-confirm-pnl">Onayla</button></span></label>
           <input type="number" step="any" id="scan-pnl" class="input-glass" placeholder="Örn: 350 veya -150">
         </div>
         <div class="form-group">
-          <label class="form-label" for="scan-result">Sonuç <span class="trade-scan-missing-tag" id="scan-miss-result">Okunamadı</span></label>
+          <label class="form-label" for="scan-result"><span>Sonuç</span><span class="trade-scan-flag-actions"><span class="trade-scan-missing-tag" id="scan-miss-result">Okunamadı</span><button type="button" class="trade-scan-confirm-btn" data-confirm-field="result" id="scan-confirm-result">Onayla</button></span></label>
           <select id="scan-result" class="input-glass">
             <option value="Win">Win (Kazanıldı)</option>
             <option value="Loss">Loss (Kaybedildi)</option>
@@ -7437,8 +7655,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       </div>
 
       <div class="trade-scan-actions">
+        <button type="button" class="btn-primary trade-scan-secondary-btn" id="tradeScanRetryModalBtn" style="display: none;">Tekrar Tara</button>
         <button type="button" class="btn-primary trade-scan-secondary-btn" id="tradeScanApplyOnlyBtn">Forma Aktar</button>
-        <button type="button" class="btn-primary neon-green" id="tradeScanSaveNowBtn">Düzenleyip Kaydet</button>
+        <button type="button" class="btn-primary neon-green" id="tradeScanSaveNowBtn">Kaydet</button>
       </div>
     </div>
   </div>
@@ -8406,13 +8625,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const accountName = info.context === 'backtest' ? 'Backtest Hesap' : 'Ana Hesap';
       const rSign = info.priceR > 0 ? '+' : '';
       const rText = `${rSign}${info.priceR.toFixed(2)} R`;
+      const oneR = Number((info.balance * (info.riskPct / 100)).toFixed(2));
+      const oneRText = formatModalMoney(oneR);
       const balText = formatModalMoney(info.balance);
       const enteredText = formatModalMoney(info.enteredPnl);
       const expectedText = `${info.expectedPnl > 0 ? '+' : ''}${formatModalMoney(info.expectedPnl)}`;
 
-      leadEl.textContent = `${accountName} büyüklüğünüze (${balText}), %${info.riskPct} risk oranına ve fiyatların verdiği ${rText} sonucuna göre Kâr / Zarar tutarını yanlış girdiniz. Hesaba göre olması gereken tutar ${expectedText} olmalıdır; aşağıdan değiştirebilir veya otomatik düzeltebilirsiniz.`;
+      leadEl.textContent = `${accountName} büyüklüğünüze (${balText}), %${info.riskPct} risk oranına (1R: ${oneRText}) ve fiyatların verdiği ${rText} sonucuna göre Kâr / Zarar tutarını yanlış girdiniz. Hesaba göre olması gereken tutar ${expectedText} (${oneRText} × ${rText}) olmalıdır; aşağıdan değiştirebilir veya otomatik düzeltebilirsiniz.`;
       enteredEl.textContent = enteredText;
-      if (expectedLblEl) expectedLblEl.textContent = `Hesaba Göre (${rText})`;
+      if (expectedLblEl) expectedLblEl.textContent = `Hesaba Göre (${oneRText} × ${rText})`;
       expectedEl.textContent = expectedText;
       expectedEl.className = `pnl-mismatch-stat-val ${info.expectedPnl > 0 ? 'pos' : info.expectedPnl < 0 ? 'neg' : ''}`;
       inputEl.value = String(info.enteredPnl);
@@ -8484,7 +8705,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const exit = parseOptionalNumber(document.getElementById(`${prefix}exit`)?.value);
       const sl = parseOptionalNumber(document.getElementById(`${prefix}sl`)?.value);
       const dir = document.getElementById(`${prefix}direction`)?.value || 'Long';
-      const riskPct = parsePositiveBalance(document.getElementById(`${prefix}risk`)?.value);
+      const riskPct = parsePositiveBalance(document.getElementById(`${prefix}risk`)?.value)
+        || parsePositiveBalance(AppState.settings.defaultRisk)
+        || 1.0;
       const rawPnl = parseOptionalNumber(document.getElementById(`${prefix}pnl`)?.value);
       const result = document.getElementById(`${prefix}result`)?.value || 'Win';
 
@@ -9407,6 +9630,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     tradeDropzone.addEventListener('click', (e) => {
       // tradeImagesStrip veya tarama durum çubuğu içine tıklandıysa dosya seçiciyi açma!
       if (e.target.closest('#tradeImagesStrip') || e.target.closest('#tradeScanStatus')) return;
+      if (isAnalyzingTradeImage) {
+        showToast('İlk görselin analizi devam ediyor, lütfen bitmesini bekleyin.', 'warning');
+        return;
+      }
       tradeFileInput.click();
     });
 
@@ -9414,6 +9641,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const picked = e.target.files ? Array.from(e.target.files) : [];
       tradeFileInput.value = '';
       if (picked.length > 0) {
+        if (isAnalyzingTradeImage) {
+          showToast('İlk görselin analizi devam ediyor, lütfen bitmesini bekleyin.', 'warning');
+          return;
+        }
         await handleIncomingImages(picked);
       }
     });
@@ -9434,6 +9665,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     tradeDropzone.addEventListener('drop', async (e) => {
       if (e.dataTransfer && e.dataTransfer.files) {
+        if (isAnalyzingTradeImage) {
+          showToast('İlk görselin analizi devam ediyor, lütfen bitmesini bekleyin.', 'warning');
+          return;
+        }
         await handleIncomingImages(e.dataTransfer.files);
       }
     });
@@ -9452,17 +9687,23 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (imageFiles.length > 0) {
         const journalSec = document.getElementById('sec-journal');
         const backtestSec = document.getElementById('sec-backtest');
-        if (journalSec && journalSec.classList.contains('active')) {
-          await handleIncomingImages(imageFiles);
-          showToast(`${imageFiles.length} ekran görüntüsü panodan eklendi.`, 'success');
-        } else if (backtestSec && backtestSec.classList.contains('active')) {
-          await handleIncomingBacktestImages(imageFiles);
-          showToast(`${imageFiles.length} ekran görüntüsü Backtest alanına eklendi.`, 'success');
+        if ((journalSec && journalSec.classList.contains('active')) || (backtestSec && backtestSec.classList.contains('active'))) {
+          if (isAnalyzingTradeImage) {
+            showToast('İlk görselin analizi devam ediyor, lütfen bitmesini bekleyin.', 'warning');
+            return;
+          }
+          if (journalSec && journalSec.classList.contains('active')) {
+            await handleIncomingImages(imageFiles);
+            showToast(autoTradeScanEnabled ? `${imageFiles.length} ekran görüntüsü panodan eklendi.` : `${imageFiles.length} ekran görüntüsü eklendi (otomatik inceleme kapalı).`, 'success');
+          } else {
+            await handleIncomingBacktestImages(imageFiles);
+            showToast(autoTradeScanEnabled ? `${imageFiles.length} ekran görüntüsü Backtest alanına eklendi.` : `${imageFiles.length} ekran görüntüsü Backtest alanına eklendi (otomatik inceleme kapalı).`, 'success');
+          }
         }
       }
     });
 
-    async function readFileAsScanDataUrl(file, maxDimension = 2048) {
+    async function readFileAsScanDataUrl(file, maxDimension = 1440) {
       if (!file || !file.type || !file.type.startsWith('image/')) return null;
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -9476,8 +9717,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           img.onload = () => {
             const w = img.naturalWidth || img.width;
             const h = img.naturalHeight || img.height;
-            if (w <= maxDimension && h <= maxDimension && file.size <= 3.5 * 1024 * 1024) {
-              resolve({ dataUrl: rawUrl, mimeType: file.type || 'image/png' });
+            const needsShrink = w > maxDimension || h > maxDimension || file.size > 450 * 1024 || file.type === 'image/png';
+            if (!needsShrink) {
+              resolve({ dataUrl: rawUrl, mimeType: file.type || 'image/jpeg' });
               return;
             }
             const scale = Math.min(1, maxDimension / Math.max(w, h));
@@ -9489,10 +9731,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               resolve({ dataUrl: rawUrl, mimeType: file.type || 'image/png' });
               return;
             }
+            ctx.fillStyle = '#0B1022';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             resolve({
-              dataUrl: canvas.toDataURL('image/png'),
-              mimeType: 'image/png'
+              dataUrl: canvas.toDataURL('image/jpeg', 0.86),
+              mimeType: 'image/jpeg'
             });
           };
           img.onerror = () => resolve({ dataUrl: rawUrl, mimeType: file.type || 'image/png' });
@@ -9505,6 +9749,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     async function handleIncomingImages(files) {
       if (!files || files.length === 0) return;
+      if (isAnalyzingTradeImage) {
+        showToast('İlk görselin analizi devam ediyor, lütfen bitmesini bekleyin.', 'warning');
+        return;
+      }
       let firstScanCandidate = null;
       for (const file of files) {
         if (!file.type || !file.type.startsWith('image/')) continue;
@@ -9536,7 +9784,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       const editId = document.getElementById('editTradeId')?.value;
       if (firstScanCandidate && !editId) {
-        await analyzeTradeImageAndPopulate('journal', firstScanCandidate);
+        lastTradeScanCandidates.journal = firstScanCandidate;
+        if (autoTradeScanEnabled) {
+          await analyzeTradeImageAndPopulate('journal', firstScanCandidate);
+        } else {
+          setTradeScanBarState('journal', 'idle', 'Görsel eklendi (otomatik inceleme kapalı).', false, 'İncele', true, 'Görseli Analiz Et');
+        }
       }
     }
 
@@ -10960,6 +11213,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     if (backtestDropzone) {
       backtestDropzone.addEventListener('click', (e) => {
         if (e.target.closest('#backtestImagesStrip') || e.target.closest('#backtestScanStatus')) return;
+        if (isAnalyzingTradeImage) {
+          showToast('İlk görselin analizi devam ediyor, lütfen bitmesini bekleyin.', 'warning');
+          return;
+        }
         backtestFileInput?.click();
       });
 
@@ -10979,6 +11236,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       backtestDropzone.addEventListener('drop', async (e) => {
         if (e.dataTransfer && e.dataTransfer.files) {
+          if (isAnalyzingTradeImage) {
+            showToast('İlk görselin analizi devam ediyor, lütfen bitmesini bekleyin.', 'warning');
+            return;
+          }
           await handleIncomingBacktestImages(e.dataTransfer.files);
         }
       });
@@ -10989,6 +11250,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const picked = e.target.files ? Array.from(e.target.files) : [];
         backtestFileInput.value = '';
         if (picked.length > 0) {
+          if (isAnalyzingTradeImage) {
+            showToast('İlk görselin analizi devam ediyor, lütfen bitmesini bekleyin.', 'warning');
+            return;
+          }
           await handleIncomingBacktestImages(picked);
         }
       });
@@ -10996,6 +11261,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     async function handleIncomingBacktestImages(files) {
       if (!files || files.length === 0) return;
+      if (isAnalyzingTradeImage) {
+        showToast('İlk görselin analizi devam ediyor, lütfen bitmesini bekleyin.', 'warning');
+        return;
+      }
       let firstScanCandidate = null;
       for (const file of files) {
         if (!file.type || !file.type.startsWith('image/')) continue;
@@ -11027,7 +11296,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       const editBtId = document.getElementById('editBacktestTradeId')?.value;
       if (firstScanCandidate && !editBtId) {
-        await analyzeTradeImageAndPopulate('backtest', firstScanCandidate);
+        lastTradeScanCandidates.backtest = firstScanCandidate;
+        if (autoTradeScanEnabled) {
+          await analyzeTradeImageAndPopulate('backtest', firstScanCandidate);
+        } else {
+          setTradeScanBarState('backtest', 'idle', 'Görsel eklendi (otomatik inceleme kapalı).', false, 'İncele', true, 'Görseli Analiz Et');
+        }
       }
     }
 
@@ -11705,6 +11979,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             renderBanner();
           }
         },
+        forceAutoCalculateFromPrices() {
+          manualPnlOverride = false;
+          preserveChartSource = false;
+          preservedChartR = null;
+          preservedChartPnl = null;
+          syncResultAndPnlFromPrices(true);
+        },
         isPreservedChartSource() {
           return preserveChartSource;
         },
@@ -12133,7 +12414,69 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
        GÖRSEL OTOMATİK ANALİZ & HIZLI DÜZENLEME MODALI
        ------------------------------------------------------------- */
     let activeTradeScanSession = null;
+    let scanPnlUserEdited = false;
+    let isAnalyzingTradeImage = false;
+    const STORAGE_KEY_AUTO_TRADE_SCAN = 'pj_auto_trade_scan';
+    let autoTradeScanEnabled = (() => {
+      try {
+        return localStorage.getItem(STORAGE_KEY_AUTO_TRADE_SCAN) !== 'false';
+      } catch {
+        return true;
+      }
+    })();
     const lastTradeScanCandidates = { journal: null, backtest: null };
+
+    function syncAutoScanToggleUI() {
+      const btnIds = ['journalAutoScanToggleBtn', 'backtestAutoScanToggleBtn'];
+      btnIds.forEach((id) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.classList.toggle('is-off', !autoTradeScanEnabled);
+        btn.setAttribute('aria-pressed', autoTradeScanEnabled ? 'true' : 'false');
+        const labelEl = btn.querySelector('.auto-scan-label');
+        const pillEl = btn.querySelector('.auto-scan-state-pill');
+        if (labelEl) {
+          labelEl.textContent = autoTradeScanEnabled ? 'Otomatik İncelemeyi Kapat' : 'Otomatik İncelemeyi Aç';
+        }
+        if (pillEl) {
+          pillEl.textContent = autoTradeScanEnabled ? 'Açık' : 'Kapalı (Sadece Fotoğraf)';
+        }
+      });
+    }
+
+    function setAutoTradeScanEnabled(enabled) {
+      autoTradeScanEnabled = Boolean(enabled);
+      try {
+        localStorage.setItem(STORAGE_KEY_AUTO_TRADE_SCAN, autoTradeScanEnabled ? 'true' : 'false');
+      } catch {}
+      syncAutoScanToggleUI();
+      showToast(
+        autoTradeScanEnabled
+          ? 'Otomatik görsel analizi ve inceleme penceresi açıldı.'
+          : 'Otomatik inceleme kapatıldı. Artık yalnızca görsel eklenecek.',
+        'info'
+      );
+    }
+
+    syncAutoScanToggleUI();
+    document.getElementById('journalAutoScanToggleBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      setAutoTradeScanEnabled(!autoTradeScanEnabled);
+    });
+    document.getElementById('backtestAutoScanToggleBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      setAutoTradeScanEnabled(!autoTradeScanEnabled);
+    });
+
+    function setTradeAnalysisLock(locked) {
+      isAnalyzingTradeImage = Boolean(locked);
+      if (tradeDropzone) tradeDropzone.classList.toggle('analyzing', isAnalyzingTradeImage);
+      if (backtestDropzone) backtestDropzone.classList.toggle('analyzing', isAnalyzingTradeImage);
+      ['tradeScanRetryBtn', 'backtestScanRetryBtn', 'tradeScanOpenBtn', 'backtestScanOpenBtn', 'tradeScanRetryModalBtn'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = isAnalyzingTradeImage;
+      });
+    }
 
     function sanitizeClientScanNotes(raw) {
       if (typeof raw !== 'string') return '';
@@ -12185,14 +12528,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
       if (ui.text) ui.text.textContent = '';
       if (ui.btn) ui.btn.style.display = 'none';
-      if (ui.retryBtn) ui.retryBtn.style.display = 'none';
+      if (ui.retryBtn) {
+        ui.retryBtn.style.display = 'none';
+        ui.retryBtn.textContent = 'Tekrar Dene';
+      }
       lastTradeScanCandidates[mode] = null;
       if (activeTradeScanSession && activeTradeScanSession.mode === mode) {
         activeTradeScanSession = null;
       }
     }
 
-    function setTradeScanBarState(mode, stateClass, message, showActionBtn = false, actionLabel = 'Düzenle / Kaydet', showRetryBtn = false) {
+    function setTradeScanBarState(mode, stateClass, message, showActionBtn = false, actionLabel = 'Düzenle / Kaydet', showRetryBtn = false, retryLabel = 'Tekrar Dene') {
       const ui = getScanElementsForMode(mode);
       if (!ui.bar) return;
       ui.bar.className = `upload-scan-bar visible ${stateClass}`;
@@ -12203,6 +12549,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
       if (ui.retryBtn) {
         ui.retryBtn.style.display = showRetryBtn ? 'inline-flex' : 'none';
+        ui.retryBtn.textContent = retryLabel;
       }
     }
 
@@ -12215,29 +12562,38 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     function inspectTradeScanCoverage(prefix, extracted) {
-      const missing = [];
+      const errors = [];
+      const uncertain = [];
       const warnings = {};
+
+      const addError = (key, msg) => {
+        if (!errors.includes(key)) errors.push(key);
+        if (msg) warnings[key] = msg;
+      };
+      const addUncertain = (key, msg) => {
+        if (errors.includes(key)) return;
+        if (!uncertain.includes(key)) uncertain.push(key);
+        if (msg && !warnings[key]) warnings[key] = msg;
+      };
 
       const pairVal = (document.getElementById(`${prefix}pair`)?.value || '').trim();
       if (!pairVal || !extracted?.pair) {
-        missing.push('pair');
+        addError('pair', 'Parite okunamadı');
       }
 
       if (!extracted?.direction) {
-        missing.push('direction');
+        addError('direction', 'Yön okunamadı');
       }
 
       const dtVal = (document.getElementById(`${prefix}datetime`)?.value || '').trim();
       if (!dtVal || (!extracted?.datetime && !extracted?.time)) {
-        missing.push('datetime');
-        warnings.datetime = 'Tarih & saat okunamadı';
+        addError('datetime', 'Tarih & saat okunamadı');
       } else if (!extracted?.datetime && extracted?.time) {
-        missing.push('datetime');
-        warnings.datetime = `Saat (${extracted.time}) okundu, tarihi kontrol edin`;
+        addUncertain('datetime', `Saat (${extracted.time}) okundu, tarihi kontrol edin`);
       }
 
       if (!extracted?.timeframe) {
-        missing.push('timeframe');
+        addError('timeframe', 'Timeframe okunamadı');
       }
 
       const entryVal = parseOptionalNumber(document.getElementById(`${prefix}entry`)?.value);
@@ -12247,9 +12603,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const dirVal = document.getElementById(`${prefix}direction`)?.value || 'Long';
       const resVal = document.getElementById(`${prefix}result`)?.value || 'Win';
 
-      if (entryVal === null) missing.push('entry');
-      if (exitVal === null) missing.push('exit');
-      if (slVal === null) missing.push('sl');
+      if (entryVal === null) addError('entry', 'Entry okunamadı');
+      if (exitVal === null) addError('exit', 'Exit okunamadı');
+      if (slVal === null) addError('sl', 'Stop Loss okunamadı');
 
       const lvlCheck = validateTradeDirectionLevelsData({
         entry: entryVal,
@@ -12258,16 +12614,37 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         direction: dirVal,
         result: resVal
       });
-      if (!lvlCheck.valid && lvlCheck.field && !missing.includes(lvlCheck.field)) {
-        missing.push(lvlCheck.field);
-        warnings[lvlCheck.field] = lvlCheck.message;
+      if (!lvlCheck.valid && lvlCheck.field) {
+        addError(lvlCheck.field, lvlCheck.message);
       }
+
+      const inspectedPriceR = computeRealizedRFromPrices(entryVal, exitVal, slVal, dirVal);
+      const balKey = prefix === 'bt-' ? 'backtestAccountBalance' : 'mainAccountBalance';
+      const hasAccountBalance = Boolean(parsePositiveBalance(AppState.settings[balKey]));
 
       if (pnlVal === null) {
-        missing.push('pnl');
+        if (inspectedPriceR !== null && !hasAccountBalance) {
+          addUncertain('pnl', 'Hesap tanımlanınca R:R’a göre hesaplanacak');
+        } else {
+          addError('pnl', 'Kâr / Zarar okunamadı');
+        }
       }
 
-      return { missing, warnings };
+      if (Array.isArray(extracted?.uncertainFields)) {
+        extracted.uncertainFields.forEach((rawKey) => {
+          const k = typeof rawKey === 'string' ? rawKey.trim() : '';
+          if (!k) return;
+          addUncertain(k, 'AI emin değil — kontrol edin');
+        });
+      }
+
+      return {
+        missing: errors,
+        errors,
+        uncertain,
+        needsStrategy: true,
+        warnings
+      };
     }
 
     function applyExtractedTradeToForm(mode, extracted) {
@@ -12346,7 +12723,18 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         }
       }
 
-      if (extracted.pnl !== null && Number.isFinite(extracted.pnl) && calcCtrl && typeof calcCtrl.applyManualPnl === 'function') {
+      const effectiveDir = dirEl?.value || extracted.direction || 'Long';
+      const extractedEntry = parseOptionalNumber(entryEl?.value);
+      const extractedExit = parseOptionalNumber(exitEl?.value);
+      const extractedSl = parseOptionalNumber(slEl?.value);
+      const extractedPriceR = computeRealizedRFromPrices(extractedEntry, extractedExit, extractedSl, effectiveDir);
+
+      scanPnlUserEdited = false;
+
+      if (extractedPriceR !== null && calcCtrl && typeof calcCtrl.forceAutoCalculateFromPrices === 'function') {
+        if (pnlEl) pnlEl.value = '';
+        calcCtrl.forceAutoCalculateFromPrices();
+      } else if (extracted.pnl !== null && Number.isFinite(extracted.pnl) && calcCtrl && typeof calcCtrl.applyManualPnl === 'function') {
         calcCtrl.applyManualPnl(extracted.pnl);
       } else if (calcCtrl && typeof calcCtrl.refresh === 'function') {
         calcCtrl.refresh();
@@ -12355,7 +12743,68 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
     }
 
-    function updateTradeScanModalLiveCalc() {
+    const SCAN_FIELD_SPECS = [
+      { key: 'pair', id: 'scan-pair', label: 'Parite', type: 'text' },
+      { key: 'direction', id: 'scan-direction', label: 'Yön', type: 'text' },
+      { key: 'datetime', id: 'scan-datetime', label: 'Tarih & Saat', type: 'text' },
+      { key: 'timeframe', id: 'scan-timeframe', label: 'Timeframe', type: 'text' },
+      { key: 'session', id: 'scan-session', label: 'Seans', type: 'text' },
+      { key: 'strategy', id: 'scan-strategy', label: 'Strateji / Model', type: 'text' },
+      { key: 'entry', id: 'scan-entry', label: 'Giriş (Entry)', type: 'number' },
+      { key: 'exit', id: 'scan-exit', label: 'Çıkış (Exit)', type: 'number' },
+      { key: 'sl', id: 'scan-sl', label: 'Stop Loss', type: 'number' },
+      { key: 'risk', id: 'scan-risk', label: 'Risk (%)', type: 'positive' },
+      { key: 'pnl', id: 'scan-pnl', label: 'Kâr / Zarar ($)', type: 'number' },
+      { key: 'result', id: 'scan-result', label: 'Sonuç', type: 'text' }
+    ];
+
+    function validateSingleScanField(key) {
+      const spec = SCAN_FIELD_SPECS.find((s) => s.key === key);
+      if (!spec) return { valid: true };
+      const el = document.getElementById(spec.id);
+      if (!el) return { valid: true };
+
+      const raw = String(el.value || '').trim();
+      if (!raw) {
+        if (key === 'pnl') {
+          const entry = parseOptionalNumber(document.getElementById('scan-entry')?.value);
+          const exit = parseOptionalNumber(document.getElementById('scan-exit')?.value);
+          const sl = parseOptionalNumber(document.getElementById('scan-sl')?.value);
+          const direction = document.getElementById('scan-direction')?.value || 'Long';
+          const modalPriceR = computeRealizedRFromPrices(entry, exit, sl, direction);
+          const modeBalKey = activeTradeScanSession?.mode === 'backtest' ? 'backtestAccountBalance' : 'mainAccountBalance';
+          const hasAccountBalance = Boolean(parsePositiveBalance(AppState.settings[modeBalKey]));
+          if (modalPriceR !== null && !hasAccountBalance) {
+            return { valid: true };
+          }
+        }
+        return { valid: false, message: `${spec.label} boş bırakılamaz` };
+      }
+      if (spec.type === 'number' && parseOptionalNumber(raw) === null) {
+        return { valid: false, message: `Geçerli ${spec.label} girin` };
+      }
+      if (spec.type === 'positive' && parsePositiveBalance(raw) === null) {
+        return { valid: false, message: `${spec.label} 0'dan büyük olmalıdır` };
+      }
+
+      if (['entry', 'exit', 'sl', 'direction', 'result'].includes(key)) {
+        const entry = parseOptionalNumber(document.getElementById('scan-entry')?.value);
+        const exit = parseOptionalNumber(document.getElementById('scan-exit')?.value);
+        const sl = parseOptionalNumber(document.getElementById('scan-sl')?.value);
+        const direction = document.getElementById('scan-direction')?.value || 'Long';
+        const result = document.getElementById('scan-result')?.value || 'Win';
+        const lvlCheck = validateTradeDirectionLevelsData({ entry, exit, sl, direction, result });
+        if (!lvlCheck.valid) {
+          if (lvlCheck.field === key || key === 'direction' || key === 'result') {
+            return { valid: false, message: lvlCheck.message };
+          }
+        }
+      }
+
+      return { valid: true };
+    }
+
+    function updateTradeScanModalLiveCalc(changedKey = null) {
       if (!activeTradeScanSession) return;
       const { balanceKey } = getScanElementsForMode(activeTradeScanSession.mode);
       const balance = parsePositiveBalance(AppState.settings[balanceKey]);
@@ -12379,18 +12828,31 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         result: resEl?.value || 'Win'
       });
 
-      if (priceR !== null && oneR && oneR > 0 && document.activeElement !== pnlEl) {
+      if (priceR !== null && oneR && oneR > 0 && !scanPnlUserEdited && document.activeElement !== pnlEl) {
         const computedPnl = Number((oneR * priceR).toFixed(2));
         if (pnlEl) pnlEl.value = String(computedPnl);
-        if (resEl) {
+        if (resEl && changedKey !== 'result') {
           if (Math.abs(computedPnl) <= 1e-10) resEl.value = 'BE';
           else resEl.value = computedPnl > 0 ? 'Win' : 'Loss';
         }
+        if (Array.isArray(activeTradeScanSession.errors)) {
+          activeTradeScanSession.errors = activeTradeScanSession.errors.filter((k) => k !== 'pnl' && k !== 'result');
+          activeTradeScanSession.missing = activeTradeScanSession.errors;
+        }
+        if (Array.isArray(activeTradeScanSession.uncertain)) {
+          activeTradeScanSession.uncertain = activeTradeScanSession.uncertain.filter((k) => k !== 'pnl' && k !== 'result');
+        }
+        if (activeTradeScanSession.warnings) {
+          delete activeTradeScanSession.warnings.pnl;
+          delete activeTradeScanSession.warnings.result;
+        }
+      } else if (changedKey === 'result' && resEl?.value === 'BE' && pnlEl && !scanPnlUserEdited) {
+        pnlEl.value = '0';
       }
 
       if (hintEl) {
         const rStr = priceR !== null ? `${priceR >= 0 ? '+' : ''}${priceR.toFixed(2)}R` : '—';
-        const oneRStr = oneR ? `${curr}${oneR.toFixed(2)}` : 'Tanımsız';
+        const oneRStr = oneR ? `${curr}${oneR.toFixed(2)}` : 'Hesap tanımlanınca hesaplanır';
         if (!lvlCheck.valid) {
           hintEl.innerHTML = `<span style="color: #FB7185;">${escapeHtml(lvlCheck.message)}</span><span>1R: ${escapeHtml(oneRStr)}</span>`;
         } else {
@@ -12399,9 +12861,212 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
     }
 
+    function renderTradeScanModalBadges(session) {
+      const badgesEl = document.getElementById('tradeScanBadges');
+      if (!badgesEl || !session) return;
+      const errSet = new Set(session.errors || session.missing || []);
+      const uncSet = new Set(session.uncertain || []);
+      const fieldLabels = {
+        pair: 'Parite',
+        direction: 'Yön',
+        datetime: 'Tarih & Saat',
+        timeframe: 'Timeframe',
+        strategy: 'Strateji',
+        entry: 'Entry',
+        exit: 'Exit',
+        sl: 'Stop Loss',
+        pnl: 'Kâr / Zarar'
+      };
+      badgesEl.innerHTML = Object.entries(fieldLabels).map(([key, label]) => {
+        if (key === 'strategy') {
+          if (session.needsStrategy) {
+            return `<span class="trade-scan-badge uncertain">${escapeHtml(label)}: Seç / Onayla</span>`;
+          }
+          return `<span class="trade-scan-badge ok">${escapeHtml(label)} ✓</span>`;
+        }
+        if (errSet.has(key)) {
+          const note = session.warnings?.[key];
+          const text = note ? `${label}: ${note}` : `${label} ✗`;
+          return `<span class="trade-scan-badge miss">${escapeHtml(text)}</span>`;
+        }
+        if (uncSet.has(key)) {
+          return `<span class="trade-scan-badge uncertain">${escapeHtml(label)}: Emin Değil</span>`;
+        }
+        return `<span class="trade-scan-badge ok">${escapeHtml(label)} ✓</span>`;
+      }).join('');
+    }
+
+    function refreshTradeScanModalUI() {
+      const session = activeTradeScanSession;
+      if (!session) return;
+
+      const errSet = new Set(session.errors || session.missing || []);
+      const uncSet = new Set((session.uncertain || []).filter((k) => !errSet.has(k)));
+      session.errors = Array.from(errSet);
+      session.missing = session.errors;
+      session.uncertain = Array.from(uncSet);
+
+      if (session.errors.length === 0 && session.apiError) {
+        const allOk = SCAN_FIELD_SPECS.every((s) => validateSingleScanField(s.key).valid);
+        if (allOk) {
+          session.apiError = null;
+        }
+      }
+
+      const hasErrors = session.errors.length > 0 || Boolean(session.apiError);
+      const hasReviewItems = session.uncertain.length > 0 || Boolean(session.needsStrategy);
+
+      const titleEl = document.getElementById('tradeScanModalTitle');
+      if (titleEl) {
+        titleEl.textContent = hasErrors
+          ? 'Eksik / Hatalı Verileri Düzelt ve Kaydet'
+          : 'Görsel Verilerini Kontrol Et ve Kaydet';
+      }
+
+      const bannerEl = document.getElementById('tradeScanBanner');
+      if (bannerEl) {
+        bannerEl.className = `trade-scan-banner ${hasErrors ? 'has-error' : (hasReviewItems ? 'has-missing' : '')}`;
+        if (session.apiError) {
+          bannerEl.textContent = `${session.apiError} Bilgileri buradan tamamlayıp onaylayabilir veya Tekrar Tara diyebilirsiniz.`;
+        } else if (session.errors.length > 0) {
+          bannerEl.textContent = 'Kırmızı işaretli alanları düzeltin veya mevcut değeri doğruysa yanındaki Onayla butonuna basın.';
+        } else if (hasReviewItems) {
+          bannerEl.textContent = 'Tüm zorunlu alanlar hazır. Sarı işaretli alanları kontrol edip Onayla veya doğrudan Kaydet\'e basabilirsiniz.';
+        } else {
+          bannerEl.textContent = 'Tüm alanlar doğrulandı ve onaylandı. Doğrudan Kaydet\'e basarak kaydedebilirsiniz.';
+        }
+      }
+
+      renderTradeScanModalBadges(session);
+
+      SCAN_FIELD_SPECS.forEach(({ key }) => {
+        const inputEl = document.getElementById(`scan-${key}`);
+        const tagEl = document.getElementById(`scan-miss-${key}`);
+        const confirmBtn = document.getElementById(`scan-confirm-${key}`);
+        const isErr = errSet.has(key);
+        const isUnc = !isErr && (uncSet.has(key) || (key === 'strategy' && Boolean(session.needsStrategy)));
+
+        if (inputEl) {
+          inputEl.classList.toggle('trade-scan-field-missing', isErr);
+          inputEl.classList.toggle('trade-scan-field-uncertain', isUnc);
+        }
+        if (tagEl) {
+          tagEl.classList.toggle('visible', isErr || isUnc);
+          tagEl.classList.toggle('uncertain', isUnc);
+          if (isErr) {
+            tagEl.textContent = session.warnings?.[key] || 'Okunamadı';
+          } else if (isUnc) {
+            tagEl.textContent = key === 'strategy' ? 'Seç / Onayla' : (session.warnings?.[key] || 'Emin değil');
+          }
+        }
+        if (confirmBtn) {
+          confirmBtn.classList.toggle('visible', isErr || isUnc);
+        }
+      });
+
+      const confirmAllBtn = document.getElementById('tradeScanConfirmAllBtn');
+      if (confirmAllBtn) {
+        confirmAllBtn.style.display = (session.errors.length > 0 || hasReviewItems) ? 'inline-flex' : 'none';
+      }
+
+      const retryModalBtn = document.getElementById('tradeScanRetryModalBtn');
+      if (retryModalBtn) {
+        retryModalBtn.style.display = session.apiError && lastTradeScanCandidates[session.mode] ? 'inline-flex' : 'none';
+      }
+
+      const saveBtn = document.getElementById('tradeScanSaveNowBtn');
+      if (saveBtn) {
+        saveBtn.textContent = hasErrors ? 'Düzenle ve Kaydet' : 'Kaydet';
+      }
+    }
+
+    function confirmScanField(key) {
+      if (!activeTradeScanSession) return false;
+      const check = validateSingleScanField(key);
+      if (!check.valid) {
+        if (!Array.isArray(activeTradeScanSession.errors)) activeTradeScanSession.errors = [];
+        if (!activeTradeScanSession.errors.includes(key)) {
+          activeTradeScanSession.errors.push(key);
+        }
+        activeTradeScanSession.uncertain = (activeTradeScanSession.uncertain || []).filter((k) => k !== key);
+        activeTradeScanSession.warnings = { ...(activeTradeScanSession.warnings || {}), [key]: check.message };
+        refreshTradeScanModalUI();
+        showToast(check.message, 'error');
+        const focusEl = document.getElementById(`scan-${key}`);
+        if (focusEl) {
+          focusEl.focus();
+          if (typeof focusEl.select === 'function') focusEl.select();
+        }
+        return false;
+      }
+
+      activeTradeScanSession.errors = (activeTradeScanSession.errors || []).filter((k) => k !== key);
+      activeTradeScanSession.missing = activeTradeScanSession.errors;
+      activeTradeScanSession.uncertain = (activeTradeScanSession.uncertain || []).filter((k) => k !== key);
+      if (key === 'strategy') activeTradeScanSession.needsStrategy = false;
+      if (activeTradeScanSession.warnings) delete activeTradeScanSession.warnings[key];
+
+      refreshTradeScanModalUI();
+      return true;
+    }
+
+    function confirmAllValidScanFields() {
+      if (!activeTradeScanSession) return;
+      const flagged = new Set([
+        ...(activeTradeScanSession.errors || []),
+        ...(activeTradeScanSession.uncertain || []),
+        ...(activeTradeScanSession.needsStrategy ? ['strategy'] : [])
+      ]);
+      if (flagged.size === 0) {
+        refreshTradeScanModalUI();
+        return;
+      }
+
+      const remainingErrors = [];
+      let confirmedCount = 0;
+
+      for (const key of flagged) {
+        const check = validateSingleScanField(key);
+        if (check.valid) {
+          confirmedCount++;
+          activeTradeScanSession.errors = (activeTradeScanSession.errors || []).filter((k) => k !== key);
+          activeTradeScanSession.uncertain = (activeTradeScanSession.uncertain || []).filter((k) => k !== key);
+          if (key === 'strategy') activeTradeScanSession.needsStrategy = false;
+          if (activeTradeScanSession.warnings) delete activeTradeScanSession.warnings[key];
+        } else {
+          remainingErrors.push({ key, message: check.message });
+          if (!Array.isArray(activeTradeScanSession.errors)) activeTradeScanSession.errors = [];
+          if (!activeTradeScanSession.errors.includes(key)) activeTradeScanSession.errors.push(key);
+          activeTradeScanSession.uncertain = (activeTradeScanSession.uncertain || []).filter((k) => k !== key);
+          activeTradeScanSession.warnings = { ...(activeTradeScanSession.warnings || {}), [key]: check.message };
+        }
+      }
+
+      activeTradeScanSession.missing = activeTradeScanSession.errors || [];
+      refreshTradeScanModalUI();
+
+      if (remainingErrors.length > 0) {
+        const first = remainingErrors[0];
+        showToast(
+          confirmedCount > 0
+            ? `${confirmedCount} alan onaylandı; ancak ${first.message}.`
+            : first.message,
+          'warning'
+        );
+        const focusEl = document.getElementById(`scan-${first.key}`);
+        if (focusEl) {
+          focusEl.focus();
+          if (typeof focusEl.select === 'function') focusEl.select();
+        }
+      } else {
+        showToast('Mevcut tüm alanlar onaylandı.', 'success');
+      }
+    }
+
     function openTradeScanReviewModal(session) {
       if (!session) return;
       activeTradeScanSession = session;
+      scanPnlUserEdited = false;
       const { prefix } = getScanElementsForMode(session.mode);
       const backdrop = document.getElementById('tradeScanReviewBackdrop');
       if (!backdrop) return;
@@ -12433,66 +13098,88 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const thumbImg = document.getElementById('tradeScanThumbImg');
       if (thumbImg) thumbImg.src = session.previewUrl || '';
 
-      const missingSet = new Set(session.missing || []);
-      const titleEl = document.getElementById('tradeScanModalTitle');
-      if (titleEl) {
-        titleEl.textContent = missingSet.size > 0
-          ? 'Eksik Verileri Tamamla ve Kaydet'
-          : 'Görsel Verilerini İncele ve Kaydet';
-      }
-
-      const bannerEl = document.getElementById('tradeScanBanner');
-      if (bannerEl) {
-        bannerEl.className = `trade-scan-banner ${missingSet.size > 0 ? 'has-missing' : ''}`;
-        bannerEl.textContent = missingSet.size > 0
-          ? 'Görselden okunan alanlar forma aktarıldı. İşaretli eksik alanları doldurup tek tıkla kaydedebilirsiniz.'
-          : 'Tüm alanlar görselden başarıyla okundu. Gerekirse düzenleyip doğrudan kaydedebilirsiniz.';
-      }
-
-      const fieldLabels = {
-        pair: 'Parite',
-        direction: 'Yön',
-        datetime: 'Tarih & Saat',
-        timeframe: 'Timeframe',
-        entry: 'Entry',
-        exit: 'Exit',
-        sl: 'Stop Loss',
-        pnl: 'Kâr / Zarar'
-      };
-
-      const badgesEl = document.getElementById('tradeScanBadges');
-      if (badgesEl) {
-        badgesEl.innerHTML = Object.entries(fieldLabels).map(([key, label]) => {
-          const isMiss = missingSet.has(key);
-          const customNote = session.warnings?.[key];
-          const text = isMiss ? (customNote ? `${label}: ${customNote}` : `${label} ✗`) : `${label} ✓`;
-          return `<span class="trade-scan-badge ${isMiss ? 'miss' : 'ok'}">${escapeHtml(text)}</span>`;
-        }).join('');
-      }
-
-      ['pair', 'direction', 'datetime', 'timeframe', 'session', 'entry', 'exit', 'sl', 'pnl', 'result'].forEach((k) => {
-        const inputEl = document.getElementById(`scan-${k}`);
-        const tagEl = document.getElementById(`scan-miss-${k}`);
-        const isMiss = missingSet.has(k);
-        if (inputEl) inputEl.classList.toggle('trade-scan-field-missing', isMiss);
-        if (tagEl) {
-          tagEl.classList.toggle('visible', isMiss);
-          tagEl.textContent = session.warnings?.[k] || 'Okunamadı';
-        }
-      });
-
       updateTradeScanModalLiveCalc();
+      refreshTradeScanModalUI();
       backdrop.classList.add('active');
 
-      const firstMissing = session.missing?.[0];
-      if (firstMissing) {
-        const focusEl = document.getElementById(`scan-${firstMissing}`);
+      const errList = session.errors || [];
+      const uncList = session.uncertain || [];
+      const firstFocusKey = errList[0] || uncList[0] || (session.needsStrategy ? 'strategy' : null);
+      if (firstFocusKey) {
+        const focusEl = document.getElementById(`scan-${firstFocusKey}`);
         if (focusEl) setTimeout(() => focusEl.focus(), 60);
       }
     }
 
+    function validateScanModalBeforeSave() {
+      const modalErrors = [];
+      const modalWarnings = {};
+
+      const entry = parseOptionalNumber(document.getElementById('scan-entry')?.value);
+      const exit = parseOptionalNumber(document.getElementById('scan-exit')?.value);
+      const sl = parseOptionalNumber(document.getElementById('scan-sl')?.value);
+      const direction = document.getElementById('scan-direction')?.value || 'Long';
+      const result = document.getElementById('scan-result')?.value || 'Win';
+      const modalPriceR = computeRealizedRFromPrices(entry, exit, sl, direction);
+      const modeBalKey = activeTradeScanSession?.mode === 'backtest' ? 'backtestAccountBalance' : 'mainAccountBalance';
+      const hasAccountBalance = Boolean(parsePositiveBalance(AppState.settings[modeBalKey]));
+
+      for (const item of SCAN_FIELD_SPECS) {
+        const el = document.getElementById(item.id);
+        if (!el) continue;
+        const raw = String(el.value || '').trim();
+        let valid = true;
+        if (item.key === 'pnl' && !raw && modalPriceR !== null && !hasAccountBalance) {
+          valid = true;
+        } else if (!raw) valid = false;
+        else if (item.type === 'number') valid = parseOptionalNumber(raw) !== null;
+        else if (item.type === 'positive') valid = parsePositiveBalance(raw) !== null;
+        if (!valid) {
+          modalErrors.push(item.key);
+          modalWarnings[item.key] = `${item.label} gerekli`;
+        }
+      }
+
+      const lvlCheck = validateTradeDirectionLevelsData({ entry, exit, sl, direction, result });
+      if (!lvlCheck.valid) {
+        const lvlKey = lvlCheck.field || 'exit';
+        if (!modalErrors.includes(lvlKey)) modalErrors.push(lvlKey);
+        modalWarnings[lvlKey] = lvlCheck.message;
+      }
+
+      if (modalErrors.length > 0) {
+        if (activeTradeScanSession) {
+          activeTradeScanSession.errors = modalErrors;
+          activeTradeScanSession.missing = modalErrors;
+          activeTradeScanSession.warnings = { ...(activeTradeScanSession.warnings || {}), ...modalWarnings };
+          refreshTradeScanModalUI();
+        }
+
+        const firstKey = modalErrors[0];
+        const firstMsg = modalWarnings[firstKey] || 'Lütfen işaretli alanları düzeltin.';
+        const bannerEl = document.getElementById('tradeScanBanner');
+        if (bannerEl) {
+          bannerEl.className = 'trade-scan-banner has-error';
+          bannerEl.textContent = `Kaydetmeden önce düzeltin: ${firstMsg}`;
+        }
+        showToast(firstMsg, 'error');
+        const focusEl = document.getElementById(`scan-${firstKey}`);
+        if (focusEl) {
+          focusEl.focus();
+          if (typeof focusEl.select === 'function') focusEl.select();
+        }
+        return false;
+      }
+
+      return true;
+    }
+
     function syncScanModalBackToForm(shouldSubmit = false) {
       if (!activeTradeScanSession) return;
+      if (shouldSubmit && !validateScanModalBeforeSave()) {
+        return;
+      }
+
       const { prefix, calcCtrl, form } = getScanElementsForMode(activeTradeScanSession.mode);
       const backdrop = document.getElementById('tradeScanReviewBackdrop');
 
@@ -12518,14 +13205,19 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         riskDst.dataset.userEdited = 'true';
       }
 
-      if (pnlSrc !== null && calcCtrl && typeof calcCtrl.applyManualPnl === 'function') {
-        const entryV = parseOptionalNumber(document.getElementById(`${prefix}entry`)?.value);
-        const exitV = parseOptionalNumber(document.getElementById(`${prefix}exit`)?.value);
-        const slV = parseOptionalNumber(document.getElementById(`${prefix}sl`)?.value);
-        const dirV = document.getElementById(`${prefix}direction`)?.value || 'Long';
-        const priceR = computeRealizedRFromPrices(entryV, exitV, slV, dirV);
-        if (priceR !== null && typeof calcCtrl.refresh === 'function') {
-          calcCtrl.refresh();
+      const entryV = parseOptionalNumber(document.getElementById(`${prefix}entry`)?.value);
+      const exitV = parseOptionalNumber(document.getElementById(`${prefix}exit`)?.value);
+      const slV = parseOptionalNumber(document.getElementById(`${prefix}sl`)?.value);
+      const dirV = document.getElementById(`${prefix}direction`)?.value || 'Long';
+      const priceR = computeRealizedRFromPrices(entryV, exitV, slV, dirV);
+
+      if (priceR !== null && !scanPnlUserEdited && calcCtrl && typeof calcCtrl.forceAutoCalculateFromPrices === 'function') {
+        const pnlDst = document.getElementById(`${prefix}pnl`);
+        if (pnlDst) pnlDst.value = '';
+        calcCtrl.forceAutoCalculateFromPrices();
+      } else if (pnlSrc !== null && calcCtrl && typeof calcCtrl.applyManualPnl === 'function') {
+        if (priceR !== null && typeof calcCtrl.forceAutoCalculateFromPrices === 'function') {
+          calcCtrl.forceAutoCalculateFromPrices();
           const autoPnl = parseOptionalNumber(document.getElementById(`${prefix}pnl`)?.value);
           if (autoPnl === null || Math.abs(autoPnl - pnlSrc) > 0.05) {
             calcCtrl.applyManualPnl(pnlSrc);
@@ -12558,116 +13250,132 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     async function analyzeTradeImageAndPopulate(mode, scanCandidate) {
       if (!scanCandidate || !scanCandidate.dataUrl) return;
-      lastTradeScanCandidates[mode] = scanCandidate;
-      setTradeScanBarState(mode, 'scanning', 'Grafik görseli taranıyor, işlem bilgileri okunuyor...', false, 'Düzenle / Kaydet', false);
+      if (isAnalyzingTradeImage) {
+        showToast('İlk görselin analizi devam ediyor, lütfen bitmesini bekleyin.', 'warning');
+        return;
+      }
 
-      const MAX_CLIENT_ATTEMPTS = 2;
-      let lastErrorMessage = '';
-      let isNetworkFailure = false;
+      setTradeAnalysisLock(true);
+      const CLIENT_ANALYZE_TIMEOUT_MS = 30000;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), CLIENT_ANALYZE_TIMEOUT_MS);
 
-      for (let attempt = 0; attempt < MAX_CLIENT_ATTEMPTS; attempt++) {
-        if (attempt > 0) {
-          setTradeScanBarState(mode, 'scanning', 'Yapay zekâ servisi yoğun, otomatik yeniden deneniyor...', false, 'Düzenle / Kaydet', false);
-          await new Promise((resolve) => setTimeout(resolve, 1100));
-        }
+      try {
+        lastTradeScanCandidates[mode] = scanCandidate;
+        setTradeScanBarState(mode, 'scanning', 'Grafik görseli taranıyor, işlem bilgileri okunuyor...', false, 'Düzenle / Kaydet', false);
+
+        let lastErrorMessage = '';
+        let isNetworkOrTimeout = false;
 
         try {
           const response = await fetch('/api/analyze-trade-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
             body: JSON.stringify({
               imageBase64: scanCandidate.dataUrl,
-              mimeType: scanCandidate.mimeType || 'image/png',
+              mimeType: scanCandidate.mimeType || 'image/jpeg',
               mode
             })
           });
 
           const payload = await response.json().catch(() => ({}));
           if (!response.ok || !payload || !payload.extracted) {
-            const isRetryable = [502, 503, 504].includes(response.status) || payload?.retryable === true;
             lastErrorMessage = payload?.error || 'Görsel otomatik okunamadı. Tekrar deneyebilir veya bilgileri elle girebilirsiniz.';
-            isNetworkFailure = false;
-            if (isRetryable && attempt < MAX_CLIENT_ATTEMPTS - 1) {
-              continue;
-            }
-            setTradeScanBarState(mode, 'error', lastErrorMessage, true, 'Elle Tamamla', Boolean(lastTradeScanCandidates[mode]));
-            activeTradeScanSession = {
+            isNetworkOrTimeout = response.status === 504 || response.status === 408;
+          } else {
+            const { extracted } = payload;
+            applyExtractedTradeToForm(mode, extracted);
+            const ui = getScanElementsForMode(mode);
+            const coverage = inspectTradeScanCoverage(ui.prefix, extracted);
+
+            const session = {
               mode,
               previewUrl: scanCandidate.previewUrl || scanCandidate.dataUrl,
-              extracted: {},
-              missing: ['pair', 'datetime', 'entry', 'exit', 'sl', 'pnl'],
-              warnings: {}
+              extracted,
+              missing: coverage.errors,
+              errors: coverage.errors,
+              uncertain: coverage.uncertain,
+              needsStrategy: coverage.needsStrategy,
+              apiError: null,
+              warnings: coverage.warnings
             };
-            showToast(lastErrorMessage, 'error');
+            activeTradeScanSession = session;
+
+            if (coverage.errors.length > 0) {
+              setTradeScanBarState(
+                mode,
+                'warn',
+                `Görsel okundu; ${coverage.errors.length} zorunlu alan eksik veya düzeltme gerektiriyor.`,
+                true,
+                'Eksikleri Tamamla',
+                false
+              );
+            } else if (coverage.uncertain.length > 0) {
+              setTradeScanBarState(
+                mode,
+                'warn',
+                `Görsel okundu; ${coverage.uncertain.length} belirsiz alan ve strateji seçimi kontrol bekliyor.`,
+                true,
+                'İncele / Kaydet',
+                false
+              );
+            } else {
+              setTradeScanBarState(
+                mode,
+                'ready',
+                'Görsel okundu; strateji seçip doğrudan kaydedebilirsiniz.',
+                true,
+                'İncele / Kaydet',
+                false
+              );
+            }
+
+            openTradeScanReviewModal(session);
             return;
           }
-
-          const { extracted } = payload;
-          applyExtractedTradeToForm(mode, extracted);
-          const ui = getScanElementsForMode(mode);
-          const coverage = inspectTradeScanCoverage(ui.prefix, extracted);
-
-          const session = {
-            mode,
-            previewUrl: scanCandidate.previewUrl || scanCandidate.dataUrl,
-            extracted,
-            missing: coverage.missing,
-            warnings: coverage.warnings
-          };
-          activeTradeScanSession = session;
-
-          if (coverage.missing.length > 0) {
-            setTradeScanBarState(
-              mode,
-              'warn',
-              `Görsel okundu; ${coverage.missing.length} alan eksik veya doğrulama gerektiriyor.`,
-              true,
-              'Eksikleri Tamamla',
-              false
-            );
-            openTradeScanReviewModal(session);
-          } else {
-            setTradeScanBarState(
-              mode,
-              'ready',
-              'Görseldeki tüm alanlar otomatik dolduruldu.',
-              true,
-              'İncele / Kaydet',
-              false
-            );
-            showToast('Görsel okundu ve işlem alanları otomatik dolduruldu.', 'success');
-          }
-          return;
         } catch (err) {
-          isNetworkFailure = true;
-          lastErrorMessage = 'Görsel analiz sunucusuna ulaşılamadı. Tekrar deneyebilir veya bilgileri elle düzenleyebilirsiniz.';
-          if (attempt < MAX_CLIENT_ATTEMPTS - 1) {
-            continue;
-          }
+          isNetworkOrTimeout = true;
+          lastErrorMessage = err && err.name === 'AbortError'
+            ? 'Görsel analizi 30 saniyede tamamlanamadı. Tekrar deneyebilir veya bilgileri elle girebilirsiniz.'
+            : 'Görsel analiz sunucusuna ulaşılamadı. Tekrar deneyebilir veya bilgileri elle düzenleyebilirsiniz.';
         }
-      }
 
-      setTradeScanBarState(
-        mode,
-        'error',
-        lastErrorMessage || 'Görsel analiz edilemedi.',
-        true,
-        'Elle Tamamla',
-        Boolean(lastTradeScanCandidates[mode])
-      );
-      activeTradeScanSession = {
-        mode,
-        previewUrl: scanCandidate.previewUrl || scanCandidate.dataUrl,
-        extracted: {},
-        missing: ['pair', 'datetime', 'entry', 'exit', 'sl', 'pnl'],
-        warnings: {}
-      };
-      showToast(lastErrorMessage || 'Görsel analiz edilemedi.', isNetworkFailure ? 'warning' : 'error');
+        setTradeScanBarState(
+          mode,
+          'error',
+          lastErrorMessage || 'Görsel analiz edilemedi.',
+          true,
+          'Elle Tamamla',
+          Boolean(lastTradeScanCandidates[mode]),
+          'Tekrar Dene'
+        );
+        activeTradeScanSession = {
+          mode,
+          previewUrl: scanCandidate.previewUrl || scanCandidate.dataUrl,
+          extracted: {},
+          missing: ['pair', 'datetime', 'entry', 'exit', 'sl', 'pnl'],
+          errors: ['pair', 'datetime', 'entry', 'exit', 'sl', 'pnl'],
+          uncertain: [],
+          needsStrategy: true,
+          apiError: lastErrorMessage || 'Görsel analiz edilemedi.',
+          warnings: {}
+        };
+        showToast(lastErrorMessage || 'Görsel analiz edilemedi.', isNetworkOrTimeout ? 'warning' : 'error');
+        openTradeScanReviewModal(activeTradeScanSession);
+      } finally {
+        clearTimeout(timeoutId);
+        setTradeAnalysisLock(false);
+      }
     }
 
     document.getElementById('tradeScanRetryBtn')?.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
+      if (isAnalyzingTradeImage) {
+        showToast('İlk görselin analizi devam ediyor, lütfen bitmesini bekleyin.', 'warning');
+        return;
+      }
       if (lastTradeScanCandidates.journal) {
         analyzeTradeImageAndPopulate('journal', lastTradeScanCandidates.journal);
       }
@@ -12676,8 +13384,25 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     document.getElementById('backtestScanRetryBtn')?.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
+      if (isAnalyzingTradeImage) {
+        showToast('İlk görselin analizi devam ediyor, lütfen bitmesini bekleyin.', 'warning');
+        return;
+      }
       if (lastTradeScanCandidates.backtest) {
         analyzeTradeImageAndPopulate('backtest', lastTradeScanCandidates.backtest);
+      }
+    });
+
+    document.getElementById('tradeScanRetryModalBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (isAnalyzingTradeImage) {
+        showToast('İlk görselin analizi devam ediyor, lütfen bitmesini bekleyin.', 'warning');
+        return;
+      }
+      if (activeTradeScanSession && lastTradeScanCandidates[activeTradeScanSession.mode]) {
+        const mode = activeTradeScanSession.mode;
+        document.getElementById('tradeScanReviewBackdrop')?.classList.remove('active');
+        analyzeTradeImageAndPopulate(mode, lastTradeScanCandidates[mode]);
       }
     });
 
@@ -12722,15 +13447,87 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       syncScanModalBackToForm(true);
     });
 
-    ['scan-pair', 'scan-direction', 'scan-datetime', 'scan-timeframe', 'scan-session', 'scan-entry', 'scan-exit', 'scan-sl', 'scan-risk', 'scan-pnl', 'scan-result'].forEach((id) => {
+    document.getElementById('tradeScanConfirmAllBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      confirmAllValidScanFields();
+    });
+
+    document.querySelectorAll('#tradeScanReviewBackdrop .trade-scan-confirm-btn[data-confirm-field]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const key = btn.getAttribute('data-confirm-field');
+        if (key) confirmScanField(key);
+      });
+    });
+
+    ['scan-pair', 'scan-direction', 'scan-datetime', 'scan-timeframe', 'scan-session', 'scan-strategy', 'scan-entry', 'scan-exit', 'scan-sl', 'scan-risk', 'scan-pnl', 'scan-result'].forEach((id) => {
       const el = document.getElementById(id);
       if (!el) return;
-      const clearMissingAndCalc = () => {
-        el.classList.remove('trade-scan-field-missing');
+      const clearMissingAndCalc = (ev) => {
         const key = id.replace(/^scan-/, '');
-        const tagEl = document.getElementById(`scan-miss-${key}`);
-        if (tagEl) tagEl.classList.remove('visible');
-        updateTradeScanModalLiveCalc();
+        if (key === 'pnl' && ev && (ev.type === 'input' || document.activeElement === el)) {
+          scanPnlUserEdited = true;
+        } else if (['entry', 'exit', 'sl', 'risk', 'direction'].includes(key)) {
+          scanPnlUserEdited = false;
+        }
+        updateTradeScanModalLiveCalc(key);
+
+        if (activeTradeScanSession) {
+          if (key === 'strategy') {
+            activeTradeScanSession.needsStrategy = false;
+          }
+
+          const check = validateSingleScanField(key);
+          if (check.valid) {
+            if (Array.isArray(activeTradeScanSession.errors)) {
+              activeTradeScanSession.errors = activeTradeScanSession.errors.filter((k) => k !== key);
+              activeTradeScanSession.missing = activeTradeScanSession.errors;
+            }
+            if (Array.isArray(activeTradeScanSession.uncertain)) {
+              activeTradeScanSession.uncertain = activeTradeScanSession.uncertain.filter((k) => k !== key);
+            }
+            if (activeTradeScanSession.warnings) delete activeTradeScanSession.warnings[key];
+          } else {
+            if (!Array.isArray(activeTradeScanSession.errors)) activeTradeScanSession.errors = [];
+            if (!activeTradeScanSession.errors.includes(key)) {
+              activeTradeScanSession.errors.push(key);
+            }
+            activeTradeScanSession.missing = activeTradeScanSession.errors;
+            activeTradeScanSession.uncertain = (activeTradeScanSession.uncertain || []).filter((k) => k !== key);
+            activeTradeScanSession.warnings = { ...(activeTradeScanSession.warnings || {}), [key]: check.message };
+          }
+
+          if (['entry', 'exit', 'sl', 'direction', 'result'].includes(key)) {
+            const entry = parseOptionalNumber(document.getElementById('scan-entry')?.value);
+            const exit = parseOptionalNumber(document.getElementById('scan-exit')?.value);
+            const sl = parseOptionalNumber(document.getElementById('scan-sl')?.value);
+            const dir = document.getElementById('scan-direction')?.value || 'Long';
+            const res = document.getElementById('scan-result')?.value || 'Win';
+            const lvlCheck = validateTradeDirectionLevelsData({ entry, exit, sl, direction: dir, result: res });
+
+            if (lvlCheck.valid) {
+              ['entry', 'exit', 'sl'].forEach((lvlKey) => {
+                const subCheck = validateSingleScanField(lvlKey);
+                if (subCheck.valid && Array.isArray(activeTradeScanSession.errors)) {
+                  activeTradeScanSession.errors = activeTradeScanSession.errors.filter((k) => k !== lvlKey);
+                  activeTradeScanSession.missing = activeTradeScanSession.errors;
+                  if (activeTradeScanSession.warnings) delete activeTradeScanSession.warnings[lvlKey];
+                }
+              });
+            } else if (lvlCheck.field) {
+              const targetKey = lvlCheck.field;
+              if (!Array.isArray(activeTradeScanSession.errors)) activeTradeScanSession.errors = [];
+              if (!activeTradeScanSession.errors.includes(targetKey)) {
+                activeTradeScanSession.errors.push(targetKey);
+              }
+              activeTradeScanSession.missing = activeTradeScanSession.errors;
+              activeTradeScanSession.uncertain = (activeTradeScanSession.uncertain || []).filter((k) => k !== targetKey);
+              activeTradeScanSession.warnings = { ...(activeTradeScanSession.warnings || {}), [targetKey]: lvlCheck.message };
+            }
+          }
+
+          refreshTradeScanModalUI();
+        }
       };
       el.addEventListener('input', clearMissingAndCalc);
       el.addEventListener('change', clearMissingAndCalc);
@@ -13481,10 +14278,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         saveSettingsState(true);
         closeAccountSetupModal(false);
         showToast('Hesap büyüklükleri kaydedildi.', 'success');
-        if (resumeContext === 'journal' && tradeForm) {
-          tradeForm.requestSubmit();
-        } else if (resumeContext === 'backtest' && backtestTradeForm) {
-          backtestTradeForm.requestSubmit();
+        if (resumeContext === 'journal') {
+          if (journalCalcCtrl && typeof journalCalcCtrl.refresh === 'function') {
+            journalCalcCtrl.refresh();
+          }
+          if (tradeForm) tradeForm.requestSubmit();
+        } else if (resumeContext === 'backtest') {
+          if (backtestCalcCtrl && typeof backtestCalcCtrl.refresh === 'function') {
+            backtestCalcCtrl.refresh();
+          }
+          if (backtestTradeForm) backtestTradeForm.requestSubmit();
         }
       });
     }

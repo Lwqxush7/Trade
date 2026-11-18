@@ -14,13 +14,15 @@ export interface ModelAttempt {
   model: string;
   thinkingLevel: ThinkingLevel | null;
   delayMs: number;
+  timeoutMs?: number;
 }
 
+export const ANALYZE_SERVER_BUDGET_MS = 26_000;
+
 export const MODEL_ATTEMPTS: readonly ModelAttempt[] = [
-  { model: 'gemini-4-hydrogen', thinkingLevel: ThinkingLevel.MEDIUM, delayMs: 0 },
-  { model: 'gemini-4-hydrogen', thinkingLevel: ThinkingLevel.LOW, delayMs: 650 },
-  { model: 'gemini-3.1-flash-lite', thinkingLevel: null, delayMs: 450 },
-  { model: 'gemini-3.1-flash-lite', thinkingLevel: null, delayMs: 900 },
+  { model: 'gemini-4-hydrogen', thinkingLevel: ThinkingLevel.LOW, delayMs: 0, timeoutMs: 11_500 },
+  { model: 'gemini-3.1-flash-lite', thinkingLevel: null, delayMs: 250, timeoutMs: 7_500 },
+  { model: 'gemini-3.1-flash-lite', thinkingLevel: null, delayMs: 400, timeoutMs: 6_500 },
 ];
 
 export interface GeminiErrorInfo {
@@ -68,7 +70,7 @@ export function isTransientGeminiError(err: unknown): boolean {
   const info = parseGeminiErrorInfo(err);
   if ([408, 429, 500, 502, 503, 504].includes(info.status)) return true;
   const combined = `${info.statusText} ${info.message}`;
-  return /UNAVAILABLE|RESOURCE_EXHAUSTED|DEADLINE_EXCEEDED|INTERNAL|high demand|overloaded|temporarily|try again|ECONNRESET|ETIMEDOUT|EAI_AGAIN|fetch failed|empty response/i.test(
+  return /UNAVAILABLE|RESOURCE_EXHAUSTED|DEADLINE_EXCEEDED|INTERNAL|TIMEOUT|TIMED_OUT|ABORT|high demand|overloaded|temporarily|try again|ECONNRESET|ETIMEDOUT|EAI_AGAIN|fetch failed|empty response/i.test(
     combined
   );
 }
@@ -90,6 +92,16 @@ export function formatFriendlyGeminiError(err: unknown): { status: number; error
     };
   }
   if (
+    info.status === 408 ||
+    info.status === 504 ||
+    /DEADLINE_EXCEEDED|TIMEOUT|TIMED_OUT|ABORT/i.test(combined)
+  ) {
+    return {
+      status: 504,
+      error: 'Görsel analizi 30 saniyelik zaman aşımına ulaştı. "Tekrar Dene" veya "Elle Tamamla" kullanabilirsiniz.',
+    };
+  }
+  if (
     info.status === 503 ||
     /UNAVAILABLE|high demand|overloaded|temporarily|try again/i.test(combined)
   ) {
@@ -108,31 +120,89 @@ function defaultSleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export interface RunFallbackOptions {
+  totalBudgetMs?: number;
+  parentSignal?: AbortSignal;
+}
+
 export async function runWithModelFallback<T>(
-  invokeFn: (attempt: ModelAttempt) => Promise<T>,
+  invokeFn: (attempt: ModelAttempt, signal?: AbortSignal) => Promise<T>,
   attempts: readonly ModelAttempt[] = MODEL_ATTEMPTS,
-  sleepFn: (ms: number) => Promise<void> = defaultSleep
+  sleepFn: (ms: number) => Promise<void> = defaultSleep,
+  options: RunFallbackOptions = {}
 ): Promise<{ result: T; modelUsed: string; attemptCount: number }> {
   let lastError: unknown = null;
+  const totalBudgetMs = options.totalBudgetMs ?? ANALYZE_SERVER_BUDGET_MS;
+  const startedAt = Date.now();
+
   for (let i = 0; i < attempts.length; i++) {
+    if (options.parentSignal?.aborted) {
+      throw Object.assign(new Error('Client aborted request (ABORT)'), { status: 499 });
+    }
+    const elapsedMs = Date.now() - startedAt;
+    const remainingBudgetMs = totalBudgetMs - elapsedMs;
+    if (remainingBudgetMs <= 500) {
+      throw (
+        lastError ||
+        Object.assign(new Error('Server analysis deadline exceeded (TIMEOUT)'), { status: 504 })
+      );
+    }
+
     const attempt = attempts[i];
     if (attempt.delayMs > 0) {
-      await sleepFn(attempt.delayMs);
+      const waitMs = Math.min(attempt.delayMs, Math.max(0, remainingBudgetMs - 1000));
+      if (waitMs > 0) {
+        await sleepFn(waitMs);
+      }
     }
+
+    const remainingAfterDelayMs = totalBudgetMs - (Date.now() - startedAt);
+    if (remainingAfterDelayMs <= 400) {
+      throw (
+        lastError ||
+        Object.assign(new Error('Server analysis deadline exceeded (TIMEOUT)'), { status: 504 })
+      );
+    }
+
+    const attemptTimeoutMs = Math.min(attempt.timeoutMs ?? remainingAfterDelayMs, remainingAfterDelayMs);
+    const attemptController = new AbortController();
+    let onParentAbort: (() => void) | null = null;
+    if (options.parentSignal) {
+      onParentAbort = () => attemptController.abort(options.parentSignal?.reason);
+      options.parentSignal.addEventListener('abort', onParentAbort, { once: true });
+    }
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => {
+        attemptController.abort(new Error('Attempt TIMEOUT'));
+        reject(Object.assign(new Error(`Model ${attempt.model} timed out after ${attemptTimeoutMs}ms (TIMEOUT)`), { status: 504 }));
+      }, attemptTimeoutMs);
+    });
+
     try {
-      const result = await invokeFn(attempt);
+      const result = await Promise.race([
+        invokeFn(attempt, attemptController.signal),
+        timeoutPromise,
+      ]);
       return { result, modelUsed: attempt.model, attemptCount: i + 1 };
     } catch (err) {
       lastError = err;
       const transient = isTransientGeminiError(err);
       const info = parseGeminiErrorInfo(err);
-      if (transient && i < attempts.length - 1) {
+      const timeLeft = totalBudgetMs - (Date.now() - startedAt);
+      if (transient && !options.parentSignal?.aborted && timeLeft > 1500 && i < attempts.length - 1) {
         console.warn(
           `[analyze-trade-image retry]: ${attempt.model} (${info.status} ${info.statusText || 'TRANSIENT'}), sonraki denemeye geçiliyor...`
         );
         continue;
       }
       throw err;
+    } finally {
+      if (timer) clearTimeout(timer);
+      if (options.parentSignal && onParentAbort) {
+        options.parentSignal.removeEventListener('abort', onParentAbort);
+      }
     }
   }
   throw lastError;
@@ -251,6 +321,39 @@ export function toFiniteNumber(raw: unknown): number | null {
   return null;
 }
 
+const VALID_UNCERTAIN_FIELDS = new Set([
+  'pair',
+  'direction',
+  'datetime',
+  'timeframe',
+  'session',
+  'entry',
+  'exit',
+  'sl',
+  'risk',
+  'pnl',
+  'result',
+]);
+
+export function normalizeUncertainFields(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const out = new Set<string>();
+  for (const item of raw) {
+    if (typeof item !== 'string') continue;
+    const key = item.trim();
+    if (!key) continue;
+    const lower = key.toLowerCase();
+    if (lower === 'date' || lower === 'time' || lower === 'datetime') {
+      out.add('datetime');
+    } else if (lower === 'riskpct' || lower === 'risk') {
+      out.add('risk');
+    } else if (VALID_UNCERTAIN_FIELDS.has(lower)) {
+      out.add(lower);
+    }
+  }
+  return Array.from(out);
+}
+
 export function sanitizeTradeNotes(raw: unknown): string {
   if (typeof raw !== 'string') return '';
   let text = raw.trim();
@@ -302,7 +405,12 @@ function buildSystemInstruction(): string {
     '3. İŞLEM NOTLARI (notes ALANI) — KESİN KURALLAR:',
     '- ASLA "Kullanıcı", "Trader", "Yatırımcı" ifadelerini veya "...kurmuş", "...açmış", "...hedeflemiş" gibi üçüncü tekil anlatımı kullanma.',
     '- ASLA parite adını, zaman dilimini (M1, M15 vb.), yönü (Long/Short) veya R:R oranını (1:2.32 vb.) tekrar eden arka plan özet cümlesi yazma. Örneğin: "Kullanıcı, NAS100 paritesinde M1 zaman diliminde 1:2.32 risk-kazanç oranına sahip bir Short pozisyon kurmuş." GİBİ BİR CÜMLE KESİNLİKLE YASAKTIR.',
-    '- Yalnızca grafikte teknik olarak ne yapıldığını kısa, doğrudan ve edilgen işlem günlüğü diliyle 1-2 cümlede yaz (örnek: "Üst likidite alımı sonrası oluşan FVG bölgesinden tepkiyle işleme girildi. Son swing tepesi üzerinde stop konumlandırılıp alt likidite seviyesinde kâr alındı.").'
+    '- Yalnızca grafikte teknik olarak ne yapıldığını kısa, doğrudan ve edilgen işlem günlüğü diliyle 1-2 cümlede yaz (örnek: "Üst likidite alımı sonrası oluşan FVG bölgesinden tepkiyle işleme girildi. Son swing tepesi üzerinde stop konumlandırılıp alt likidite seviyesinde kâr alındı.").',
+    '',
+    '4. EMİN OLUNAMAYAN ALANLAR (uncertainFields ALANI):',
+    '- Görselde silik, kesik, kısmen görünen, başka etiketlerle çakışan veya tam emin olamadan çıkardığın alanların adlarını uncertainFields dizisine ekle.',
+    '- Kullanabileceğin alan adları: "pair", "direction", "date", "time", "timeframe", "session", "entry", "exit", "sl", "riskPct", "pnl", "result".',
+    '- Ekranda net ve kesin biçimde okuduğun alanları uncertainFields içine EKLEME.'
   ].join('\n');
 }
 
@@ -373,6 +481,12 @@ const TRADE_IMAGE_RESPONSE_SCHEMA = {
       type: Type.STRING,
       nullable: true,
       description: '"Kullanıcı" kelimesi ve parite/timeframe/R:R tekrarı OLMADAN yalnızca grafikte teknik olarak ne yapıldığını anlatan kısa 1-2 cümlelik not.'
+    },
+    uncertainFields: {
+      type: Type.ARRAY,
+      nullable: true,
+      items: { type: Type.STRING },
+      description: 'Görselde silik, kesik veya belirsiz olduğu için kullanıcının kontrol etmesi gereken alan adları listesi (örn. pair, direction, date, time, timeframe, session, entry, exit, sl, riskPct, pnl, result).'
     }
   }
 };
@@ -400,53 +514,69 @@ async function startServer() {
         : 'image/png';
     const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, '');
 
+    const requestController = new AbortController();
+    const onResClose = () => {
+      if (!res.writableEnded) {
+        requestController.abort(new Error('Client closed connection'));
+      }
+    };
+    res.on('close', onResClose);
+
     try {
       const ai = new GoogleGenAI({
         apiKey,
         httpOptions: {
+          timeout: ANALYZE_SERVER_BUDGET_MS,
           headers: {
             'User-Agent': 'aistudio-build',
           },
         },
       });
 
-      const { result: response } = await runWithModelFallback(async (attempt) => {
-        const config: {
-          systemInstruction: string;
-          thinkingConfig?: { thinkingLevel: ThinkingLevel };
-          responseMimeType: string;
-          responseSchema: typeof TRADE_IMAGE_RESPONSE_SCHEMA;
-        } = {
-          systemInstruction: buildSystemInstruction(),
-          responseMimeType: 'application/json',
-          responseSchema: TRADE_IMAGE_RESPONSE_SCHEMA,
-        };
-        if (attempt.thinkingLevel) {
-          config.thinkingConfig = { thinkingLevel: attempt.thinkingLevel };
-        }
-        const gen = await ai.models.generateContent({
-          model: attempt.model,
-          contents: {
-            parts: [
-              {
-                inlineData: {
-                  mimeType: safeMime,
-                  data: cleanBase64,
+      const { result: response } = await runWithModelFallback(
+        async (attempt, signal) => {
+          const config: {
+            systemInstruction: string;
+            thinkingConfig?: { thinkingLevel: ThinkingLevel };
+            responseMimeType: string;
+            responseSchema: typeof TRADE_IMAGE_RESPONSE_SCHEMA;
+            abortSignal?: AbortSignal;
+          } = {
+            systemInstruction: buildSystemInstruction(),
+            responseMimeType: 'application/json',
+            responseSchema: TRADE_IMAGE_RESPONSE_SCHEMA,
+            abortSignal: signal,
+          };
+          if (attempt.thinkingLevel) {
+            config.thinkingConfig = { thinkingLevel: attempt.thinkingLevel };
+          }
+          const gen = await ai.models.generateContent({
+            model: attempt.model,
+            contents: {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: safeMime,
+                    data: cleanBase64,
+                  },
                 },
-              },
-              {
-                text:
-                  'Bu grafik ekran görüntüsündeki tüm işlem bilgilerini çıkar. Alt X-eksenindeki saat etiketlerine, giriş/çıkış/SL fiyatlarına dikkatle bak ve notes alanında yalnızca ne yapıldığını teknik olarak yaz (kesinlikle "Kullanıcı" kelimesini ve parite/timeframe/R:R özet cümlesini yazma).',
-              },
-            ],
-          },
-          config,
-        });
-        if (!gen.text || !gen.text.trim()) {
-          throw new Error('empty response');
-        }
-        return gen;
-      });
+                {
+                  text:
+                    'Bu grafik ekran görüntüsündeki tüm işlem bilgilerini çıkar. Alt X-eksenindeki saat etiketlerine, giriş/çıkış/SL fiyatlarına dikkatle bak ve notes alanında yalnızca ne yapıldığını teknik olarak yaz (kesinlikle "Kullanıcı" kelimesini ve parite/timeframe/R:R özet cümlesini yazma).',
+                },
+              ],
+            },
+            config,
+          });
+          if (!gen.text || !gen.text.trim()) {
+            throw new Error('empty response');
+          }
+          return gen;
+        },
+        MODEL_ATTEMPTS,
+        defaultSleep,
+        { totalBudgetMs: ANALYZE_SERVER_BUDGET_MS, parentSignal: requestController.signal }
+      );
 
       const rawText = (response.text ?? '{}').trim();
       let parsed: Record<string, unknown> = {};
@@ -488,6 +618,7 @@ async function startServer() {
       }
 
       const notes = sanitizeTradeNotes(parsed.notes);
+      const uncertainFields = normalizeUncertainFields(parsed.uncertainFields);
 
       return res.json({
         extracted: {
@@ -505,9 +636,13 @@ async function startServer() {
           pnl,
           result,
           notes,
+          uncertainFields,
         },
       });
     } catch (err: unknown) {
+      if (requestController.signal.aborted || res.headersSent) {
+        return;
+      }
       const info = parseGeminiErrorInfo(err);
       const friendly = formatFriendlyGeminiError(err);
       console.error(`[analyze-trade-image error] (${info.status} ${info.statusText}):`, info.message);
@@ -515,6 +650,8 @@ async function startServer() {
         error: friendly.error,
         retryable: isTransientGeminiError(err),
       });
+    } finally {
+      res.off('close', onResClose);
     }
   });
 

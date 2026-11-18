@@ -10,6 +10,7 @@ import {
   normalizeTime,
   toFiniteNumber,
   sanitizeTradeNotes,
+  normalizeUncertainFields,
   parseGeminiErrorInfo,
   isTransientGeminiError,
   formatFriendlyGeminiError,
@@ -75,6 +76,14 @@ test('sanitizeTradeNotes keeps clean technical notes intact', () => {
   assert.equal(sanitizeTradeNotes(clean), clean);
 });
 
+test('normalizeUncertainFields maps date/time/riskPct aliases and filters invalid keys', () => {
+  assert.deepEqual(
+    normalizeUncertainFields(['date', 'time', 'riskPct', 'entry', 'unknownField', 'PAIR']),
+    ['datetime', 'risk', 'entry', 'pair']
+  );
+  assert.deepEqual(normalizeUncertainFields(null), []);
+});
+
 test('parseGeminiErrorInfo and formatFriendlyGeminiError extract nested 503 JSON cleanly', () => {
   const raw503 = new Error(
     '{"error":{"code":503,"message":"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.","status":"UNAVAILABLE"}}'
@@ -111,7 +120,7 @@ test('runWithModelFallback retries transient 503 errors and falls back to lite m
 
   assert.deepEqual(calledModels, [
     'gemini-4-hydrogen',
-    'gemini-4-hydrogen',
+    'gemini-3.1-flash-lite',
     'gemini-3.1-flash-lite',
   ]);
   assert.equal(out.modelUsed, 'gemini-3.1-flash-lite');
@@ -157,4 +166,32 @@ test('runWithModelFallback throws last transient error once all attempts exhaust
   );
   assert.equal(calls, MODEL_ATTEMPTS.length);
 });
+
+test('runWithModelFallback times out stalled primary model and succeeds on fallback', async () => {
+  const calledModels: string[] = [];
+  const noopSleep = async () => {};
+  const fastAttempts = [
+    { model: 'gemini-4-hydrogen', thinkingLevel: null, delayMs: 0, timeoutMs: 40 },
+    { model: 'gemini-3.1-flash-lite', thinkingLevel: null, delayMs: 0, timeoutMs: 500 },
+  ];
+
+  const out = await runWithModelFallback(
+    async (attempt, signal) => {
+      calledModels.push(attempt.model);
+      if (attempt.model === 'gemini-4-hydrogen') {
+        await new Promise((_resolve, reject) => {
+          signal?.addEventListener('abort', () => reject(new Error('aborted')), { once: true });
+        });
+      }
+      return { text: '{"pair":"XAUUSD"}' };
+    },
+    fastAttempts,
+    noopSleep,
+    { totalBudgetMs: 3000 }
+  );
+
+  assert.deepEqual(calledModels, ['gemini-4-hydrogen', 'gemini-3.1-flash-lite']);
+  assert.equal(out.modelUsed, 'gemini-3.1-flash-lite');
+});
+
 
