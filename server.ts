@@ -400,7 +400,7 @@ function buildSystemInstruction(): string {
     '- Yeşil bölge girişin ÜSTÜNDE ise direction="Long", yeşil bölge girişin ALTINDA ise direction="Short" olarak belirle.',
     '- Entry, Exit ve SL değerlerini yalnızca sağ fiyat eksenindeki etiketlerden veya pozisyon/emir çizgilerinden sayı olarak oku.',
     '- İşlem hedefte kapandıysa Exit=TP, stop olduysa Exit=SL olur. Long Win için exit > entry; Long Loss için exit < entry; Short Win için exit < entry; Short Loss için exit > entry kuralına uy.',
-    '- Risk (%) veya gerçekleşen PnL ($) ekranda açıkça sayısal olarak yazmıyorsa bunları tahmin etme, null döndür.',
+    '- TradingView Long/Short pozisyon kutusundaki hedef/stop mesafe yüzdelerini (örn. +0.17%, -0.09%) ASLA riskPct olarak alma. Yalnızca açıkça "Account Risk %" veya hesap risk yüzdesi yazıyorsa oku, aksi halde riskPct ve pnl için null döndür.',
     '',
     '3. İŞLEM NOTLARI (notes ALANI) — KESİN KURALLAR:',
     '- ASLA "Kullanıcı", "Trader", "Yatırımcı" ifadelerini veya "...kurmuş", "...açmış", "...hedeflemiş" gibi üçüncü tekil anlatımı kullanma.',
@@ -465,7 +465,7 @@ const TRADE_IMAGE_RESPONSE_SCHEMA = {
     riskPct: {
       type: Type.NUMBER,
       nullable: true,
-      description: 'Ekranda açıkça yazıyorsa risk yüzdesi (örn. 1 veya 0.5), yazmıyorsa null.'
+      description: 'Yalnızca açıkça hesap risk yüzdesi etiketi varsa döndür (TradingView hedef/stop fiyat mesafe yüzdelerini ASLA alma); yoksa null.'
     },
     pnl: {
       type: Type.NUMBER,

@@ -12415,6 +12415,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
        ------------------------------------------------------------- */
     let activeTradeScanSession = null;
     let scanPnlUserEdited = false;
+    let scanRiskUserEdited = false;
     let isAnalyzingTradeImage = false;
     const STORAGE_KEY_AUTO_TRADE_SCAN = 'pj_auto_trade_scan';
     let autoTradeScanEnabled = (() => {
@@ -12707,9 +12708,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         slEl.value = String(extracted.sl);
       }
 
-      if (extracted.riskPct !== null && Number.isFinite(extracted.riskPct) && extracted.riskPct > 0 && riskEl) {
-        riskEl.value = String(extracted.riskPct);
-        riskEl.dataset.userEdited = 'true';
+      if (riskEl && riskEl.dataset.userEdited !== 'true' && Number.isFinite(Number(AppState.settings.defaultRisk))) {
+        riskEl.value = String(AppState.settings.defaultRisk);
       }
 
       if (extracted.result && resEl) {
@@ -12853,8 +12853,14 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (hintEl) {
         const rStr = priceR !== null ? `${priceR >= 0 ? '+' : ''}${priceR.toFixed(2)}R` : '—';
         const oneRStr = oneR ? `${curr}${oneR.toFixed(2)}` : 'Hesap tanımlanınca hesaplanır';
+        const expectedPnlVal = (priceR !== null && oneR && oneR > 0) ? Number((oneR * priceR).toFixed(2)) : null;
+        const expectedPnlStr = expectedPnlVal !== null
+          ? `${expectedPnlVal > 0 ? '+' : (expectedPnlVal < 0 ? '-' : '')}${curr}${Math.abs(expectedPnlVal).toFixed(2)}`
+          : null;
         if (!lvlCheck.valid) {
           hintEl.innerHTML = `<span style="color: #FB7185;">${escapeHtml(lvlCheck.message)}</span><span>1R: ${escapeHtml(oneRStr)}</span>`;
+        } else if (expectedPnlStr !== null) {
+          hintEl.innerHTML = `<span>1R Risk: <strong>${escapeHtml(oneRStr)}</strong> • Hesaplanan R: <strong>${escapeHtml(rStr)}</strong></span><span>Hesaba Göre P/L: <strong>${escapeHtml(expectedPnlStr)}</strong></span>`;
         } else {
           hintEl.innerHTML = `<span>Hesaplanan R: <strong>${escapeHtml(rStr)}</strong></span><span>1R Risk: ${escapeHtml(oneRStr)}</span>`;
         }
@@ -13067,6 +13073,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (!session) return;
       activeTradeScanSession = session;
       scanPnlUserEdited = false;
+      scanRiskUserEdited = false;
       const { prefix } = getScanElementsForMode(session.mode);
       const backdrop = document.getElementById('tradeScanReviewBackdrop');
       if (!backdrop) return;
@@ -13201,7 +13208,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const pnlSrc = parseOptionalNumber(document.getElementById('scan-pnl')?.value);
       const riskSrc = parsePositiveBalance(document.getElementById('scan-risk')?.value);
       const riskDst = document.getElementById(`${prefix}risk`);
-      if (riskDst && riskSrc !== null) {
+      if (riskDst && riskSrc !== null && scanRiskUserEdited) {
         riskDst.dataset.userEdited = 'true';
       }
 
@@ -13467,7 +13474,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const key = id.replace(/^scan-/, '');
         if (key === 'pnl' && ev && (ev.type === 'input' || document.activeElement === el)) {
           scanPnlUserEdited = true;
-        } else if (['entry', 'exit', 'sl', 'risk', 'direction'].includes(key)) {
+        } else if (key === 'risk' && ev && (ev.type === 'input' || ev.type === 'change' || document.activeElement === el)) {
+          scanRiskUserEdited = true;
+          scanPnlUserEdited = false;
+        } else if (['entry', 'exit', 'sl', 'direction'].includes(key)) {
           scanPnlUserEdited = false;
         }
         updateTradeScanModalLiveCalc(key);
@@ -14173,6 +14183,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         if (nextRisk !== null) {
           AppState.settings.defaultRisk = nextRisk;
           saveSettingsState(true);
+          syncSettingsToInputs();
         }
       });
     }
@@ -14201,6 +14212,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           AppState.settings.mainAccountBalance = val;
           AppState.settings.accountsConfigured = Boolean(val && parsePositiveBalance(AppState.settings.backtestAccountBalance));
           saveSettingsState(true);
+          syncSettingsToInputs();
         }
       });
     }
@@ -14213,6 +14225,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           AppState.settings.backtestAccountBalance = val;
           AppState.settings.accountsConfigured = Boolean(parsePositiveBalance(AppState.settings.mainAccountBalance) && val);
           saveSettingsState(true);
+          syncSettingsToInputs();
         }
       });
     }
