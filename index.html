@@ -19918,7 +19918,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           ...base,
           tpColor: '#10B981',
           slColor: '#F43F5E',
-          fillOpacity: 22,
+          fillOpacity: 20,
           showStats: true
         };
       }
@@ -20800,7 +20800,6 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const slH = Math.abs(pSl.y - pEntry.y);
         const tpCol = d.tpColor || '#10B981';
         const slCol = d.slColor || '#F43F5E';
-        const posFillOp = Math.max(0.05, Math.min(0.65, (Number.isFinite(Number(d.fillOpacity)) ? Number(d.fillOpacity) : 22) / 100));
         const posStrokeW = Math.max(1, lineWidth * 0.85);
         const factoryDefCol = (RP_DRAW_TOOLS[d.type]?.defaultColor || '').toUpperCase();
         const hasCustomEntryColor = Boolean(d.color && d.color.toUpperCase() !== factoryDefCol);
@@ -20820,102 +20819,73 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           endTime: endT
         }, candles);
 
+        const risk = Math.abs(entryP - slP);
+        const reward = Math.abs(tpP - entryP);
         const isTpHit = liveEval.state === 'tp_hit';
         const isSlHit = liveEval.state === 'sl_hit';
-        const tpEffectiveOp = isTpHit ? Math.min(0.84, posFillOp * 1.85) : (isSlHit ? posFillOp * 0.52 : posFillOp);
-        const slEffectiveOp = isSlHit ? Math.min(0.84, posFillOp * 1.85) : (isTpHit ? posFillOp * 0.52 : posFillOp);
+        const flatFillOp = Math.max(0.05, Math.min(0.65, (Number.isFinite(Number(d.fillOpacity)) ? Number(d.fillOpacity) : 20) / 100));
+
+        let tpFillOp = flatFillOp;
+        let slFillOp = flatFillOp;
+        let tpStrokeOp = 0.72;
+        let slStrokeOp = 0.72;
+        let tpStrokeW = Math.max(1, posStrokeW * 0.85);
+        let slStrokeW = Math.max(1, posStrokeW * 0.85);
+
+        if (isTpHit) {
+          tpFillOp = Math.min(0.72, flatFillOp + 0.16);
+          slFillOp = Math.max(0.06, flatFillOp * 0.55);
+          tpStrokeOp = 0.96;
+          slStrokeOp = 0.42;
+          tpStrokeW = Math.max(1.5, posStrokeW + 0.5);
+        } else if (isSlHit) {
+          slFillOp = Math.min(0.72, flatFillOp + 0.16);
+          tpFillOp = Math.max(0.06, flatFillOp * 0.55);
+          slStrokeOp = 0.96;
+          tpStrokeOp = 0.42;
+          slStrokeW = Math.max(1.5, posStrokeW + 0.5);
+        } else if (liveEval.state === 'profit') {
+          const tpProg = reward > 0 ? Math.max(0, Math.min(1, liveEval.liveDiff / reward)) : 0.5;
+          tpFillOp = Math.min(0.68, flatFillOp + 0.08 + tpProg * 0.08);
+          slFillOp = Math.max(0.07, flatFillOp * 0.62);
+          tpStrokeOp = 0.88;
+          slStrokeOp = 0.50;
+          tpStrokeW = Math.max(1.2, posStrokeW + 0.25);
+        } else if (liveEval.state === 'loss') {
+          const slProg = risk > 0 ? Math.max(0, Math.min(1, Math.abs(liveEval.liveDiff) / risk)) : 0.5;
+          slFillOp = Math.min(0.68, flatFillOp + 0.08 + slProg * 0.08);
+          tpFillOp = Math.max(0.07, flatFillOp * 0.62);
+          slStrokeOp = 0.88;
+          tpStrokeOp = 0.50;
+          slStrokeW = Math.max(1.2, posStrokeW + 0.25);
+        }
 
         applyRpCanvasStrokeStyle(ctx, style, posStrokeW);
         ctx.save();
-        if (tpH > 2) {
-          const tpGrad = ctx.createLinearGradient(leftX, tpTop, leftX, tpTop + tpH);
-          const tpNearEntry = pTp.y < pEntry.y ? 1 : 0;
-          tpGrad.addColorStop(tpNearEntry, hexToRgba(tpCol, Math.max(0.04, tpEffectiveOp * 0.68)));
-          tpGrad.addColorStop(1 - tpNearEntry, hexToRgba(tpCol, Math.min(0.86, tpEffectiveOp * 1.2)));
-          ctx.fillStyle = tpGrad;
-        } else {
-          ctx.fillStyle = hexToRgba(tpCol, tpEffectiveOp);
-        }
-        drawRpRoundedRectPath(ctx, leftX, tpTop, boxW, tpH, Math.min(4, tpH / 3, boxW / 6));
-        ctx.fill();
-        if (isTpHit) {
-          ctx.shadowColor = tpCol;
-          ctx.shadowBlur = 12;
-        }
-        ctx.strokeStyle = hexToRgba(tpCol, isTpHit ? 1 : 0.88);
-        ctx.lineWidth = isTpHit ? Math.max(2, posStrokeW + 0.9) : posStrokeW;
-        ctx.stroke();
-        ctx.shadowBlur = 0;
+        ctx.fillStyle = hexToRgba(tpCol, tpFillOp);
+        ctx.fillRect(leftX, tpTop, boxW, tpH);
+        ctx.strokeStyle = hexToRgba(tpCol, tpStrokeOp);
+        ctx.lineWidth = tpStrokeW;
+        ctx.strokeRect(leftX, tpTop, boxW, tpH);
 
-        if (slH > 2) {
-          const slGrad = ctx.createLinearGradient(leftX, slTop, leftX, slTop + slH);
-          const slNearEntry = pSl.y < pEntry.y ? 1 : 0;
-          slGrad.addColorStop(slNearEntry, hexToRgba(slCol, Math.max(0.04, slEffectiveOp * 0.68)));
-          slGrad.addColorStop(1 - slNearEntry, hexToRgba(slCol, Math.min(0.86, slEffectiveOp * 1.2)));
-          ctx.fillStyle = slGrad;
-        } else {
-          ctx.fillStyle = hexToRgba(slCol, slEffectiveOp);
-        }
-        drawRpRoundedRectPath(ctx, leftX, slTop, boxW, slH, Math.min(4, slH / 3, boxW / 6));
-        ctx.fill();
-        if (isSlHit) {
-          ctx.shadowColor = slCol;
-          ctx.shadowBlur = 12;
-        }
-        ctx.strokeStyle = hexToRgba(slCol, isSlHit ? 1 : 0.88);
-        ctx.lineWidth = isSlHit ? Math.max(2, posStrokeW + 0.9) : posStrokeW;
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // Live fiyat ilerleme dolgusu ve yatay anlık fiyat iz çizgisi
-        if (liveEval.hasPriceActivity && Number.isFinite(liveEval.currentPrice) && rpCandlestickSeries) {
-          const curRawY = rpCandlestickSeries.priceToCoordinate(liveEval.currentPrice);
-          if (curRawY !== null && Number.isFinite(curRawY)) {
-            const curY = curRawY + plot.top;
-            const boxMinY = Math.min(tpTop, slTop);
-            const boxMaxY = Math.max(tpTop + tpH, slTop + slH);
-            const clampedCurY = Math.max(boxMinY, Math.min(boxMaxY, curY));
-            const isInProfit = liveEval.liveDiff >= 0;
-            const activeZoneCol = isInProfit ? tpCol : slCol;
-            const progTop = Math.min(pEntry.y, clampedCurY);
-            const progH = Math.abs(clampedCurY - pEntry.y);
-            if (progH > 1.5 && boxW > 6) {
-              ctx.fillStyle = hexToRgba(activeZoneCol, isTpHit || isSlHit ? 0.24 : 0.16);
-              ctx.fillRect(leftX + 1, progTop, Math.max(2, boxW - 2), progH);
-            }
-            ctx.save();
-            ctx.setLineDash([4, 3]);
-            ctx.strokeStyle = hexToRgba(activeZoneCol, 0.95);
-            ctx.lineWidth = 1.3;
-            ctx.beginPath();
-            ctx.moveTo(leftX, clampedCurY);
-            ctx.lineTo(leftX + boxW, clampedCurY);
-            ctx.stroke();
-            ctx.setLineDash([]);
-            ctx.beginPath();
-            ctx.arc(leftX + boxW, clampedCurY, 3.2, 0, Math.PI * 2);
-            ctx.fillStyle = activeZoneCol;
-            ctx.fill();
-            ctx.restore();
-          }
-        }
+        ctx.fillStyle = hexToRgba(slCol, slFillOp);
+        ctx.fillRect(leftX, slTop, boxW, slH);
+        ctx.strokeStyle = hexToRgba(slCol, slStrokeOp);
+        ctx.lineWidth = slStrokeW;
+        ctx.strokeRect(leftX, slTop, boxW, slH);
         ctx.restore();
 
         ctx.strokeStyle = entryCol;
-        ctx.lineWidth = Math.max(1.5, lineWidth * 0.95);
+        ctx.lineWidth = Math.max(1.2, lineWidth * 0.85);
         ctx.beginPath();
         ctx.moveTo(leftX, pEntry.y);
         ctx.lineTo(leftX + boxW, pEntry.y);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        const risk = Math.abs(entryP - slP);
-        const reward = Math.abs(tpP - entryP);
         const rr = risk > 0 ? (reward / risk) : 0;
         const tpPct = entryP > 0 ? (reward / entryP) * 100 : 0;
         const slPct = entryP > 0 ? (risk / entryP) * 100 : 0;
-
-        d._execBtnRect = null;
 
         if (d.showStats !== false) {
           const balVal = Number(document.getElementById('rp-balance-input')?.value);
@@ -20997,7 +20967,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             const sideTag = d.type === 'longpos' ? 'LONG' : 'SHORT';
             let liveBadgeText = '';
             let badgeAccentCol = d.type === 'longpos' ? tpCol : slCol;
-            let badgeFillBg = isLightTheme ? 'rgba(15, 23, 42, 0.92)' : 'rgba(9, 15, 34, 0.94)';
+            let badgeFillBg = isLightTheme ? 'rgba(15, 23, 42, 0.90)' : 'rgba(11, 18, 38, 0.92)';
 
             if (liveEval.hasPriceActivity) {
               const rSign = liveEval.liveR > 0 ? '+' : (liveEval.liveR < 0 ? '-' : '');
@@ -21012,64 +20982,43 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 badgeAccentCol = tpCol;
                 badgeFillBg = isTpHit
                   ? (isLightTheme ? '#065F46' : '#064E3B')
-                  : (isLightTheme ? 'rgba(6, 78, 59, 0.94)' : 'rgba(6, 48, 38, 0.95)');
+                  : (isLightTheme ? 'rgba(6, 78, 59, 0.92)' : 'rgba(6, 48, 38, 0.92)');
               } else if (isSlHit || liveEval.liveDiff < 0) {
                 badgeAccentCol = slCol;
                 badgeFillBg = isSlHit
                   ? (isLightTheme ? '#9F1239' : '#881337')
-                  : (isLightTheme ? 'rgba(136, 19, 55, 0.94)' : 'rgba(76, 5, 25, 0.95)');
+                  : (isLightTheme ? 'rgba(136, 19, 55, 0.92)' : 'rgba(76, 5, 25, 0.92)');
               }
             }
 
-            const showExecChip = isSelected && boxW >= 96;
-            const execChipText = d.type === 'longpos' ? '⚡ Buy Aç' : '⚡ Sell Aç';
             const rrLabel = boxW >= 145 && liveBadgeText
               ? `${sideTag} · 1:${rr.toFixed(2)} · ${liveBadgeText}`
               : (boxW >= 115
                   ? `${sideTag} · R:R 1:${rr.toFixed(2)}`
                   : (liveBadgeText && boxW >= 82 ? `1:${rr.toFixed(2)} · ${liveBadgeText}` : `1:${rr.toFixed(2)}`));
 
-            ctx.font = '800 10.5px "Plus Jakarta Sans", system-ui, sans-serif';
+            ctx.font = '700 10.5px "Plus Jakarta Sans", system-ui, sans-serif';
             const rrTextW = ctx.measureText(rrLabel).width;
-            const execGap = showExecChip ? 6 : 0;
-            const execChipW = showExecChip ? (ctx.measureText(execChipText).width + 14) : 0;
-            const lblW = rrTextW + 24 + execGap + execChipW;
+            const lblW = rrTextW + 22;
             const badgeCx = Math.max(plot.left + lblW / 2 + 4, Math.min(plot.right - lblW / 2 - 4, textCx));
             const badgeLeft = badgeCx - lblW / 2;
 
             ctx.save();
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
-            ctx.shadowBlur = 10;
-            drawRpRoundedRectPath(ctx, badgeLeft, pEntry.y - 12, lblW, 24, 7);
+            drawRpRoundedRectPath(ctx, badgeLeft, pEntry.y - 11, lblW, 22, 5);
             ctx.fillStyle = badgeFillBg;
             ctx.fill();
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = hasCustomEntryColor ? hexToRgba(color, 0.9) : hexToRgba(badgeAccentCol, isTpHit || isSlHit ? 1 : 0.85);
-            ctx.lineWidth = isTpHit || isSlHit ? 1.6 : 1.2;
+            ctx.strokeStyle = hasCustomEntryColor ? hexToRgba(color, 0.85) : hexToRgba(badgeAccentCol, 0.78);
+            ctx.lineWidth = 1;
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.arc(badgeLeft + 10, pEntry.y, 3.3, 0, Math.PI * 2);
+            ctx.arc(badgeLeft + 9.5, pEntry.y, 2.8, 0, Math.PI * 2);
             ctx.fillStyle = badgeAccentCol;
             ctx.fill();
 
             ctx.textAlign = 'left';
             ctx.fillStyle = '#F8FAFC';
-            ctx.fillText(rrLabel, badgeLeft + 18, pEntry.y + 0.5);
-
-            if (showExecChip) {
-              const exX = badgeLeft + rrTextW + 24;
-              const exY = pEntry.y - 9;
-              const exH = 18;
-              drawRpRoundedRectPath(ctx, exX, exY, execChipW, exH, 5);
-              ctx.fillStyle = d.type === 'longpos' ? tpCol : slCol;
-              ctx.fill();
-              ctx.fillStyle = '#FFFFFF';
-              ctx.textAlign = 'center';
-              ctx.font = '800 9.5px "Plus Jakarta Sans", system-ui, sans-serif';
-              ctx.fillText(execChipText, exX + execChipW / 2, pEntry.y + 0.5);
-              d._execBtnRect = { x: exX, y: exY, w: execChipW, h: exH };
-            }
+            ctx.fillText(rrLabel, badgeLeft + 16, pEntry.y + 0.5);
             ctx.restore();
           }
         }
@@ -21339,125 +21288,144 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       };
     }
 
-    function renderRpTradePreviewOverlay(ctx, plot, isLightTheme) {
-      if (!rpChartInstance || !rpCandlestickSeries) return;
-      const candles = getVisibleRpCandles();
-      if (!candles || candles.length === 0) return;
+    function getRpAxisBadgeTextColor(hexColor) {
+      const clean = String(hexColor || '').trim().replace(/^#/, '');
+      if (clean.length === 3 || clean.length === 6) {
+        const full = clean.length === 3
+          ? clean.split('').map(c => c + c).join('')
+          : clean;
+        const r = parseInt(full.slice(0, 2), 16);
+        const g = parseInt(full.slice(2, 4), 16);
+        const b = parseInt(full.slice(4, 6), 16);
+        if (Number.isFinite(r) && Number.isFinite(g) && Number.isFinite(b)) {
+          const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+          return lum > 0.68 ? '#0F172A' : '#FFFFFF';
+        }
+      }
+      return '#FFFFFF';
+    }
 
-      const activeItem = rpOpenTrade || rpPendingOrder;
-      const isPreview = !activeItem && !!(rpPreviewOrder && rpPreviewOrder.active);
-      if (!activeItem && !isPreview) return;
+    function collectRpSelectedAxisPriceMarkers(d) {
+      if (!d || !Array.isArray(d.points) || d.points.length === 0) return [];
+      const baseColor = d.color || (RP_DRAW_TOOLS[d.type]?.defaultColor) || '#38BDF8';
+      const rawMarkers = [];
 
-      const spec = activeItem
-        ? {
-            direction: activeItem.direction,
-            entry: rpOpenTrade ? activeItem.entryPrice : activeItem.orderPrice,
-            sl: activeItem.sl,
-            tp: activeItem.tp,
-            lot: activeItem.lot,
-            contractSize: activeItem.contractSize,
-            startTime: rpOpenTrade ? activeItem.entryTime : (activeItem.createdTime || candles[candles.length - 1].time),
-            isLiveOpen: !!rpOpenTrade
+      if ((d.type === 'longpos' || d.type === 'shortpos') && d.points.length >= 3) {
+        rawMarkers.push({ price: d.points[1].price, color: d.tpColor || '#10B981' });
+        rawMarkers.push({ price: d.points[0].price, color: '#2563EB' });
+        rawMarkers.push({ price: d.points[2].price, color: d.slColor || '#F43F5E' });
+      } else if (d.type === 'fib' && d.points.length >= 2) {
+        const price1 = d.reverse ? d.points[1].price : d.points[0].price;
+        const price2 = d.reverse ? d.points[0].price : d.points[1].price;
+        const levels = getRpFibPriceLevels(d);
+        const selectedLevels = levels.length <= 7
+          ? levels
+          : levels.filter(l => l.ratio === 0 || l.ratio === 0.382 || l.ratio === 0.5 || l.ratio === 0.618 || l.ratio === 0.705 || l.ratio === 0.786 || l.ratio === 1);
+        (selectedLevels.length > 0 ? selectedLevels : levels.slice(0, 7)).forEach(lvlObj => {
+          const lPrice = price1 + (price2 - price1) * lvlObj.ratio;
+          rawMarkers.push({ price: lPrice, color: lvlObj.color || baseColor });
+        });
+      } else if (d.type === 'measure' && d.points.length >= 2) {
+        const isUp = d.points[1].price >= d.points[0].price;
+        const useCustomColor = Boolean(d.useCustomColor || (d.color && d.color.toUpperCase() !== '#38BDF8'));
+        const mColor = useCustomColor ? baseColor : (isUp ? '#10B981' : '#F43F5E');
+        rawMarkers.push({ price: d.points[0].price, color: mColor });
+        rawMarkers.push({ price: d.points[1].price, color: mColor });
+      } else if (
+        d.type === 'hline' || d.type === 'hray' || d.type === 'trendline' ||
+        d.type === 'ray' || d.type === 'extended' || d.type === 'arrow' ||
+        d.type === 'rect' || d.type === 'channel' || d.type === 'text' || d.type === 'callout'
+      ) {
+        d.points.forEach(pt => {
+          if (pt && Number.isFinite(pt.price)) {
+            rawMarkers.push({ price: pt.price, color: baseColor });
           }
-        : {
-            direction: rpPreviewOrder.direction || 'Buy',
-            entry: rpPreviewOrder.entry,
-            sl: rpPreviewOrder.sl,
-            tp: rpPreviewOrder.tp,
-            lot: parseOptionalRpInputNumber('rp-lot-input') || 1,
-            contractSize: parseOptionalRpInputNumber('rp-contract-size-input') || 1,
-            startTime: candles[Math.max(0, candles.length - 1)].time,
-            isLiveOpen: false
-          };
+        });
+      }
 
-      if (!Number.isFinite(spec.entry)) return;
-      const entryYRaw = rpCandlestickSeries.priceToCoordinate(spec.entry);
-      if (entryYRaw === null || !Number.isFinite(entryYRaw)) return;
-      const entryY = entryYRaw + plot.top;
+      const seen = new Set();
+      const deduped = [];
+      for (const m of rawMarkers) {
+        if (!Number.isFinite(m.price)) continue;
+        const rounded = roundRpPrice(m.price);
+        const key = rounded.toFixed(rpCurrentPrecision);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        deduped.push({ price: rounded, text: key, color: m.color });
+      }
+      return deduped;
+    }
 
-      const lastCandle = candles[candles.length - 1];
-      const startPx = rpPointToPixel({ time: spec.startTime, price: spec.entry }, plot);
-      const lastPx = rpPointToPixel({ time: lastCandle.time, price: spec.entry }, plot);
-      const barPx = lastPx ? lastPx.x : plot.right - 90;
-      const leftX = Math.max(plot.left + 4, Math.min(plot.right - 96, startPx ? startPx.x : (barPx - 36)));
-      const rightX = Math.min(plot.right - 4, Math.max(leftX + 110, barPx + 90));
-      const boxW = Math.max(36, rightX - leftX);
+    function renderRpSelectedDrawingAxisPrices(ctx, plot, wrapWidth, isLightTheme) {
+      if (!rpSelectedDrawingId || !rpChartInstance || !rpCandlestickSeries) return;
+      if (rpDrawPrefs && rpDrawPrefs.hideDrawings) return;
+      const sel = rpDrawings.find(d => d.id === rpSelectedDrawingId);
+      if (!sel) return;
 
-      const tpCol = '#10B981';
-      const slCol = '#F43F5E';
-      const evalState = spec.isLiveOpen
-        ? evaluateRpPositionLiveState({
-            direction: spec.direction,
-            entry: spec.entry,
-            tp: spec.tp,
-            sl: spec.sl,
-            startTime: spec.startTime,
-            endTime: lastCandle.time
-          }, candles)
-        : { hasPriceActivity: false, liveDiff: 0, liveR: 0, state: 'pending' };
+      const axisW = wrapWidth - plot.right;
+      if (axisW < 34) return;
 
-      const inProfit = evalState.hasPriceActivity && evalState.liveDiff > 0;
-      const inLoss = evalState.hasPriceActivity && evalState.liveDiff < 0;
+      const markers = collectRpSelectedAxisPriceMarkers(sel);
+      if (markers.length === 0) return;
+
+      const pillH = 18;
+      const halfH = pillH / 2;
+      const minY = plot.top + halfH + 1;
+      const maxY = plot.bottom - halfH - 1;
+      if (maxY <= minY) return;
+
+      const items = [];
+      for (const m of markers) {
+        const yRaw = rpCandlestickSeries.priceToCoordinate(m.price);
+        if (yRaw === null || !Number.isFinite(yRaw)) continue;
+        const yPlot = yRaw + plot.top;
+        if (yPlot < plot.top - 10 || yPlot > plot.bottom + 10) continue;
+        items.push({
+          ...m,
+          y: Math.max(minY, Math.min(maxY, yPlot))
+        });
+      }
+      if (items.length === 0) return;
+
+      items.sort((a, b) => a.y - b.y);
+      const minGap = pillH + 2;
+      for (let i = 1; i < items.length; i++) {
+        if (items[i].y - items[i - 1].y < minGap) {
+          items[i].y = items[i - 1].y + minGap;
+        }
+      }
+      if (items[items.length - 1].y > maxY) {
+        items[items.length - 1].y = maxY;
+        for (let i = items.length - 2; i >= 0; i--) {
+          if (items[i + 1].y - items[i].y < minGap) {
+            items[i].y = items[i + 1].y - minGap;
+          }
+        }
+      }
 
       ctx.save();
-      if (Number.isFinite(spec.tp)) {
-        const tpYRaw = rpCandlestickSeries.priceToCoordinate(spec.tp);
-        if (tpYRaw !== null && Number.isFinite(tpYRaw)) {
-          const tpY = tpYRaw + plot.top;
-          const topY = Math.min(entryY, tpY);
-          const h = Math.abs(tpY - entryY);
-          const tpAlpha = evalState.state === 'tp_hit' ? 0.28 : (inProfit ? 0.20 : 0.11);
-          if (h > 2) {
-            ctx.fillStyle = hexToRgba(tpCol, tpAlpha);
-            ctx.fillRect(leftX, topY, boxW, h);
-          }
-        }
-      }
+      ctx.beginPath();
+      ctx.rect(plot.right, plot.top, axisW, plot.height);
+      ctx.clip();
 
-      if (Number.isFinite(spec.sl)) {
-        const slYRaw = rpCandlestickSeries.priceToCoordinate(spec.sl);
-        if (slYRaw !== null && Number.isFinite(slYRaw)) {
-          const slY = slYRaw + plot.top;
-          const topY = Math.min(entryY, slY);
-          const h = Math.abs(slY - entryY);
-          const slAlpha = evalState.state === 'sl_hit' ? 0.28 : (inLoss ? 0.20 : 0.11);
-          if (h > 2) {
-            ctx.fillStyle = hexToRgba(slCol, slAlpha);
-            ctx.fillRect(leftX, topY, boxW, h);
-          }
-        }
-      }
+      ctx.font = '700 10.5px "JetBrains Mono", "Plus Jakarta Sans", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
 
-      // Önizleme modunda sağ fiyat etiketi ve #rp-pos-tag ile çakışmayan kompakt R:R rozeti
-      if (isPreview) {
-        let badgeTxt = spec.direction === 'Buy' ? 'BUY' : 'SELL';
-        if (Number.isFinite(spec.sl) && Number.isFinite(spec.tp)) {
-          const riskD = Math.abs(spec.entry - spec.sl);
-          const rewD = Math.abs(spec.tp - spec.entry);
-          if (riskD > 0) {
-            badgeTxt += ` · 1:${(rewD / riskD).toFixed(2)}`;
-          }
-        }
-        if (Number.isFinite(spec.tp)) {
-          const tpUsd = computeRpLevelDollarPnl(spec.tp, spec.entry, spec.direction, spec.lot || 1, spec.contractSize || 1);
-          if (tpUsd !== null) badgeTxt += ` · Hedef +$${Math.abs(tpUsd).toFixed(0)}`;
-        }
-
-        ctx.font = '800 10px "Plus Jakarta Sans", system-ui, sans-serif';
-        const tw = ctx.measureText(badgeTxt).width + 18;
-        const maxRightX = Math.max(plot.left + 8, plot.right - tw - 138);
-        const bx = Math.max(plot.left + 8, Math.min(maxRightX, leftX + 8));
-        const by = Math.max(plot.top + 6, Math.min(plot.bottom - 26, entryY - 11));
-        drawRpRoundedRectPath(ctx, bx, by, tw, 22, 6);
-        ctx.fillStyle = isLightTheme ? 'rgba(15, 23, 42, 0.90)' : 'rgba(10, 17, 38, 0.92)';
+      const pillX = plot.right + 2;
+      const pillW = Math.max(40, axisW - 5);
+      for (const item of items) {
+        if (item.y < minY - 2 || item.y > maxY + 2) continue;
+        const boxY = item.y - halfH;
+        drawRpRoundedRectPath(ctx, pillX, boxY, pillW, pillH, 3.5);
+        ctx.fillStyle = item.color;
         ctx.fill();
-        ctx.strokeStyle = spec.direction === 'Sell' ? slCol : '#3B82F6';
-        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = isLightTheme ? 'rgba(15, 23, 42, 0.18)' : 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 0.8;
         ctx.stroke();
-        ctx.fillStyle = '#F8FAFC';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(badgeTxt, bx + tw / 2, by + 11);
+
+        ctx.fillStyle = getRpAxisBadgeTextColor(item.color);
+        ctx.fillText(item.text, pillX + pillW / 2, item.y + 0.5);
       }
       ctx.restore();
     }
@@ -21485,8 +21453,6 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       ctx.rect(plot.left, plot.top, plot.width, plot.height);
       ctx.clip();
 
-      renderRpTradePreviewOverlay(ctx, plot, isLightTheme);
-
       if (!rpDrawPrefs || !rpDrawPrefs.hideDrawings) {
         for (const d of rpDrawings) {
           drawSingleRpShape(ctx, d, plot, d.id === rpSelectedDrawingId, isLightTheme, d.id === rpHoveredDrawingId);
@@ -21507,6 +21473,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
 
       ctx.restore();
+
+      renderRpSelectedDrawingAxisPrices(ctx, plot, wrap.clientWidth, isLightTheme);
     }
 
     function getRpViewportSignature(precomputedPlot = null) {
@@ -22628,7 +22596,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         pOpRange.max = '60';
         pOpRange.step = '5';
         pOpRange.className = 'rp-draw-set-range';
-        const pOpVal = Number.isFinite(Number(d.fillOpacity)) ? Number(d.fillOpacity) : 22;
+        const pOpVal = Number.isFinite(Number(d.fillOpacity)) ? Number(d.fillOpacity) : 20;
         pOpRange.value = String(pOpVal);
         const pOpTxt = document.createElement('span');
         pOpTxt.className = 'rp-draw-set-val';
@@ -24503,16 +24471,6 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           }
 
           if (!rpIsPickingStart) {
-            if (rpSelectedDrawingId) {
-              const selPos = rpDrawings.find(d => d.id === rpSelectedDrawingId && (d.type === 'longpos' || d.type === 'shortpos'));
-              const rBox = selPos && selPos._execBtnRect;
-              if (rBox && x >= rBox.x - 3 && x <= rBox.x + rBox.w + 3 && y >= rBox.y - 3 && y <= rBox.y + rBox.h + 3) {
-                e.preventDefault();
-                e.stopPropagation();
-                executeRpTradeFromDrawing(selPos.id);
-                return;
-              }
-            }
             const drawHit = hitTestRpDrawing(x, y);
             if (drawHit && drawHit.drawing) {
               if (rpLongPressTimer !== null) {
