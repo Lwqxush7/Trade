@@ -2221,6 +2221,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
 }
 
+.rp-pos-tag.profit {
+  border-color: rgba(16, 185, 129, 0.78);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.22);
+}
+
+.rp-pos-tag.loss {
+  border-color: rgba(244, 63, 94, 0.78);
+  box-shadow: 0 6px 20px rgba(244, 63, 94, 0.22);
+}
+
 .rp-pos-side {
   color: #60A5FA;
 }
@@ -2721,6 +2731,63 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   background: rgba(2, 132, 199, 0.14);
   border-color: rgba(2, 132, 199, 0.55);
   color: #0284C7;
+}
+
+.rp-ctx-rr-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+:root[data-theme="light"] .rp-ctx-rr-summary {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+.rp-ctx-rr-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+}
+
+.rp-ctx-rr-stat-k {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.rp-ctx-rr-stat-v {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rp-ctx-rr-stat.pos .rp-ctx-rr-stat-v {
+  color: var(--color-neon-green);
+}
+
+.rp-ctx-rr-stat.neg .rp-ctx-rr-stat-v {
+  color: var(--color-danger);
+}
+
+:root[data-theme="light"] .rp-ctx-rr-stat.pos .rp-ctx-rr-stat-v {
+  color: #059669;
+}
+
+:root[data-theme="light"] .rp-ctx-rr-stat.neg .rp-ctx-rr-stat-v {
+  color: #DC2626;
 }
 
 .rp-ctx-view {
@@ -4168,6 +4235,64 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 .rp-draw-props-btn.active {
   color: var(--color-warning);
   background: rgba(251, 191, 36, 0.14);
+}
+
+.rp-draw-pos-only {
+  display: none;
+}
+
+.rp-draw-pos-only.visible {
+  display: inline-flex;
+}
+
+.rp-draw-props-sep.rp-draw-pos-only.visible {
+  display: inline-block;
+}
+
+.rp-draw-props-execute {
+  height: 24px;
+  padding: 0 10px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 185, 129, 0.55);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.35));
+  color: #6EE7B7;
+  font-family: inherit;
+  font-size: 0.71rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.rp-draw-props-execute.sell {
+  border-color: rgba(244, 63, 94, 0.58);
+  background: linear-gradient(135deg, rgba(244, 63, 94, 0.24), rgba(225, 29, 72, 0.34));
+  color: #FDA4AF;
+}
+
+.rp-draw-props-execute:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.rp-draw-props-execute:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+:root[data-theme="light"] .rp-draw-props-execute {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(5, 150, 105, 0.45);
+  color: #047857;
+}
+
+:root[data-theme="light"] .rp-draw-props-execute.sell {
+  background: rgba(225, 29, 72, 0.12);
+  border-color: rgba(225, 29, 72, 0.45);
+  color: #BE123C;
 }
 
 /* Grafik Metin Ekleme Popover */
@@ -6630,6 +6755,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 <button type="button" class="rp-draw-props-btn" id="rp-draw-prop-clone" title="Çoğalt (Ctrl+D)" aria-label="Çizimi Çoğalt">📋</button>
                 <button type="button" class="rp-draw-props-btn" id="rp-draw-prop-lock" title="Kilitle / Kilidi Aç" aria-label="Çizimi Kilitle">🔒</button>
                 <button type="button" class="rp-draw-props-btn" id="rp-draw-prop-delete" title="Çizimi Sil (Delete)" aria-label="Çizimi Sil">🗑</button>
+                <span class="rp-draw-props-sep rp-draw-pos-only" id="rp-draw-pos-sep"></span>
+                <button type="button" class="rp-draw-props-execute rp-draw-pos-only" id="rp-draw-prop-execute" title="Bu R:R Kutusundan Gerçek İşlem Aç (Tek Tık)" aria-label="Bu Kutudan İşlem Aç">İşleme Gir</button>
               </div>
 
               <div class="rp-draw-text-modal" id="rp-draw-text-modal" role="dialog" aria-label="Metin Düzenle">
@@ -6845,6 +6972,21 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                     <button type="button" class="rp-ctx-rr-chip" data-rp-rr="1.5">1:1.5</button>
                     <button type="button" class="rp-ctx-rr-chip active" data-rp-rr="2">1:2</button>
                     <button type="button" class="rp-ctx-rr-chip" data-rp-rr="3">1:3</button>
+                  </div>
+                </div>
+
+                <div class="rp-ctx-rr-summary" id="rp-ctx-rr-summary">
+                  <div class="rp-ctx-rr-stat neg">
+                    <span class="rp-ctx-rr-stat-k">Risk</span>
+                    <strong class="rp-ctx-rr-stat-v" id="rp-ctx-sum-risk">—</strong>
+                  </div>
+                  <div class="rp-ctx-rr-stat">
+                    <span class="rp-ctx-rr-stat-k">R:R</span>
+                    <strong class="rp-ctx-rr-stat-v" id="rp-ctx-sum-rr">1:2.00</strong>
+                  </div>
+                  <div class="rp-ctx-rr-stat pos">
+                    <span class="rp-ctx-rr-stat-k">Hedef</span>
+                    <strong class="rp-ctx-rr-stat-v" id="rp-ctx-sum-tp">—</strong>
                   </div>
                 </div>
 
@@ -7135,7 +7277,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                         <span class="rp-set-row-label">Opaklık</span>
                         <div class="rp-set-range-wrap">
                           <input type="range" id="rp-set-wm-opacity" class="rp-set-range" min="2" max="50" step="1">
-                          <span class="rp-set-range-val" id="rp-set-wm-opacity-val">8%</span>
+                          <span class="rp-set-range-val" id="rp-set-wm-opacity-val">16%</span>
                         </div>
                       </div>
                       <div class="rp-set-row">
@@ -9703,7 +9845,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
     });
 
-    async function readFileAsScanDataUrl(file, maxDimension = 1440) {
+    async function readFileAsScanDataUrl(file, maxDimension = 1920) {
       if (!file || !file.type || !file.type.startsWith('image/')) return null;
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -9717,27 +9859,144 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           img.onload = () => {
             const w = img.naturalWidth || img.width;
             const h = img.naturalHeight || img.height;
-            const needsShrink = w > maxDimension || h > maxDimension || file.size > 450 * 1024 || file.type === 'image/png';
-            if (!needsShrink) {
-              resolve({ dataUrl: rawUrl, mimeType: file.type || 'image/jpeg' });
-              return;
-            }
             const scale = Math.min(1, maxDimension / Math.max(w, h));
             const canvas = document.createElement('canvas');
             canvas.width = Math.max(1, Math.round(w * scale));
             canvas.height = Math.max(1, Math.round(h * scale));
-            const ctx = canvas.getContext('2d');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
             if (!ctx) {
               resolve({ dataUrl: rawUrl, mimeType: file.type || 'image/png' });
               return;
             }
-            ctx.fillStyle = '#0B1022';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            resolve({
-              dataUrl: canvas.toDataURL('image/jpeg', 0.86),
-              mimeType: 'image/jpeg'
-            });
+
+            try {
+              const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              const d = imgData.data;
+              let hasAlpha = false;
+              let opaqueLumSum = 0;
+              let opaqueCount = 0;
+              let brightOpaqueCount = 0;
+              let semiNeutralLumSum = 0;
+              let semiNeutralCount = 0;
+              let opaqueNeutralLumSum = 0;
+              let opaqueNeutralCount = 0;
+              const step = Math.max(4, Math.floor((d.length / 4) / 8000) * 4);
+              for (let i = 0; i < d.length; i += step) {
+                const r = d[i], g = d[i + 1], b = d[i + 2], a = d[i + 3];
+                const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                const maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
+                const minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+                const isNeutral = (maxC - minC) <= 60;
+                if (a < 245) {
+                  hasAlpha = true;
+                  if (a >= 4 && a <= 140 && isNeutral) {
+                    semiNeutralLumSum += lum;
+                    semiNeutralCount++;
+                  }
+                } else {
+                  opaqueLumSum += lum;
+                  opaqueCount++;
+                  if (lum > 185) brightOpaqueCount++;
+                  if (isNeutral) {
+                    opaqueNeutralLumSum += lum;
+                    opaqueNeutralCount++;
+                  }
+                }
+              }
+
+              let isLightCanvas;
+              if (!hasAlpha) {
+                isLightCanvas = opaqueCount > 0 && (brightOpaqueCount / opaqueCount) > 0.5;
+              } else if (semiNeutralCount >= 12) {
+                isLightCanvas = (semiNeutralLumSum / semiNeutralCount) < 128;
+              } else if (opaqueNeutralCount >= 10) {
+                isLightCanvas = (opaqueNeutralLumSum / opaqueNeutralCount) < 145;
+              } else {
+                isLightCanvas = opaqueCount > 0 && (opaqueLumSum / opaqueCount) < 130;
+              }
+
+              if (hasAlpha) {
+                // Şeffaf PNG'lerde çok silik filigran/ızgara piksellerini zemin giydirmeden önce güçlendir
+                const preImg = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const px = preImg.data;
+                let preChanged = false;
+                for (let i = 0; i < px.length; i += 4) {
+                  const a = px[i + 3];
+                  if (a >= 2 && a <= 115) {
+                    const r = px[i], g = px[i + 1], b = px[i + 2];
+                    const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                    if ((!isLightCanvas && lum >= 135) || (isLightCanvas && lum <= 125)) {
+                      px[i + 3] = Math.min(210, Math.round(a * 6.5));
+                      preChanged = true;
+                    }
+                  }
+                }
+                if (preChanged) {
+                  ctx.putImageData(preImg, 0, 0);
+                }
+                const fillHex = isLightCanvas ? '#FFFFFF' : '#0B1022';
+                ctx.globalCompositeOperation = 'destination-over';
+                ctx.fillStyle = fillHex;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.globalCompositeOperation = 'source-over';
+              } else {
+                // Opak ekran görüntülerinde arka planla çok yakın tonda kalan silik filigranı belirginleştir
+                const fullImg = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const px = fullImg.data;
+                let changed = false;
+                if (isLightCanvas) {
+                  for (let i = 0; i < px.length; i += 4) {
+                    const r = px[i], g = px[i + 1], b = px[i + 2];
+                    const maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
+                    const minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+                    if (maxC - minC <= 32) {
+                      const lum = (r + g + b) / 3;
+                      if (lum >= 195 && lum <= 251) {
+                        const delta = (255 - lum) * 3.8;
+                        px[i] = Math.max(85, Math.round(r - delta));
+                        px[i + 1] = Math.max(85, Math.round(g - delta));
+                        px[i + 2] = Math.max(85, Math.round(b - delta));
+                        changed = true;
+                      }
+                    }
+                  }
+                } else {
+                  const bgCornerLum = 0.2126 * px[0] + 0.7152 * px[1] + 0.0722 * px[2];
+                  const baseLum = bgCornerLum < 55 ? bgCornerLum : 16;
+                  for (let i = 0; i < px.length; i += 4) {
+                    const r = px[i], g = px[i + 1], b = px[i + 2];
+                    const maxC = r > g ? (r > b ? r : b) : (g > b ? g : b);
+                    const minC = r < g ? (r < b ? r : b) : (g < b ? g : b);
+                    if (maxC - minC <= 36) {
+                      const lum = (r + g + b) / 3;
+                      if (lum >= baseLum + 4 && lum <= baseLum + 45) {
+                        const delta = (lum - baseLum) * 3.4;
+                        px[i] = Math.min(200, Math.round(r + delta));
+                        px[i + 1] = Math.min(200, Math.round(g + delta));
+                        px[i + 2] = Math.min(200, Math.round(b + delta));
+                        changed = true;
+                      }
+                    }
+                  }
+                }
+                if (changed) {
+                  ctx.putImageData(fullImg, 0, 0);
+                }
+              }
+            } catch (_) {}
+
+            const pngUrl = canvas.toDataURL('image/png');
+            if (pngUrl.length <= 2.6 * 1024 * 1024) {
+              resolve({ dataUrl: pngUrl, mimeType: 'image/png' });
+            } else {
+              resolve({
+                dataUrl: canvas.toDataURL('image/jpeg', 0.92),
+                mimeType: 'image/jpeg'
+              });
+            }
           };
           img.onerror = () => resolve({ dataUrl: rawUrl, mimeType: file.type || 'image/png' });
           img.src = rawUrl;
@@ -11882,20 +12141,28 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             if (!Number.isNaN(val)) {
               if (res === 'Loss' && val > 0) pnlEl.value = String(-val);
               else if (res === 'Win' && val < 0) pnlEl.value = String(Math.abs(val));
+            } else if (res === 'Loss' && balance && riskPct) {
+              pnlEl.value = String(-Math.abs(Number((balance * (riskPct / 100)).toFixed(2))));
             }
           } else if (!Number.isNaN(val)) {
             if (res === 'Loss' && val > 0) pnlEl.value = String(-val);
             else if (res === 'Win' && val < 0) pnlEl.value = String(Math.abs(val));
+          } else if (res === 'Loss') {
+            const balance = getAccountBalance();
+            const riskPct = getEffectiveRiskPct();
+            if (balance && riskPct) {
+              pnlEl.value = String(-Math.abs(Number((balance * (riskPct / 100)).toFixed(2))));
+            }
           }
           renderBanner();
         });
 
         pnlEl.addEventListener('input', () => {
-          manualPnlOverride = true;
+          const val = parseOptionalNumber(pnlEl.value);
+          manualPnlOverride = val !== null;
           preserveChartSource = false;
           preservedChartR = null;
           preservedChartPnl = null;
-          const val = parseOptionalNumber(pnlEl.value);
           if (val !== null) {
             if (val > 0) resultEl.value = 'Win';
             else if (val < 0) resultEl.value = 'Loss';
@@ -12731,15 +12998,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
       scanPnlUserEdited = false;
 
+      if (pnlEl) pnlEl.value = '';
       if (extractedPriceR !== null && calcCtrl && typeof calcCtrl.forceAutoCalculateFromPrices === 'function') {
-        if (pnlEl) pnlEl.value = '';
         calcCtrl.forceAutoCalculateFromPrices();
-      } else if (extracted.pnl !== null && Number.isFinite(extracted.pnl) && calcCtrl && typeof calcCtrl.applyManualPnl === 'function') {
-        calcCtrl.applyManualPnl(extracted.pnl);
       } else if (calcCtrl && typeof calcCtrl.refresh === 'function') {
         calcCtrl.refresh();
-      } else if (pnlEl && extracted.pnl !== null && Number.isFinite(extracted.pnl)) {
-        pnlEl.value = String(extracted.pnl);
       }
     }
 
@@ -12829,11 +13092,22 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       });
 
       if (priceR !== null && oneR && oneR > 0 && !scanPnlUserEdited && document.activeElement !== pnlEl) {
-        const computedPnl = Number((oneR * priceR).toFixed(2));
-        if (pnlEl) pnlEl.value = String(computedPnl);
-        if (resEl && changedKey !== 'result') {
-          if (Math.abs(computedPnl) <= 1e-10) resEl.value = 'BE';
-          else resEl.value = computedPnl > 0 ? 'Win' : 'Loss';
+        const rawComputed = Number((oneR * priceR).toFixed(2));
+        if (changedKey === 'result') {
+          const pickedRes = resEl?.value || 'Win';
+          if (pickedRes === 'BE') {
+            if (pnlEl) pnlEl.value = '0';
+          } else if (pickedRes === 'Loss') {
+            if (pnlEl) pnlEl.value = String(-Math.abs(rawComputed));
+          } else {
+            if (pnlEl) pnlEl.value = String(Math.abs(rawComputed));
+          }
+        } else {
+          if (pnlEl) pnlEl.value = String(rawComputed);
+          if (resEl) {
+            if (Math.abs(rawComputed) <= 1e-10) resEl.value = 'BE';
+            else resEl.value = rawComputed > 0 ? 'Win' : 'Loss';
+          }
         }
         if (Array.isArray(activeTradeScanSession.errors)) {
           activeTradeScanSession.errors = activeTradeScanSession.errors.filter((k) => k !== 'pnl' && k !== 'result');
@@ -12846,8 +13120,23 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           delete activeTradeScanSession.warnings.pnl;
           delete activeTradeScanSession.warnings.result;
         }
-      } else if (changedKey === 'result' && resEl?.value === 'BE' && pnlEl && !scanPnlUserEdited) {
+      } else if (resEl?.value === 'BE' && pnlEl && !scanPnlUserEdited && changedKey === 'result') {
         pnlEl.value = '0';
+      } else if (resEl?.value === 'Loss' && oneR && oneR > 0 && pnlEl && !scanPnlUserEdited && changedKey === 'result') {
+        pnlEl.value = String(-Math.abs(Number(oneR.toFixed(2))));
+      } else if (resEl?.value === 'Win' && oneR && oneR > 0 && pnlEl && !scanPnlUserEdited && changedKey === 'result') {
+        const curNum = parseOptionalNumber(pnlEl.value);
+        if (curNum !== null && curNum < 0) {
+          pnlEl.value = String(Math.abs(curNum));
+        }
+      } else if (changedKey === 'result' && pnlEl && scanPnlUserEdited) {
+        const curNum = parseOptionalNumber(pnlEl.value);
+        if (resEl?.value === 'BE') {
+          pnlEl.value = '0';
+        } else if (curNum !== null && curNum !== 0) {
+          if (resEl?.value === 'Loss' && curNum > 0) pnlEl.value = String(-curNum);
+          else if (resEl?.value === 'Win' && curNum < 0) pnlEl.value = String(Math.abs(curNum));
+        }
       }
 
       if (hintEl) {
@@ -13263,7 +13552,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
 
       setTradeAnalysisLock(true);
-      const CLIENT_ANALYZE_TIMEOUT_MS = 30000;
+      const CLIENT_ANALYZE_TIMEOUT_MS = 38000;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), CLIENT_ANALYZE_TIMEOUT_MS);
 
@@ -13281,7 +13570,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             signal: controller.signal,
             body: JSON.stringify({
               imageBase64: scanCandidate.dataUrl,
-              mimeType: scanCandidate.mimeType || 'image/jpeg',
+              mimeType: scanCandidate.mimeType || 'image/png',
               mode
             })
           });
@@ -13344,7 +13633,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         } catch (err) {
           isNetworkOrTimeout = true;
           lastErrorMessage = err && err.name === 'AbortError'
-            ? 'Görsel analizi 30 saniyede tamamlanamadı. Tekrar deneyebilir veya bilgileri elle girebilirsiniz.'
+            ? 'Görsel analizi 38 saniyede tamamlanamadı. Tekrar deneyebilir veya bilgileri elle girebilirsiniz.'
             : 'Görsel analiz sunucusuna ulaşılamadı. Tekrar deneyebilir veya bilgileri elle düzenleyebilirsiniz.';
         }
 
@@ -13357,12 +13646,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           Boolean(lastTradeScanCandidates[mode]),
           'Tekrar Dene'
         );
+        const failFields = ['pair', 'direction', 'datetime', 'timeframe', 'entry', 'exit', 'sl', 'pnl'];
         activeTradeScanSession = {
           mode,
           previewUrl: scanCandidate.previewUrl || scanCandidate.dataUrl,
           extracted: {},
-          missing: ['pair', 'datetime', 'entry', 'exit', 'sl', 'pnl'],
-          errors: ['pair', 'datetime', 'entry', 'exit', 'sl', 'pnl'],
+          missing: [...failFields],
+          errors: [...failFields],
           uncertain: [],
           needsStrategy: true,
           apiError: lastErrorMessage || 'Görsel analiz edilemedi.',
@@ -14771,7 +15061,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           visible: true,
           text: '',
           color: isLight ? '#0F172A' : '#C5D5F5',
-          opacity: 8,
+          opacity: isLight ? 16 : 12,
           fontSize: 42
         }
       };
@@ -14790,13 +15080,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           rpChartSettings = defaults;
           return rpChartSettings;
         }
+        const mergedWm = { ...defaults.watermark, ...(parsed.watermark || {}) };
+        if (!parsed.customized && Number(mergedWm.opacity) <= 8) {
+          mergedWm.opacity = defaults.watermark.opacity;
+        }
         rpChartSettings = {
           customized: !!parsed.customized,
           updatedAt: parsed.updatedAt || '',
           candles: { ...defaults.candles, ...(parsed.candles || {}) },
           canvas: { ...defaults.canvas, ...(parsed.canvas || {}) },
           scales: { ...defaults.scales, ...(parsed.scales || {}) },
-          watermark: { ...defaults.watermark, ...(parsed.watermark || {}) }
+          watermark: mergedWm
         };
       } catch (_) {
         rpChartSettings = defaults;
@@ -14993,7 +15287,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       };
       const priceScaleMode = priceModeMap[s.scales.priceMode] ?? 0;
       const axisBorderColor = isLight ? 'rgba(15, 23, 42, 0.14)' : 'rgba(255, 255, 255, 0.16)';
-      const wmAlpha = Math.max(0.02, Math.min(0.5, Number(s.watermark.opacity ?? 8) / 100));
+      const wmAlpha = Math.max(isLight ? 0.08 : 0.05, Math.min(0.55, Number(s.watermark.opacity ?? (isLight ? 16 : 12)) / 100));
 
       return {
         layout: {
@@ -15463,6 +15757,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         }
       }
       rpTradePriceLines = { entry: null, sl: null, tp: null };
+      if (typeof scheduleRpDrawRender === 'function') scheduleRpDrawRender();
     }
 
     function getRpMinPriceStep() {
@@ -15790,6 +16085,25 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       applyRpHintBadge(document.getElementById('rp-sl-pnl-hint'), specs.slPnl);
       applyRpHintBadge(document.getElementById('rp-tp-pnl-hint'), specs.tpPnl);
 
+      const sumRiskEl = document.getElementById('rp-ctx-sum-risk');
+      const sumRrEl = document.getElementById('rp-ctx-sum-rr');
+      const sumTpEl = document.getElementById('rp-ctx-sum-tp');
+      if (sumRiskEl) {
+        sumRiskEl.textContent = specs.slPnl !== null ? formatRpLevelDollarText(specs.slPnl) : '—';
+      }
+      if (sumTpEl) {
+        sumTpEl.textContent = specs.tpPnl !== null ? formatRpLevelDollarText(specs.tpPnl) : '—';
+      }
+      if (sumRrEl) {
+        let rrVal = rpPreviewRrRatio;
+        if (specs.entryRef !== null && specs.sl !== null && specs.tp !== null) {
+          const rDist = Math.abs(specs.entryRef - specs.sl);
+          const tDist = Math.abs(specs.tp - specs.entryRef);
+          if (rDist > 0 && tDist > 0) rrVal = tDist / rDist;
+        }
+        sumRrEl.textContent = Number.isFinite(rrVal) && rrVal > 0 ? `1:${rrVal.toFixed(2)}` : '—';
+      }
+
       const activeItem = rpOpenTrade || rpPendingOrder;
       if (activeItem) {
         const isPending = !rpOpenTrade && !!rpPendingOrder;
@@ -15906,6 +16220,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         });
       }
       updateRpPanelDollarHints();
+      if (typeof scheduleRpDrawRender === 'function') scheduleRpDrawRender();
     }
 
     function setRpPreviewDirection(newDir) {
@@ -16182,6 +16497,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
       updateRpPanelDollarHints();
       updateRpChartOverlay();
+      if (typeof scheduleRpDrawRender === 'function') scheduleRpDrawRender();
     }
 
     function isRpContextPanelOpen() {
@@ -16411,6 +16727,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (!rpOpenTrade && !rpPendingOrder) {
         clearRpTradePriceLines();
       }
+      if (typeof scheduleRpDrawRender === 'function') scheduleRpDrawRender();
     }
 
     function updateRpContextActiveLive() {
@@ -16670,6 +16987,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         sideEl.textContent = `${activeItem.orderType} ${activeItem.direction} ${lotStr}`;
         pnlEl.textContent = `@ ${formatRpPrice(activeItem.orderPrice)}`;
         pnlEl.classList.remove('pos', 'neg');
+        tagEl.classList.remove('profit', 'loss');
       } else {
         const diff = activeItem.direction === 'Buy'
           ? (currentActiveCandle.close - activeItem.entryPrice)
@@ -16680,6 +16998,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         pnlEl.textContent = `${sign}${Math.abs(livePnl).toFixed(2)} USD`;
         pnlEl.classList.toggle('pos', livePnl > 0);
         pnlEl.classList.toggle('neg', livePnl < 0);
+        tagEl.classList.toggle('profit', livePnl > 0);
+        tagEl.classList.toggle('loss', livePnl < 0);
       }
     }
 
@@ -16707,6 +17027,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
       updateRpTradeControls();
       updateRpChartOverlay();
+      if (typeof scheduleRpDrawRender === 'function') scheduleRpDrawRender();
       if (hadPending && isRpContextPanelOpen()) {
         closeRpContextPanel();
       }
@@ -16722,6 +17043,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       rpOpenTrade = null;
       updateRpTradeControls();
       updateRpChartOverlay();
+      if (typeof scheduleRpDrawRender === 'function') scheduleRpDrawRender();
       if (isRpContextPanelOpen()) {
         syncRpContextPanelView();
       }
@@ -19856,7 +20178,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             const maxX = Math.max(pEntry.x, pTp.x);
             const minY = Math.min(pEntry.y, pTp.y, pSl.y);
             const maxY = Math.max(pEntry.y, pTp.y, pSl.y);
+            const textCx = (minX + maxX) / 2;
+            const onCenterPill = Math.abs(py - pEntry.y) <= 14 && px >= Math.min(minX, textCx - 70) && px <= Math.max(maxX, textCx + 70);
             const onEdge =
+              onCenterPill ||
               distPointToSegment(px, py, minX, pEntry.y, maxX, pEntry.y) <= tol + 2 ||
               distPointToSegment(px, py, minX, pTp.y, maxX, pTp.y) <= tol ||
               distPointToSegment(px, py, minX, pSl.y, maxX, pSl.y) <= tol ||
@@ -20481,54 +20806,116 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const hasCustomEntryColor = Boolean(d.color && d.color.toUpperCase() !== factoryDefCol);
         const entryCol = hasCustomEntryColor ? color : (isLightTheme ? '#0F172A' : '#E2E8F0');
 
+        const entryP = d.points[0].price;
+        const tpP = d.points[1].price;
+        const slP = d.points[2].price;
+        const startT = Math.min(Number(d.points[0].time) || 0, Number(d.points[1].time) || 0);
+        const endT = Math.max(Number(d.points[0].time) || 0, Number(d.points[1].time) || 0);
+        const liveEval = evaluateRpPositionLiveState({
+          direction: d.type === 'longpos' ? 'Long' : 'Short',
+          entry: entryP,
+          tp: tpP,
+          sl: slP,
+          startTime: startT,
+          endTime: endT
+        }, candles);
+
+        const isTpHit = liveEval.state === 'tp_hit';
+        const isSlHit = liveEval.state === 'sl_hit';
+        const tpEffectiveOp = isTpHit ? Math.min(0.84, posFillOp * 1.85) : (isSlHit ? posFillOp * 0.52 : posFillOp);
+        const slEffectiveOp = isSlHit ? Math.min(0.84, posFillOp * 1.85) : (isTpHit ? posFillOp * 0.52 : posFillOp);
+
         applyRpCanvasStrokeStyle(ctx, style, posStrokeW);
         ctx.save();
         if (tpH > 2) {
           const tpGrad = ctx.createLinearGradient(leftX, tpTop, leftX, tpTop + tpH);
           const tpNearEntry = pTp.y < pEntry.y ? 1 : 0;
-          tpGrad.addColorStop(tpNearEntry, hexToRgba(tpCol, Math.max(0.04, posFillOp * 0.65)));
-          tpGrad.addColorStop(1 - tpNearEntry, hexToRgba(tpCol, Math.min(0.75, posFillOp * 1.15)));
+          tpGrad.addColorStop(tpNearEntry, hexToRgba(tpCol, Math.max(0.04, tpEffectiveOp * 0.68)));
+          tpGrad.addColorStop(1 - tpNearEntry, hexToRgba(tpCol, Math.min(0.86, tpEffectiveOp * 1.2)));
           ctx.fillStyle = tpGrad;
         } else {
-          ctx.fillStyle = hexToRgba(tpCol, posFillOp);
+          ctx.fillStyle = hexToRgba(tpCol, tpEffectiveOp);
         }
         drawRpRoundedRectPath(ctx, leftX, tpTop, boxW, tpH, Math.min(4, tpH / 3, boxW / 6));
         ctx.fill();
-        ctx.strokeStyle = hexToRgba(tpCol, 0.88);
-        ctx.lineWidth = posStrokeW;
+        if (isTpHit) {
+          ctx.shadowColor = tpCol;
+          ctx.shadowBlur = 12;
+        }
+        ctx.strokeStyle = hexToRgba(tpCol, isTpHit ? 1 : 0.88);
+        ctx.lineWidth = isTpHit ? Math.max(2, posStrokeW + 0.9) : posStrokeW;
         ctx.stroke();
+        ctx.shadowBlur = 0;
 
         if (slH > 2) {
           const slGrad = ctx.createLinearGradient(leftX, slTop, leftX, slTop + slH);
           const slNearEntry = pSl.y < pEntry.y ? 1 : 0;
-          slGrad.addColorStop(slNearEntry, hexToRgba(slCol, Math.max(0.04, posFillOp * 0.65)));
-          slGrad.addColorStop(1 - slNearEntry, hexToRgba(slCol, Math.min(0.75, posFillOp * 1.15)));
+          slGrad.addColorStop(slNearEntry, hexToRgba(slCol, Math.max(0.04, slEffectiveOp * 0.68)));
+          slGrad.addColorStop(1 - slNearEntry, hexToRgba(slCol, Math.min(0.86, slEffectiveOp * 1.2)));
           ctx.fillStyle = slGrad;
         } else {
-          ctx.fillStyle = hexToRgba(slCol, posFillOp);
+          ctx.fillStyle = hexToRgba(slCol, slEffectiveOp);
         }
         drawRpRoundedRectPath(ctx, leftX, slTop, boxW, slH, Math.min(4, slH / 3, boxW / 6));
         ctx.fill();
-        ctx.strokeStyle = hexToRgba(slCol, 0.88);
+        if (isSlHit) {
+          ctx.shadowColor = slCol;
+          ctx.shadowBlur = 12;
+        }
+        ctx.strokeStyle = hexToRgba(slCol, isSlHit ? 1 : 0.88);
+        ctx.lineWidth = isSlHit ? Math.max(2, posStrokeW + 0.9) : posStrokeW;
         ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Live fiyat ilerleme dolgusu ve yatay anlık fiyat iz çizgisi
+        if (liveEval.hasPriceActivity && Number.isFinite(liveEval.currentPrice) && rpCandlestickSeries) {
+          const curRawY = rpCandlestickSeries.priceToCoordinate(liveEval.currentPrice);
+          if (curRawY !== null && Number.isFinite(curRawY)) {
+            const curY = curRawY + plot.top;
+            const boxMinY = Math.min(tpTop, slTop);
+            const boxMaxY = Math.max(tpTop + tpH, slTop + slH);
+            const clampedCurY = Math.max(boxMinY, Math.min(boxMaxY, curY));
+            const isInProfit = liveEval.liveDiff >= 0;
+            const activeZoneCol = isInProfit ? tpCol : slCol;
+            const progTop = Math.min(pEntry.y, clampedCurY);
+            const progH = Math.abs(clampedCurY - pEntry.y);
+            if (progH > 1.5 && boxW > 6) {
+              ctx.fillStyle = hexToRgba(activeZoneCol, isTpHit || isSlHit ? 0.24 : 0.16);
+              ctx.fillRect(leftX + 1, progTop, Math.max(2, boxW - 2), progH);
+            }
+            ctx.save();
+            ctx.setLineDash([4, 3]);
+            ctx.strokeStyle = hexToRgba(activeZoneCol, 0.95);
+            ctx.lineWidth = 1.3;
+            ctx.beginPath();
+            ctx.moveTo(leftX, clampedCurY);
+            ctx.lineTo(leftX + boxW, clampedCurY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.arc(leftX + boxW, clampedCurY, 3.2, 0, Math.PI * 2);
+            ctx.fillStyle = activeZoneCol;
+            ctx.fill();
+            ctx.restore();
+          }
+        }
         ctx.restore();
 
         ctx.strokeStyle = entryCol;
-        ctx.lineWidth = Math.max(1.4, lineWidth * 0.95);
+        ctx.lineWidth = Math.max(1.5, lineWidth * 0.95);
         ctx.beginPath();
         ctx.moveTo(leftX, pEntry.y);
         ctx.lineTo(leftX + boxW, pEntry.y);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        const entryP = d.points[0].price;
-        const tpP = d.points[1].price;
-        const slP = d.points[2].price;
         const risk = Math.abs(entryP - slP);
         const reward = Math.abs(tpP - entryP);
         const rr = risk > 0 ? (reward / risk) : 0;
         const tpPct = entryP > 0 ? (reward / entryP) * 100 : 0;
         const slPct = entryP > 0 ? (risk / entryP) * 100 : 0;
+
+        d._execBtnRect = null;
 
         if (d.showStats !== false) {
           const balVal = Number(document.getElementById('rp-balance-input')?.value);
@@ -20536,6 +20923,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           const hasRiskDollar = Number.isFinite(balVal) && balVal > 0 && Number.isFinite(riskPctVal) && riskPctVal > 0;
           const slDollar = hasRiskDollar ? (balVal * riskPctVal) / 100 : null;
           const tpDollar = (slDollar !== null && rr > 0) ? slDollar * rr : null;
+          const liveDollar = (slDollar !== null && liveEval.hasPriceActivity && risk > 0)
+            ? (slDollar * liveEval.liveR)
+            : null;
 
           ctx.font = '700 10.5px "Plus Jakarta Sans", system-ui, sans-serif';
           ctx.textAlign = 'center';
@@ -20552,74 +20942,134 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             }
             return candidates[candidates.length - 1];
           };
+
           if (tpH > 18 && boxW >= 54) {
             ctx.save();
             ctx.beginPath();
             ctx.rect(leftX + 3, tpTop, Math.max(0, boxW - 6), tpH);
             ctx.clip();
             ctx.fillStyle = isLightTheme ? '#065F46' : '#A7F3D0';
+            const tpPrefix = isTpHit ? '✓ TP ULAŞILDI' : 'Hedef';
             const tpDollarVal = tpDollar !== null ? `+$${tpDollar.toFixed(0)}` : '';
             const tpDollarStr = tpDollar !== null ? ` · ${tpDollarVal}` : '';
             const tpCandidates = tpDollar !== null
               ? [
-                  `Hedef: ${formatRpPrice(tpP)} (+${tpPct.toFixed(2)}%${tpDollarStr})`,
+                  `${tpPrefix}: ${formatRpPrice(tpP)} (+${tpPct.toFixed(2)}%${tpDollarStr})`,
                   `+${tpPct.toFixed(2)}%${tpDollarStr}`,
                   tpDollarVal,
                   `+${tpPct.toFixed(1)}%`
                 ]
               : [
-                  `Hedef: ${formatRpPrice(tpP)} (+${tpPct.toFixed(2)}%)`,
+                  `${tpPrefix}: ${formatRpPrice(tpP)} (+${tpPct.toFixed(2)}%)`,
                   `+${tpPct.toFixed(2)}%`,
                   `+${tpPct.toFixed(1)}%`
                 ];
             ctx.fillText(pickFittingLabel(tpCandidates), textCx, tpTop + tpH / 2);
             ctx.restore();
           }
+
           if (slH > 18 && boxW >= 54) {
             ctx.save();
             ctx.beginPath();
             ctx.rect(leftX + 3, slTop, Math.max(0, boxW - 6), slH);
             ctx.clip();
             ctx.fillStyle = isLightTheme ? '#9F1239' : '#FECDD3';
+            const slPrefix = isSlHit ? '✕ SL TETİKLENDİ' : 'Stop';
             const slDollarVal = slDollar !== null ? `-$${slDollar.toFixed(0)}` : '';
             const slDollarStr = slDollar !== null ? ` · ${slDollarVal}` : '';
             const slCandidates = slDollar !== null
               ? [
-                  `Stop: ${formatRpPrice(slP)} (-${slPct.toFixed(2)}%${slDollarStr})`,
+                  `${slPrefix}: ${formatRpPrice(slP)} (-${slPct.toFixed(2)}%${slDollarStr})`,
                   `-${slPct.toFixed(2)}%${slDollarStr}`,
                   slDollarVal,
                   `-${slPct.toFixed(1)}%`
                 ]
               : [
-                  `Stop: ${formatRpPrice(slP)} (-${slPct.toFixed(2)}%)`,
+                  `${slPrefix}: ${formatRpPrice(slP)} (-${slPct.toFixed(2)}%)`,
                   `-${slPct.toFixed(2)}%`,
                   `-${slPct.toFixed(1)}%`
                 ];
             ctx.fillText(pickFittingLabel(slCandidates), textCx, slTop + slH / 2);
             ctx.restore();
           }
+
           if (boxW >= 34) {
-            const rrLabel = boxW >= 120
-              ? `${d.type === 'longpos' ? 'LONG' : 'SHORT'} · R:R 1:${rr.toFixed(2)}`
-              : `1:${rr.toFixed(2)}`;
-            const lblW = ctx.measureText(rrLabel).width + 24;
+            const sideTag = d.type === 'longpos' ? 'LONG' : 'SHORT';
+            let liveBadgeText = '';
+            let badgeAccentCol = d.type === 'longpos' ? tpCol : slCol;
+            let badgeFillBg = isLightTheme ? 'rgba(15, 23, 42, 0.92)' : 'rgba(9, 15, 34, 0.94)';
+
+            if (liveEval.hasPriceActivity) {
+              const rSign = liveEval.liveR > 0 ? '+' : (liveEval.liveR < 0 ? '-' : '');
+              const rText = `${rSign}${Math.abs(liveEval.liveR).toFixed(2)}R`;
+              if (liveDollar !== null) {
+                const dSign = liveDollar > 0 ? '+' : (liveDollar < 0 ? '-' : '');
+                liveBadgeText = `${dSign}$${Math.abs(liveDollar).toFixed(0)} (${rText})`;
+              } else {
+                liveBadgeText = rText;
+              }
+              if (isTpHit || liveEval.liveDiff > 0) {
+                badgeAccentCol = tpCol;
+                badgeFillBg = isTpHit
+                  ? (isLightTheme ? '#065F46' : '#064E3B')
+                  : (isLightTheme ? 'rgba(6, 78, 59, 0.94)' : 'rgba(6, 48, 38, 0.95)');
+              } else if (isSlHit || liveEval.liveDiff < 0) {
+                badgeAccentCol = slCol;
+                badgeFillBg = isSlHit
+                  ? (isLightTheme ? '#9F1239' : '#881337')
+                  : (isLightTheme ? 'rgba(136, 19, 55, 0.94)' : 'rgba(76, 5, 25, 0.95)');
+              }
+            }
+
+            const showExecChip = isSelected && boxW >= 96;
+            const execChipText = d.type === 'longpos' ? '⚡ Buy Aç' : '⚡ Sell Aç';
+            const rrLabel = boxW >= 145 && liveBadgeText
+              ? `${sideTag} · 1:${rr.toFixed(2)} · ${liveBadgeText}`
+              : (boxW >= 115
+                  ? `${sideTag} · R:R 1:${rr.toFixed(2)}`
+                  : (liveBadgeText && boxW >= 82 ? `1:${rr.toFixed(2)} · ${liveBadgeText}` : `1:${rr.toFixed(2)}`));
+
+            ctx.font = '800 10.5px "Plus Jakarta Sans", system-ui, sans-serif';
+            const rrTextW = ctx.measureText(rrLabel).width;
+            const execGap = showExecChip ? 6 : 0;
+            const execChipW = showExecChip ? (ctx.measureText(execChipText).width + 14) : 0;
+            const lblW = rrTextW + 24 + execGap + execChipW;
             const badgeCx = Math.max(plot.left + lblW / 2 + 4, Math.min(plot.right - lblW / 2 - 4, textCx));
+            const badgeLeft = badgeCx - lblW / 2;
+
             ctx.save();
             ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
             ctx.shadowBlur = 10;
-            drawRpRoundedRectPath(ctx, badgeCx - lblW / 2, pEntry.y - 11, lblW, 22, 7);
-            ctx.fillStyle = isLightTheme ? 'rgba(15, 23, 42, 0.92)' : 'rgba(9, 15, 34, 0.94)';
+            drawRpRoundedRectPath(ctx, badgeLeft, pEntry.y - 12, lblW, 24, 7);
+            ctx.fillStyle = badgeFillBg;
             ctx.fill();
             ctx.shadowBlur = 0;
-            ctx.strokeStyle = hasCustomEntryColor ? hexToRgba(color, 0.9) : hexToRgba(d.type === 'longpos' ? tpCol : slCol, 0.78);
-            ctx.lineWidth = 1.2;
+            ctx.strokeStyle = hasCustomEntryColor ? hexToRgba(color, 0.9) : hexToRgba(badgeAccentCol, isTpHit || isSlHit ? 1 : 0.85);
+            ctx.lineWidth = isTpHit || isSlHit ? 1.6 : 1.2;
             ctx.stroke();
+
             ctx.beginPath();
-            ctx.arc(badgeCx - lblW / 2 + 10, pEntry.y, 3.2, 0, Math.PI * 2);
-            ctx.fillStyle = d.type === 'longpos' ? tpCol : slCol;
+            ctx.arc(badgeLeft + 10, pEntry.y, 3.3, 0, Math.PI * 2);
+            ctx.fillStyle = badgeAccentCol;
             ctx.fill();
+
+            ctx.textAlign = 'left';
             ctx.fillStyle = '#F8FAFC';
-            ctx.fillText(rrLabel, badgeCx + 5, pEntry.y + 0.5);
+            ctx.fillText(rrLabel, badgeLeft + 18, pEntry.y + 0.5);
+
+            if (showExecChip) {
+              const exX = badgeLeft + rrTextW + 24;
+              const exY = pEntry.y - 9;
+              const exH = 18;
+              drawRpRoundedRectPath(ctx, exX, exY, execChipW, exH, 5);
+              ctx.fillStyle = d.type === 'longpos' ? tpCol : slCol;
+              ctx.fill();
+              ctx.fillStyle = '#FFFFFF';
+              ctx.textAlign = 'center';
+              ctx.font = '800 9.5px "Plus Jakarta Sans", system-ui, sans-serif';
+              ctx.fillText(execChipText, exX + execChipW / 2, pEntry.y + 0.5);
+              d._execBtnRect = { x: exX, y: exY, w: execChipW, h: exH };
+            }
             ctx.restore();
           }
         }
@@ -20822,6 +21272,196 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       ctx.restore();
     }
 
+    function evaluateRpPositionLiveState(spec, visibleCandles) {
+      const candles = Array.isArray(visibleCandles) ? visibleCandles : [];
+      if (!spec || !Number.isFinite(spec.entry) || candles.length === 0) {
+        return { hasPriceActivity: false, currentPrice: null, liveDiff: 0, liveR: 0, tpHit: false, slHit: false, state: 'pending' };
+      }
+      const isLong = spec.direction === 'Long' || spec.direction === 'Buy';
+      const entry = spec.entry;
+      const tp = Number.isFinite(spec.tp) ? spec.tp : null;
+      const sl = Number.isFinite(spec.sl) ? spec.sl : null;
+      const startTime = Number.isFinite(spec.startTime) ? spec.startTime : candles[0].time;
+      const endTime = Number.isFinite(spec.endTime) ? spec.endTime : candles[candles.length - 1].time;
+
+      const lastVisible = candles[candles.length - 1];
+      if (startTime > lastVisible.time) {
+        return { hasPriceActivity: false, currentPrice: null, liveDiff: 0, liveR: 0, tpHit: false, slHit: false, state: 'pending' };
+      }
+
+      const evalEnd = endTime >= lastVisible.time ? lastVisible.time : endTime;
+      let tpHit = false;
+      let slHit = false;
+      let lastEvalCandle = null;
+
+      for (let i = 0; i < candles.length; i++) {
+        const c = candles[i];
+        if (c.time < startTime) continue;
+        if (c.time > evalEnd) break;
+        lastEvalCandle = c;
+        if (!tpHit && !slHit) {
+          if (isLong) {
+            if (sl !== null && c.low <= sl) slHit = true;
+            if (tp !== null && c.high >= tp) tpHit = true;
+          } else {
+            if (sl !== null && c.high >= sl) slHit = true;
+            if (tp !== null && c.low <= tp) tpHit = true;
+          }
+          if (tpHit && slHit) {
+            // Muhafazakar kural: tek mum içinde ikisi de görüldüyse açılışa uzaklık yerine SL önce sayılır
+            tpHit = false;
+          }
+        }
+      }
+
+      if (!lastEvalCandle) {
+        return { hasPriceActivity: false, currentPrice: null, liveDiff: 0, liveR: 0, tpHit: false, slHit: false, state: 'pending' };
+      }
+
+      const currentPrice = tpHit ? tp : (slHit ? sl : lastEvalCandle.close);
+      const liveDiff = isLong ? (currentPrice - entry) : (entry - currentPrice);
+      const riskDist = sl !== null ? Math.abs(entry - sl) : 0;
+      const liveR = riskDist > 0 ? (liveDiff / riskDist) : 0;
+      let state = 'flat';
+      if (tpHit) state = 'tp_hit';
+      else if (slHit) state = 'sl_hit';
+      else if (liveDiff > 0) state = 'profit';
+      else if (liveDiff < 0) state = 'loss';
+
+      return {
+        hasPriceActivity: true,
+        currentPrice,
+        liveDiff,
+        liveR,
+        tpHit,
+        slHit,
+        state
+      };
+    }
+
+    function renderRpTradePreviewOverlay(ctx, plot, isLightTheme) {
+      if (!rpChartInstance || !rpCandlestickSeries) return;
+      const candles = getVisibleRpCandles();
+      if (!candles || candles.length === 0) return;
+
+      const activeItem = rpOpenTrade || rpPendingOrder;
+      const isPreview = !activeItem && !!(rpPreviewOrder && rpPreviewOrder.active);
+      if (!activeItem && !isPreview) return;
+
+      const spec = activeItem
+        ? {
+            direction: activeItem.direction,
+            entry: rpOpenTrade ? activeItem.entryPrice : activeItem.orderPrice,
+            sl: activeItem.sl,
+            tp: activeItem.tp,
+            lot: activeItem.lot,
+            contractSize: activeItem.contractSize,
+            startTime: rpOpenTrade ? activeItem.entryTime : (activeItem.createdTime || candles[candles.length - 1].time),
+            isLiveOpen: !!rpOpenTrade
+          }
+        : {
+            direction: rpPreviewOrder.direction || 'Buy',
+            entry: rpPreviewOrder.entry,
+            sl: rpPreviewOrder.sl,
+            tp: rpPreviewOrder.tp,
+            lot: parseOptionalRpInputNumber('rp-lot-input') || 1,
+            contractSize: parseOptionalRpInputNumber('rp-contract-size-input') || 1,
+            startTime: candles[Math.max(0, candles.length - 1)].time,
+            isLiveOpen: false
+          };
+
+      if (!Number.isFinite(spec.entry)) return;
+      const entryYRaw = rpCandlestickSeries.priceToCoordinate(spec.entry);
+      if (entryYRaw === null || !Number.isFinite(entryYRaw)) return;
+      const entryY = entryYRaw + plot.top;
+
+      const lastCandle = candles[candles.length - 1];
+      const startPx = rpPointToPixel({ time: spec.startTime, price: spec.entry }, plot);
+      const lastPx = rpPointToPixel({ time: lastCandle.time, price: spec.entry }, plot);
+      const barPx = lastPx ? lastPx.x : plot.right - 90;
+      const leftX = Math.max(plot.left + 4, Math.min(plot.right - 96, startPx ? startPx.x : (barPx - 36)));
+      const rightX = Math.min(plot.right - 4, Math.max(leftX + 110, barPx + 90));
+      const boxW = Math.max(36, rightX - leftX);
+
+      const tpCol = '#10B981';
+      const slCol = '#F43F5E';
+      const evalState = spec.isLiveOpen
+        ? evaluateRpPositionLiveState({
+            direction: spec.direction,
+            entry: spec.entry,
+            tp: spec.tp,
+            sl: spec.sl,
+            startTime: spec.startTime,
+            endTime: lastCandle.time
+          }, candles)
+        : { hasPriceActivity: false, liveDiff: 0, liveR: 0, state: 'pending' };
+
+      const inProfit = evalState.hasPriceActivity && evalState.liveDiff > 0;
+      const inLoss = evalState.hasPriceActivity && evalState.liveDiff < 0;
+
+      ctx.save();
+      if (Number.isFinite(spec.tp)) {
+        const tpYRaw = rpCandlestickSeries.priceToCoordinate(spec.tp);
+        if (tpYRaw !== null && Number.isFinite(tpYRaw)) {
+          const tpY = tpYRaw + plot.top;
+          const topY = Math.min(entryY, tpY);
+          const h = Math.abs(tpY - entryY);
+          const tpAlpha = evalState.state === 'tp_hit' ? 0.28 : (inProfit ? 0.20 : 0.11);
+          if (h > 2) {
+            ctx.fillStyle = hexToRgba(tpCol, tpAlpha);
+            ctx.fillRect(leftX, topY, boxW, h);
+          }
+        }
+      }
+
+      if (Number.isFinite(spec.sl)) {
+        const slYRaw = rpCandlestickSeries.priceToCoordinate(spec.sl);
+        if (slYRaw !== null && Number.isFinite(slYRaw)) {
+          const slY = slYRaw + plot.top;
+          const topY = Math.min(entryY, slY);
+          const h = Math.abs(slY - entryY);
+          const slAlpha = evalState.state === 'sl_hit' ? 0.28 : (inLoss ? 0.20 : 0.11);
+          if (h > 2) {
+            ctx.fillStyle = hexToRgba(slCol, slAlpha);
+            ctx.fillRect(leftX, topY, boxW, h);
+          }
+        }
+      }
+
+      // Önizleme modunda sağ fiyat etiketi ve #rp-pos-tag ile çakışmayan kompakt R:R rozeti
+      if (isPreview) {
+        let badgeTxt = spec.direction === 'Buy' ? 'BUY' : 'SELL';
+        if (Number.isFinite(spec.sl) && Number.isFinite(spec.tp)) {
+          const riskD = Math.abs(spec.entry - spec.sl);
+          const rewD = Math.abs(spec.tp - spec.entry);
+          if (riskD > 0) {
+            badgeTxt += ` · 1:${(rewD / riskD).toFixed(2)}`;
+          }
+        }
+        if (Number.isFinite(spec.tp)) {
+          const tpUsd = computeRpLevelDollarPnl(spec.tp, spec.entry, spec.direction, spec.lot || 1, spec.contractSize || 1);
+          if (tpUsd !== null) badgeTxt += ` · Hedef +$${Math.abs(tpUsd).toFixed(0)}`;
+        }
+
+        ctx.font = '800 10px "Plus Jakarta Sans", system-ui, sans-serif';
+        const tw = ctx.measureText(badgeTxt).width + 18;
+        const maxRightX = Math.max(plot.left + 8, plot.right - tw - 138);
+        const bx = Math.max(plot.left + 8, Math.min(maxRightX, leftX + 8));
+        const by = Math.max(plot.top + 6, Math.min(plot.bottom - 26, entryY - 11));
+        drawRpRoundedRectPath(ctx, bx, by, tw, 22, 6);
+        ctx.fillStyle = isLightTheme ? 'rgba(15, 23, 42, 0.90)' : 'rgba(10, 17, 38, 0.92)';
+        ctx.fill();
+        ctx.strokeStyle = spec.direction === 'Sell' ? slCol : '#3B82F6';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        ctx.fillStyle = '#F8FAFC';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(badgeTxt, bx + tw / 2, by + 11);
+      }
+      ctx.restore();
+    }
+
     function renderRpDrawings() {
       const wrap = document.getElementById('rp-chart-wrap');
       const canvas = document.getElementById('rp-draw-canvas');
@@ -20844,6 +21484,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       ctx.beginPath();
       ctx.rect(plot.left, plot.top, plot.width, plot.height);
       ctx.clip();
+
+      renderRpTradePreviewOverlay(ctx, plot, isLightTheme);
 
       if (!rpDrawPrefs || !rpDrawPrefs.hideDrawings) {
         for (const d of rpDrawings) {
@@ -20934,12 +21576,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const widthEl = document.getElementById('rp-draw-prop-width');
       const styleEl = document.getElementById('rp-draw-prop-style');
       const lockBtn = document.getElementById('rp-draw-prop-lock');
+      const posSep = document.getElementById('rp-draw-pos-sep');
+      const posExecBtn = document.getElementById('rp-draw-prop-execute');
       if (!bar) return;
 
       const activeId = rpSelectedDrawingId || rpHoveredDrawingId;
       const sel = activeId ? rpDrawings.find(d => d.id === activeId) : null;
       if (!sel || (rpDrawPrefs && rpDrawPrefs.hideDrawings)) {
         bar.classList.remove('visible');
+        if (posSep) posSep.classList.remove('visible');
+        if (posExecBtn) posExecBtn.classList.remove('visible');
         return;
       }
       if (colorEl) colorEl.value = sel.color || (RP_DRAW_TOOLS[sel.type]?.defaultColor) || '#38BDF8';
@@ -20949,6 +21595,22 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         lockBtn.classList.toggle('active', !!sel.locked);
         lockBtn.textContent = sel.locked ? '🔓' : '🔒';
         lockBtn.title = sel.locked ? 'Kilidi Aç' : 'Çizimi Kilitle';
+      }
+
+      const isPosTool = sel.type === 'longpos' || sel.type === 'shortpos';
+      if (posSep) posSep.classList.toggle('visible', isPosTool);
+      if (posExecBtn) {
+        posExecBtn.classList.toggle('visible', isPosTool);
+        if (isPosTool && sel.points && sel.points.length >= 3) {
+          const isLong = sel.type === 'longpos';
+          const risk = Math.abs(sel.points[0].price - sel.points[2].price);
+          const reward = Math.abs(sel.points[1].price - sel.points[0].price);
+          const rr = risk > 0 ? (reward / risk) : 0;
+          posExecBtn.classList.toggle('sell', !isLong);
+          posExecBtn.textContent = rr > 0
+            ? `${isLong ? 'Buy Aç' : 'Sell Aç'} · 1:${rr.toFixed(1)}`
+            : (isLong ? 'Buy Aç' : 'Sell Aç');
+        }
       }
       bar.classList.add('visible');
     }
@@ -21417,6 +22079,137 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       syncRpDrawPropsBar();
       renderRpDrawings();
       showToast('Çizim çoğaltıldı.', 'success');
+    }
+
+    let rpLastArrowNudgeUndo = { id: null, ts: 0 };
+
+    function nudgeRpSelectedPositionBox(key, shiftKey) {
+      if (!rpSelectedDrawingId || !rpChartInstance || !rpCandlestickSeries) return false;
+      const sel = rpDrawings.find(d => d.id === rpSelectedDrawingId);
+      if (!sel || (sel.type !== 'longpos' && sel.type !== 'shortpos') || !Array.isArray(sel.points) || sel.points.length < 3) {
+        return false;
+      }
+      if (sel.locked) {
+        showToast('Bu pozisyon kutusu kilitli. Kaydırmak için önce kilidi açın.', 'info');
+        return true;
+      }
+
+      const now = Date.now();
+      if (rpLastArrowNudgeUndo.id !== sel.id || (now - rpLastArrowNudgeUndo.ts) > 650) {
+        pushRpDrawUndoSnapshot();
+      }
+      rpLastArrowNudgeUndo = { id: sel.id, ts: now };
+
+      const mult = shiftKey ? 5 : 1;
+      if (key === 'ArrowLeft' || key === 'ArrowRight') {
+        const barDelta = (key === 'ArrowRight' ? 1 : -1) * mult;
+        const barSec = Math.max(1, getRpBarIntervalSec());
+        sel.points.forEach(pt => {
+          const curLogical = rpLogicalFromTime(pt.time);
+          if (curLogical !== null && Number.isFinite(curLogical)) {
+            const nextTime = rpTimeFromLogical(curLogical + barDelta);
+            if (nextTime !== null && Number.isFinite(nextTime)) {
+              pt.time = nextTime;
+              return;
+            }
+          }
+          pt.time = Number(pt.time) + barDelta * barSec;
+        });
+      } else if (key === 'ArrowUp' || key === 'ArrowDown') {
+        const plot = getRpPlotRect();
+        let step = getRpMinPriceStep() * 5;
+        if (plot && plot.height > 20) {
+          const topP = rpCandlestickSeries.coordinateToPrice(0);
+          const botP = rpCandlestickSeries.coordinateToPrice(plot.height);
+          if (topP !== null && botP !== null && Number.isFinite(topP) && Number.isFinite(botP) && topP > botP) {
+            step = Math.max(getRpMinPriceStep(), roundRpPrice((topP - botP) * (shiftKey ? 0.018 : 0.004)));
+          }
+        }
+        const priceDelta = (key === 'ArrowUp' ? 1 : -1) * step;
+        const minStep = getRpMinPriceStep();
+        const minPtPrice = Math.min(...sel.points.map(p => Number(p.price) || 0));
+        const clampedDelta = (minPtPrice + priceDelta < minStep) ? (minStep - minPtPrice) : priceDelta;
+        sel.points.forEach(pt => {
+          pt.price = roundRpPrice(Math.max(minStep, (Number(pt.price) || 0) + clampedDelta));
+        });
+      } else {
+        return false;
+      }
+
+      saveRpDrawingsToStorage();
+      syncRpDrawPropsBar();
+      renderRpDrawings();
+      return true;
+    }
+
+    function executeRpTradeFromDrawing(drawId) {
+      const targetId = drawId || rpSelectedDrawingId || rpHoveredDrawingId;
+      const d = targetId ? rpDrawings.find(item => item.id === targetId) : null;
+      if (!d || (d.type !== 'longpos' && d.type !== 'shortpos') || !Array.isArray(d.points) || d.points.length < 3) {
+        return false;
+      }
+
+      const currentCandle = rpReplayActive ? getRpCurrentActiveCandle() : null;
+      if (!rpReplayActive || !currentCandle) {
+        showToast('Kutudan işlem açmak için önce CSV yükleyip Başlangıç mumu seçin.', 'info');
+        return false;
+      }
+      if (rpOpenTrade !== null || rpPendingOrder !== null) {
+        showToast('Aynı anda yalnızca bir açık pozisyon veya bekleyen emir bulunabilir.', 'error');
+        return false;
+      }
+
+      const direction = d.type === 'longpos' ? 'Buy' : 'Sell';
+      const boxEntry = roundRpPrice(d.points[0].price);
+      const boxTp = roundRpPrice(d.points[1].price);
+      const boxSl = roundRpPrice(d.points[2].price);
+      const curClose = roundRpPrice(currentCandle.close);
+      const marketTol = Math.max(getRpMinPriceStep() * 2, Math.abs(curClose) * 0.0003);
+
+      let orderType = 'Market';
+      if (Math.abs(boxEntry - curClose) > marketTol) {
+        if (direction === 'Buy') {
+          orderType = boxEntry < curClose ? 'Limit' : 'Stop';
+        } else {
+          orderType = boxEntry > curClose ? 'Limit' : 'Stop';
+        }
+      }
+
+      rpPreviewDirection = direction;
+      const typeEl = document.getElementById('rp-order-type-select');
+      const ordPriceEl = document.getElementById('rp-order-price-input');
+      const slEl = document.getElementById('rp-sl-input');
+      const tpEl = document.getElementById('rp-tp-input');
+
+      if (typeEl) typeEl.value = orderType;
+      syncRpOrderTypeVisibility();
+
+      const effectiveEntry = orderType === 'Market' ? curClose : boxEntry;
+      if (ordPriceEl && orderType !== 'Market') {
+        ordPriceEl.value = effectiveEntry.toFixed(rpCurrentPrecision);
+      }
+      if (slEl) slEl.value = boxSl.toFixed(rpCurrentPrecision);
+      if (tpEl) tpEl.value = boxTp.toFixed(rpCurrentPrecision);
+
+      const slDist = Math.abs(effectiveEntry - boxSl);
+      const tpDist = Math.abs(boxTp - effectiveEntry);
+      if (slDist > 0 && tpDist > 0) {
+        rpPreviewRrRatio = Math.max(0.1, Number((tpDist / slDist).toFixed(2)));
+      }
+      rpPreviewOrder = {
+        active: true,
+        direction,
+        rrRatio: rpPreviewRrRatio,
+        entry: effectiveEntry,
+        sl: boxSl,
+        tp: boxTp
+      };
+
+      syncRpLotFromRisk();
+      syncRpDirectionAndRrUi();
+      openRpVirtualTrade(direction);
+      renderRpDrawings();
+      return true;
     }
 
     let rpSettingsTargetId = null;
@@ -22467,10 +23260,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         lotInput.addEventListener('input', () => {
           updateRpPanelDollarHints();
           updateRpPriceLineLabels();
+          if (typeof renderRpDrawings === 'function') renderRpDrawings();
         });
         lotInput.addEventListener('change', () => {
           updateRpPanelDollarHints();
           updateRpPriceLineLabels();
+          if (typeof renderRpDrawings === 'function') renderRpDrawings();
         });
       }
       if (contractInput) {
@@ -22478,11 +23273,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           if (!rpOpenTrade && !rpPendingOrder) syncRpLotFromRisk();
           updateRpPanelDollarHints();
           updateRpPriceLineLabels();
+          if (typeof renderRpDrawings === 'function') renderRpDrawings();
         });
         contractInput.addEventListener('change', () => {
           if (!rpOpenTrade && !rpPendingOrder) syncRpLotFromRisk();
           updateRpPanelDollarHints();
           updateRpPriceLineLabels();
+          if (typeof renderRpDrawings === 'function') renderRpDrawings();
         });
       }
 
@@ -22779,6 +23576,14 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           return;
         }
 
+        if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') && !isTyping && !hasOpenUiModal && !e.ctrlKey && !e.metaKey && !e.altKey && rpSelectedDrawingId) {
+          if (nudgeRpSelectedPositionBox(e.key, e.shiftKey)) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+        }
+
         if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'z' && !isTyping && !hasOpenUiModal) {
           if (undoLastRpDrawAction()) {
             e.preventDefault();
@@ -23068,6 +23873,14 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           e.stopPropagation();
           const targetId = getPropsBarTargetId();
           if (targetId) deleteRpDrawingById(targetId);
+        });
+      }
+      const propExecute = document.getElementById('rp-draw-prop-execute');
+      if (propExecute) {
+        propExecute.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const targetId = getPropsBarTargetId();
+          if (targetId) executeRpTradeFromDrawing(targetId);
         });
       }
 
@@ -23690,6 +24503,16 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           }
 
           if (!rpIsPickingStart) {
+            if (rpSelectedDrawingId) {
+              const selPos = rpDrawings.find(d => d.id === rpSelectedDrawingId && (d.type === 'longpos' || d.type === 'shortpos'));
+              const rBox = selPos && selPos._execBtnRect;
+              if (rBox && x >= rBox.x - 3 && x <= rBox.x + rBox.w + 3 && y >= rBox.y - 3 && y <= rBox.y + rBox.h + 3) {
+                e.preventDefault();
+                e.stopPropagation();
+                executeRpTradeFromDrawing(selPos.id);
+                return;
+              }
+            }
             const drawHit = hitTestRpDrawing(x, y);
             if (drawHit && drawHit.drawing) {
               if (rpLongPressTimer !== null) {

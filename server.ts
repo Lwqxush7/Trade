@@ -17,12 +17,12 @@ export interface ModelAttempt {
   timeoutMs?: number;
 }
 
-export const ANALYZE_SERVER_BUDGET_MS = 26_000;
+export const ANALYZE_SERVER_BUDGET_MS = 32_000;
 
 export const MODEL_ATTEMPTS: readonly ModelAttempt[] = [
-  { model: 'gemini-4-hydrogen', thinkingLevel: ThinkingLevel.LOW, delayMs: 0, timeoutMs: 11_500 },
-  { model: 'gemini-3.1-flash-lite', thinkingLevel: null, delayMs: 250, timeoutMs: 7_500 },
-  { model: 'gemini-3.1-flash-lite', thinkingLevel: null, delayMs: 400, timeoutMs: 6_500 },
+  { model: 'gemini-4-hydrogen', thinkingLevel: ThinkingLevel.LOW, delayMs: 0, timeoutMs: 16_000 },
+  { model: 'gemini-3.8-flash', thinkingLevel: null, delayMs: 150, timeoutMs: 7_000 },
+  { model: 'gemini-3.1-flash-lite', thinkingLevel: null, delayMs: 200, timeoutMs: 8_000 },
 ];
 
 export interface GeminiErrorInfo {
@@ -75,6 +75,14 @@ export function isTransientGeminiError(err: unknown): boolean {
   );
 }
 
+export function isFallthroughGeminiError(err: unknown): boolean {
+  if (isTransientGeminiError(err)) return true;
+  const info = parseGeminiErrorInfo(err);
+  if (info.status === 404 || info.status === 400) return true;
+  const combined = `${info.statusText} ${info.message}`;
+  return /NOT_FOUND|not found|is not supported|unsupported|INVALID_ARGUMENT/i.test(combined);
+}
+
 export function formatFriendlyGeminiError(err: unknown): { status: number; error: string } {
   const info = parseGeminiErrorInfo(err);
   const combined = `${info.statusText} ${info.message}`;
@@ -98,7 +106,7 @@ export function formatFriendlyGeminiError(err: unknown): { status: number; error
   ) {
     return {
       status: 504,
-      error: 'Görsel analizi 30 saniyelik zaman aşımına ulaştı. "Tekrar Dene" veya "Elle Tamamla" kullanabilirsiniz.',
+      error: 'Görsel analizi zaman aşımına ulaştı. "Tekrar Dene" veya "Elle Tamamla" kullanabilirsiniz.',
     };
   }
   if (
@@ -108,6 +116,12 @@ export function formatFriendlyGeminiError(err: unknown): { status: number; error
     return {
       status: 503,
       error: 'Yapay zekâ servisi şu an geçici olarak yoğun. "Tekrar Dene" ile yeniden tarayabilir veya "Elle Tamamla" kullanabilirsiniz.',
+    };
+  }
+  if (info.status === 404 || /NOT_FOUND|not found/i.test(combined)) {
+    return {
+      status: 404,
+      error: 'Seçili analiz modeline erişilemedi. "Tekrar Dene" veya "Elle Tamamla" kullanabilirsiniz.',
     };
   }
   return {
@@ -188,12 +202,12 @@ export async function runWithModelFallback<T>(
       return { result, modelUsed: attempt.model, attemptCount: i + 1 };
     } catch (err) {
       lastError = err;
-      const transient = isTransientGeminiError(err);
+      const canFallthrough = isFallthroughGeminiError(err);
       const info = parseGeminiErrorInfo(err);
       const timeLeft = totalBudgetMs - (Date.now() - startedAt);
-      if (transient && !options.parentSignal?.aborted && timeLeft > 1500 && i < attempts.length - 1) {
+      if (canFallthrough && !options.parentSignal?.aborted && timeLeft > 1200 && i < attempts.length - 1) {
         console.warn(
-          `[analyze-trade-image retry]: ${attempt.model} (${info.status} ${info.statusText || 'TRANSIENT'}), sonraki denemeye geçiliyor...`
+          `[analyze-trade-image retry]: ${attempt.model} (${info.status} ${info.statusText || 'FALLTHROUGH'}), sonraki modele geçiliyor...`
         );
         continue;
       }
@@ -389,29 +403,93 @@ function buildSystemInstruction(): string {
   return [
     'Sen profesyonel bir finansal grafik analiz ve veri çıkarım motorusun. Görevin, yüklenen işlem (trade) grafik ekran görüntüsünden yalnızca kesin form verilerini ve kısa teknik yürütme notunu çıkarmaktır.',
     '',
-    '1. TARİH VE SAAT OKUMA (ÇOK ÖNEMLİ):',
-    '- Grafiğin EN ALTINDAKİ X-ekseni (zaman ekseni) üzerindeki saat ve tarih etiketlerini dikkatle incele.',
-    '- Koyu/renkli crosshair saat rozetine (örn. "16:54", "11 Kas \'26 16:54", "2026-11-11 16:54"), pozisyon kutusunun sol kenarının (giriş mumu) dikey olarak denk geldiği alttaki X-ekseni saat işaretlerine ve sağ alt köşedeki grafik saatine bak.',
-    '- Alttaki zaman ekseninde saat (HH:mm) okunabiliyorsa ASLA time alanını null bırakma. Tarih (gün/ay) görünmüyorsa bile saati mutlaka time alanına "HH:mm" (24 saat) olarak yaz.',
-    '- Tarihte yıl yazmıyorsa içinde bulunulan yılı (2026) kabul et; gün ve ay yoksa date alanını null bırakıp time alanını yine de doldur.',
+    '1. PARİTE VE TIMEFRAME OKUMA (SOL ÜST VEYA ORTA FİLİGRAN):',
+    '- Parite ve zaman dilimi yalnızca sol üst köşede değil, çoğunlukla grafiğin TAM ORTASINDAKİ (arka plan filigranı / watermark) "PARİTE · TF" (ör. "XAUUSD · M5", "NAS100 · M15", "EURUSD · H1") yazısında da yer alır.',
+    '- Açık (beyaz) veya koyu zemin üzerinde silik olsa bile grafik ortasındaki filigran metnini dikkatle oku; pair ve timeframe alanlarını buradan çıkar.',
     '',
-    '2. FİYAT VE YÖN TUTARLILIĞI:',
-    '- TradingView/cTrader/MT5 Long/Short pozisyon kutularında yeşil alan TP (hedef), kırmızı alan SL (stop) ve orta çizgi Entry (giriş) fiyatıdır.',
-    '- Yeşil bölge girişin ÜSTÜNDE ise direction="Long", yeşil bölge girişin ALTINDA ise direction="Short" olarak belirle.',
-    '- Entry, Exit ve SL değerlerini yalnızca sağ fiyat eksenindeki etiketlerden veya pozisyon/emir çizgilerinden sayı olarak oku.',
-    '- İşlem hedefte kapandıysa Exit=TP, stop olduysa Exit=SL olur. Long Win için exit > entry; Long Loss için exit < entry; Short Win için exit < entry; Short Loss için exit > entry kuralına uy.',
-    '- TradingView Long/Short pozisyon kutusundaki hedef/stop mesafe yüzdelerini (örn. +0.17%, -0.09%) ASLA riskPct olarak alma. Yalnızca açıkça "Account Risk %" veya hesap risk yüzdesi yazıyorsa oku, aksi halde riskPct ve pnl için null döndür.',
+    '2. TARİH VE SAAT OKUMA (ÇOK ÖNEMLİ):',
+    '- Grafiğin EN ALTINDAKİ X-ekseni (zaman ekseni) üzerindeki saat ve tarih etiketlerini dikkatle incele (ör. "09:00 ... 18:00  18:45").',
+    '- Koyu/renkli crosshair saat rozetine (örn. "16:54", "11 Kas \'26 16:54", "2026-11-11 16:54"), giriş mumunun/pozisyonun dikey olarak denk geldiği alttaki X-ekseni saat işaretlerine ve sağ alt köşedeki son mum saatine bak.',
+    '- Alttaki zaman ekseninde saat (HH:mm) okunabiliyorsa ASLA time alanını null bırakma. Tarih görünmüyorsa date için null döndürüp time alanını mutlaka "HH:mm" olarak doldur.',
+    '- Tarihte yıl yazmıyorsa içinde bulunulan yılı (2026) kabul et.',
     '',
-    '3. İŞLEM NOTLARI (notes ALANI) — KESİN KURALLAR:',
+    '3. FİYAT, ÇİZGİ ETİKETLERİ, TP/SL ÇIKIŞ KURALI VE YÖN TUTARLILIĞI:',
+    '- TradingView/cTrader/MT5 Long/Short pozisyon kutularında yeşil alan TP (hedef), kırmızı alan SL (stop) ve orta çizgi Entry (giriş) fiyatıdır. Yeşil bölge girişin ÜSTÜNDE ise Long, ALTINDA ise Short.',
+    '- Yatay çizgi etiketli grafiklerde (sağ fiyat ekseninde renkli rozetler):',
+    '  * "Sell Giriş" / "Sell" / "Short Giriş" mavi rozetinin yanındaki fiyat = entry ve direction = "Short".',
+    '  * "Buy Giriş" / "Buy" / "Long Giriş" rozetinin yanındaki fiyat = entry ve direction = "Long".',
+    '  * Kırmızı "SL" veya "SL (-$...)" rozetinin yanındaki sayısal eksen fiyatı = sl.',
+    '  * Yeşil "TP" veya "TP (+$...)" rozetinin yanındaki sayısal eksen fiyatı = tp (hedef TP seviyesi).',
+    '- ÇOK ÖNEMLİ — ÇIKIŞ (exit) FİYATI İLE ANLIK FİYAT ROZETİNİ KARIŞTIRMA:',
+    '  * Grafik sağ ekseninde hem yeşil "TP (+$...) | 3897.32" etiketi hem de en son muma ait etiketsiz bir anlık fiyat rozeti (örn. TP çizgisinin ötesinde "3890.12") aynı anda görülebilir.',
+    '  * Mumlar veya son fiyat "TP" çizgisine değmiş ya da TP çizgisini geçmişse (Short işlemde fiyat TP altına indiyse; Long işlemde fiyat TP üstüne çıktıysa), pozisyon TP seviyesinde kârla kapanmış demektir: Bu durumda exit MUTLAKA tp fiyatı (örn. 3897.32) olmalıdır; TP ötesindeki anlık mum fiyatını (örn. 3890.12) ASLA exit alma! result = "Win" döndür.',
+    '  * Benzer şekilde mumlar veya son fiyat "SL" çizgisine değmiş ya da SL çizgisini geçmişse (Short işlemde fiyat SL üstüne çıktıysa; Long işlemde fiyat SL altına indiyse), pozisyon SL seviyesinde kapanmış demektir: exit MUTLAKA sl fiyatı olmalıdır ve result = "Loss" döndür.',
+    '  * Etiketsiz son fiyat/kapanış rozetini yalnızca ortada TP/SL çizgisi yoksa veya mumlar henüz ne TP ne SL çizgisine değmeden arada kapanmışsa exit olarak kullan.',
+    '- Short işlemde: Win için exit < entry ve sl > entry; Loss için exit > entry ve sl > entry.',
+    '- Long işlemde: Win için exit > entry ve sl < entry; Loss için exit < entry ve sl < entry.',
+    '- TradingView pozisyon kutusundaki hedef/stop mesafe yüzdelerini (örn. +0.17%, -0.09%) ASLA riskPct olarak alma. Yalnızca açıkça hesap risk yüzdesi yazıyorsa oku, aksi halde riskPct için null döndür.',
+    '- Grafik üzerindeki "SL (-$998.64)" veya "TP (+$2598.80)" etiketleri yalnızca ekran görüntüsüne ait bilgi rozetidir; kullanıcı hesabı üzerinden hesaplama yapılacağı için pnl alanına ekranda kesin gerçekleşmiş hesap PnL yazmıyorsa null döndürebilirsin.',
+    '',
+    '4. İŞLEM NOTLARI (notes ALANI) — KESİN KURALLAR:',
     '- ASLA "Kullanıcı", "Trader", "Yatırımcı" ifadelerini veya "...kurmuş", "...açmış", "...hedeflemiş" gibi üçüncü tekil anlatımı kullanma.',
-    '- ASLA parite adını, zaman dilimini (M1, M15 vb.), yönü (Long/Short) veya R:R oranını (1:2.32 vb.) tekrar eden arka plan özet cümlesi yazma. Örneğin: "Kullanıcı, NAS100 paritesinde M1 zaman diliminde 1:2.32 risk-kazanç oranına sahip bir Short pozisyon kurmuş." GİBİ BİR CÜMLE KESİNLİKLE YASAKTIR.',
-    '- Yalnızca grafikte teknik olarak ne yapıldığını kısa, doğrudan ve edilgen işlem günlüğü diliyle 1-2 cümlede yaz (örnek: "Üst likidite alımı sonrası oluşan FVG bölgesinden tepkiyle işleme girildi. Son swing tepesi üzerinde stop konumlandırılıp alt likidite seviyesinde kâr alındı.").',
+    '- ASLA parite adını, zaman dilimini (M1, M5, M15 vb.), yönü (Long/Short) veya R:R oranını (1:2.32 vb.) tekrar eden arka plan özet cümlesi yazma.',
+    '- Yalnızca grafikte teknik olarak ne yapıldığını kısa, doğrudan ve edilgen işlem günlüğü diliyle 1-2 cümlede yaz (örnek: "Likidite alımı sonrası yapı kırılımı ile işleme girildi. Son swing tepe üzerinde stop konumlandırılıp alt likidite bölgesinde kâr alındı.").',
     '',
-    '4. EMİN OLUNAMAYAN ALANLAR (uncertainFields ALANI):',
-    '- Görselde silik, kesik, kısmen görünen, başka etiketlerle çakışan veya tam emin olamadan çıkardığın alanların adlarını uncertainFields dizisine ekle.',
-    '- Kullanabileceğin alan adları: "pair", "direction", "date", "time", "timeframe", "session", "entry", "exit", "sl", "riskPct", "pnl", "result".',
-    '- Ekranda net ve kesin biçimde okuduğun alanları uncertainFields içine EKLEME.'
+    '5. EMİN OLUNAMAYAN ALANLAR (uncertainFields ALANI):',
+    '- Görselde silik, kesik, kısmen görünen veya kapanış noktası belirsiz olan alanların adlarını uncertainFields dizisine ekle ("pair", "direction", "date", "time", "timeframe", "session", "entry", "exit", "sl", "riskPct", "pnl", "result").',
+    '- Net ve kesin okuduğun alanları uncertainFields içine EKLEME.'
   ].join('\n');
+}
+
+export function reconcileExtractedExitPrice(params: {
+  direction: 'Long' | 'Short' | null;
+  entry: number | null;
+  exit: number | null;
+  sl: number | null;
+  tp: number | null;
+  result: 'Win' | 'Loss' | 'BE' | null;
+}): { exit: number | null; result: 'Win' | 'Loss' | 'BE' | null } {
+  const { direction, entry, sl, tp } = params;
+  let exit = params.exit;
+  let result = params.result;
+
+  if (direction === 'Short' && entry !== null) {
+    if (tp !== null && tp < entry) {
+      if (exit !== null && exit <= tp) {
+        exit = tp;
+        result = 'Win';
+      } else if (exit === null && result === 'Win') {
+        exit = tp;
+      }
+    }
+    if (sl !== null && sl > entry) {
+      if (exit !== null && exit >= sl) {
+        exit = sl;
+        result = 'Loss';
+      } else if (exit === null && result === 'Loss') {
+        exit = sl;
+      }
+    }
+  } else if (direction === 'Long' && entry !== null) {
+    if (tp !== null && tp > entry) {
+      if (exit !== null && exit >= tp) {
+        exit = tp;
+        result = 'Win';
+      } else if (exit === null && result === 'Win') {
+        exit = tp;
+      }
+    }
+    if (sl !== null && sl < entry) {
+      if (exit !== null && exit <= sl) {
+        exit = sl;
+        result = 'Loss';
+      } else if (exit === null && result === 'Loss') {
+        exit = sl;
+      }
+    }
+  }
+
+  return { exit, result };
 }
 
 const TRADE_IMAGE_RESPONSE_SCHEMA = {
@@ -455,7 +533,12 @@ const TRADE_IMAGE_RESPONSE_SCHEMA = {
     exit: {
       type: Type.NUMBER,
       nullable: true,
-      description: 'Çıkış / Kapanış fiyatı (sayısal). Okunamıyorsa null.'
+      description: 'Çıkış / Kapanış fiyatı (sayısal). Fiyat TP çizgisine değdiyse veya geçtiyse MUTLAKA TP fiyatı; SL çizgisine değdiyse veya geçtiyse MUTLAKA SL fiyatı. TP/SL dışındaki anlık mum fiyatını yalnızca TP/SL tetiklenmediyse kullan.'
+    },
+    tp: {
+      type: Type.NUMBER,
+      nullable: true,
+      description: 'Grafikteki yeşil TP / Take Profit hedef seviyesi fiyatı (sayısal). Yoksa null.'
     },
     sl: {
       type: Type.NUMBER,
@@ -562,7 +645,7 @@ async function startServer() {
                 },
                 {
                   text:
-                    'Bu grafik ekran görüntüsündeki tüm işlem bilgilerini çıkar. Alt X-eksenindeki saat etiketlerine, giriş/çıkış/SL fiyatlarına dikkatle bak ve notes alanında yalnızca ne yapıldığını teknik olarak yaz (kesinlikle "Kullanıcı" kelimesini ve parite/timeframe/R:R özet cümlesini yazma).',
+                    'Bu grafik ekran görüntüsündeki tüm işlem bilgilerini çıkar: ortadaki veya köşedeki parite·timeframe filigranını (örn. XAUUSD · M5, XAUUSD · H1), sağ fiyat eksenindeki Sell Giriş/Buy Giriş/SL/TP etiketlerini ve fiyatlarını, alt X-eksenindeki tarih/saat etiketlerini oku. Eğer fiyat TP çizgisine değmiş veya TP çizgisini geçmişse exit değerini en sondaki mum fiyatına değil TP çizgisinin fiyatına eşitle (ör. TP 3897.32 iken anlık fiyat 3890.12 ise exit=3897.32). notes alanında yalnızca teknik olarak ne yapıldığını yaz (kesinlikle "Kullanıcı" kelimesini ve parite/timeframe/R:R özet cümlesini yazma).',
                 },
               ],
             },
@@ -597,15 +680,31 @@ async function startServer() {
       const timeframe = normalizeTimeframe(parsed.timeframe);
       const session = normalizeSession(parsed.session, time);
       const entry = toFiniteNumber(parsed.entry);
-      const exit = toFiniteNumber(parsed.exit);
+      const rawExit = toFiniteNumber(parsed.exit);
       const sl = toFiniteNumber(parsed.sl);
+      const tp = toFiniteNumber(parsed.tp);
       const riskPct = toFiniteNumber(parsed.riskPct);
       const pnl = toFiniteNumber(parsed.pnl);
       let result = normalizeResult(parsed.result);
 
-      if (!direction && entry !== null && sl !== null && entry !== sl) {
-        direction = sl < entry ? 'Long' : 'Short';
+      if (!direction && entry !== null) {
+        if (sl !== null && entry !== sl) {
+          direction = sl < entry ? 'Long' : 'Short';
+        } else if (tp !== null && entry !== tp) {
+          direction = tp > entry ? 'Long' : 'Short';
+        }
       }
+
+      const reconciled = reconcileExtractedExitPrice({
+        direction,
+        entry,
+        exit: rawExit,
+        sl,
+        tp,
+        result,
+      });
+      const exit = reconciled.exit;
+      result = reconciled.result;
 
       if (!result && entry !== null && exit !== null && direction) {
         if (Math.abs(exit - entry) === 0) {
@@ -632,6 +731,7 @@ async function startServer() {
           entry,
           exit,
           sl,
+          tp,
           riskPct: riskPct !== null && riskPct > 0 ? riskPct : null,
           pnl,
           result,

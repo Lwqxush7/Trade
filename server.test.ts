@@ -11,6 +11,7 @@ import {
   toFiniteNumber,
   sanitizeTradeNotes,
   normalizeUncertainFields,
+  reconcileExtractedExitPrice,
   parseGeminiErrorInfo,
   isTransientGeminiError,
   formatFriendlyGeminiError,
@@ -120,7 +121,7 @@ test('runWithModelFallback retries transient 503 errors and falls back to lite m
 
   assert.deepEqual(calledModels, [
     'gemini-4-hydrogen',
-    'gemini-3.1-flash-lite',
+    'gemini-3.8-flash',
     'gemini-3.1-flash-lite',
   ]);
   assert.equal(out.modelUsed, 'gemini-3.1-flash-lite');
@@ -145,6 +146,33 @@ test('runWithModelFallback stops immediately on non-transient 403 error', async 
     /PERMISSION_DENIED/
   );
   assert.equal(calls, 1);
+});
+
+test('runWithModelFallback falls through 404 NOT_FOUND on intermediate model to 3.1-flash-lite', async () => {
+  const calledModels: string[] = [];
+  const noopSleep = async () => {};
+
+  const out = await runWithModelFallback(
+    async (attempt) => {
+      calledModels.push(attempt.model);
+      if (attempt.model === 'gemini-4-hydrogen') {
+        throw Object.assign(new Error('{"error":{"code":503,"status":"UNAVAILABLE"}}'), { status: 503 });
+      }
+      if (attempt.model === 'gemini-3.8-flash') {
+        throw Object.assign(new Error('{"error":{"code":404,"status":"NOT_FOUND"}}'), { status: 404 });
+      }
+      return { text: '{"pair":"XAUUSD"}' };
+    },
+    MODEL_ATTEMPTS,
+    noopSleep
+  );
+
+  assert.deepEqual(calledModels, [
+    'gemini-4-hydrogen',
+    'gemini-3.8-flash',
+    'gemini-3.1-flash-lite',
+  ]);
+  assert.equal(out.modelUsed, 'gemini-3.1-flash-lite');
 });
 
 test('runWithModelFallback throws last transient error once all attempts exhaust', async () => {
@@ -193,5 +221,57 @@ test('runWithModelFallback times out stalled primary model and succeeds on fallb
   assert.deepEqual(calledModels, ['gemini-4-hydrogen', 'gemini-3.1-flash-lite']);
   assert.equal(out.modelUsed, 'gemini-3.1-flash-lite');
 });
+
+test('reconcileExtractedExitPrice snaps trailing candle price beyond TP to TP level for Short and Long', () => {
+  // Short screenshot case: Sell Giriş 3936.80, SL 3956.54, TP 3897.32, live trailing badge 3890.12
+  const shortSnapped = reconcileExtractedExitPrice({
+    direction: 'Short',
+    entry: 3936.8,
+    exit: 3890.12,
+    sl: 3956.54,
+    tp: 3897.32,
+    result: 'Win',
+  });
+  assert.equal(shortSnapped.exit, 3897.32);
+  assert.equal(shortSnapped.result, 'Win');
+
+  // Long crossed above TP
+  const longSnapped = reconcileExtractedExitPrice({
+    direction: 'Long',
+    entry: 2500.0,
+    exit: 2545.5,
+    sl: 2490.0,
+    tp: 2530.0,
+    result: null,
+  });
+  assert.equal(longSnapped.exit, 2530.0);
+  assert.equal(longSnapped.result, 'Win');
+});
+
+test('reconcileExtractedExitPrice snaps crossed SL to SL and preserves manual exit between entry and TP', () => {
+  const slSnapped = reconcileExtractedExitPrice({
+    direction: 'Short',
+    entry: 3936.8,
+    exit: 3960.0,
+    sl: 3956.54,
+    tp: 3897.32,
+    result: 'Loss',
+  });
+  assert.equal(slSnapped.exit, 3956.54);
+  assert.equal(slSnapped.result, 'Loss');
+
+  // Partial profit closed before reaching TP must stay as-is
+  const manualEarly = reconcileExtractedExitPrice({
+    direction: 'Short',
+    entry: 3936.8,
+    exit: 3915.0,
+    sl: 3956.54,
+    tp: 3897.32,
+    result: 'Win',
+  });
+  assert.equal(manualEarly.exit, 3915.0);
+  assert.equal(manualEarly.result, 'Win');
+});
+
 
 
