@@ -7858,14 +7858,28 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     const fallbackWinCfg = (typeof window !== 'undefined' && window.__FIREBASE_CONFIG__ && typeof window.__FIREBASE_CONFIG__ === 'object')
       ? window.__FIREBASE_CONFIG__
       : {};
+    let viteEnv = {};
+    try {
+      viteEnv = {
+        apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+        appId: import.meta.env.VITE_FIREBASE_APP_ID,
+        measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+      };
+    } catch (_) {
+      viteEnv = {};
+    }
     const firebaseConfig = {
-      apiKey: import.meta.env.VITE_FIREBASE_API_KEY || fallbackWinCfg.apiKey || "",
-      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || fallbackWinCfg.authDomain || "",
-      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || fallbackWinCfg.projectId || "",
-      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || fallbackWinCfg.storageBucket || "",
-      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || fallbackWinCfg.messagingSenderId || "",
-      appId: import.meta.env.VITE_FIREBASE_APP_ID || fallbackWinCfg.appId || "",
-      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || fallbackWinCfg.measurementId || ""
+      apiKey: viteEnv.apiKey || fallbackWinCfg.apiKey || "",
+      authDomain: viteEnv.authDomain || fallbackWinCfg.authDomain || "",
+      projectId: viteEnv.projectId || fallbackWinCfg.projectId || "",
+      storageBucket: viteEnv.storageBucket || fallbackWinCfg.storageBucket || "",
+      messagingSenderId: viteEnv.messagingSenderId || fallbackWinCfg.messagingSenderId || "",
+      appId: viteEnv.appId || fallbackWinCfg.appId || "",
+      measurementId: viteEnv.measurementId || fallbackWinCfg.measurementId || ""
     };
 
     let app = null;
@@ -8994,57 +9008,61 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     }
 
     let isGoogleSigningIn = false;
-    googleSignInBtn.addEventListener('click', async () => {
-      if (!auth) {
-        showToast('Bulut senkronizasyonu için Firebase yapılandırması (.env) gereklidir. Şu an yerel modda çalışıyorsunuz.', 'info');
-        return;
-      }
-      if (isGoogleSigningIn) return;
-      isGoogleSigningIn = true;
-      googleSignInBtn.disabled = true;
-
-      const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({ prompt: 'select_account' });
-      setSyncState('syncing', 'Giriş Yapılıyor...');
-
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (err) {
-        if (err && (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment')) {
-          try {
-            await signInWithRedirect(auth, provider);
-            return;
-          } catch (redirErr) {
-            setSyncState('error', 'Bağlantı Hatası');
-            showToast('Google Giriş Hatası: ' + (redirErr?.message || redirErr), 'error');
-          }
-        } else if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request')) {
-          setSyncState('offline', 'Çevrimdışı (Giriş Yapılmadı)');
-          showToast('Google giriş penceresi kapatıldı.', 'info');
-        } else if (err && err.code === 'auth/unauthorized-domain') {
-          setSyncState('error', 'Alan Adı Yetkisiz');
-          showToast('Bu alan adı Firebase Authentication için yetkilendirilmemiş.', 'error');
-        } else {
-          setSyncState('error', 'Bağlantı Hatası');
-          showToast('Google Giriş Hatası: ' + (err?.message || err), 'error');
+    if (googleSignInBtn) {
+      googleSignInBtn.addEventListener('click', async () => {
+        if (!auth) {
+          showToast('Bulut senkronizasyonu için Firebase yapılandırması gereklidir. Şu an yerel modda çalışıyorsunuz.', 'info');
+          return;
         }
-      } finally {
-        isGoogleSigningIn = false;
-        googleSignInBtn.disabled = false;
-      }
-    });
+        if (isGoogleSigningIn) return;
+        isGoogleSigningIn = true;
+        googleSignInBtn.disabled = true;
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        setSyncState('syncing', 'Giriş Yapılıyor...');
+
+        try {
+          await signInWithPopup(auth, provider);
+        } catch (err) {
+          if (err && (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment')) {
+            try {
+              await signInWithRedirect(auth, provider);
+              return;
+            } catch (redirErr) {
+              setSyncState('error', 'Bağlantı Hatası');
+              showToast('Google Giriş Hatası: ' + (redirErr?.message || redirErr), 'error');
+            }
+          } else if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request')) {
+            setSyncState('offline', 'Çevrimdışı (Giriş Yapılmadı)');
+            showToast('Google giriş penceresi kapatıldı.', 'info');
+          } else if (err && err.code === 'auth/unauthorized-domain') {
+            setSyncState('error', 'Alan Adı Yetkisiz');
+            showToast('Bu alan adı Firebase Authentication için yetkilendirilmemiş.', 'error');
+          } else {
+            setSyncState('error', 'Bağlantı Hatası');
+            showToast('Google Giriş Hatası: ' + (err?.message || err), 'error');
+          }
+        } finally {
+          isGoogleSigningIn = false;
+          googleSignInBtn.disabled = false;
+        }
+      });
+    }
+
+    document.getElementById('logoutBtn')?.addEventListener('click', () => {
       if (!auth) return;
       signOut(auth).then(() => {
         showToast('Oturum kapatıldı.', 'info');
       });
     });
 
-    userProfileBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      profileDropdown.classList.toggle('active');
-    });
+    if (userProfileBtn && profileDropdown) {
+      userProfileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profileDropdown.classList.toggle('active');
+      });
+    }
 
     document.addEventListener('click', () => {
       if (profileDropdown) profileDropdown.classList.remove('active');
@@ -25297,7 +25315,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
+    let propJournalBootstrapped = false;
+    function bootstrapPropJournalApp() {
+      if (propJournalBootstrapped) return;
+      propJournalBootstrapped = true;
+
       loadAppState();
       setDefaultDatetime();
       renderFavoritePills();
@@ -25306,9 +25328,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       updateBacktestModules();
       init3DTilt();
 
-      document.getElementById('currentHeaderDate').textContent = new Date().toLocaleDateString('tr-TR', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-      });
+      const headerDateEl = document.getElementById('currentHeaderDate');
+      if (headerDateEl) {
+        headerDateEl.textContent = new Date().toLocaleDateString('tr-TR', {
+          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+      }
 
       document.addEventListener('keydown', (e) => {
         if (e.key !== 'Escape') return;
@@ -25344,7 +25369,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           window.closeSummaryPanel();
         }
       });
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      window.addEventListener('DOMContentLoaded', bootstrapPropJournalApp);
+    } else {
+      bootstrapPropJournalApp();
+    }
   </script>
 </body>
 </html>
