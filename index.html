@@ -5796,7 +5796,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       <div class="header-right">
         <div class="storage-status-badge" id="storageStatusBadge" title="Bulut Durumu">
           <span class="storage-status-dot offline" id="syncStatusDot"></span>
-          <span id="storageStatusText">Bağlantı Bekleniyor</span>
+          <span id="storageStatusText">Giriş Bekleniyor</span>
         </div>
 
         <button type="button" class="header-action-btn" id="headerSummaryBtn" title="Özetler">
@@ -7855,6 +7855,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     /* -------------------------------------------------------------
        FIREBASE GERÇEK WEB YAPILANDIRMASI (TEK SEFERLİK BAŞLATMA)
        ------------------------------------------------------------- */
+    const defaultFirebaseConfig = {
+      apiKey: "AIzaSyB13wDsbCVsexplGSXMwLY3CmwZJq7g-SY",
+      authDomain: "trade-d981b.firebaseapp.com",
+      projectId: "trade-d981b",
+      storageBucket: "trade-d981b.firebasestorage.app",
+      messagingSenderId: "725558486984",
+      appId: "1:725558486984:web:3cfeb27abb19638fec42fd",
+      measurementId: "G-Z9CVXFDTNK"
+    };
     const fallbackWinCfg = (typeof window !== 'undefined' && window.__FIREBASE_CONFIG__ && typeof window.__FIREBASE_CONFIG__ === 'object')
       ? window.__FIREBASE_CONFIG__
       : {};
@@ -7873,13 +7882,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       viteEnv = {};
     }
     const firebaseConfig = {
-      apiKey: viteEnv.apiKey || fallbackWinCfg.apiKey || "",
-      authDomain: viteEnv.authDomain || fallbackWinCfg.authDomain || "",
-      projectId: viteEnv.projectId || fallbackWinCfg.projectId || "",
-      storageBucket: viteEnv.storageBucket || fallbackWinCfg.storageBucket || "",
-      messagingSenderId: viteEnv.messagingSenderId || fallbackWinCfg.messagingSenderId || "",
-      appId: viteEnv.appId || fallbackWinCfg.appId || "",
-      measurementId: viteEnv.measurementId || fallbackWinCfg.measurementId || ""
+      apiKey: viteEnv.apiKey || fallbackWinCfg.apiKey || defaultFirebaseConfig.apiKey,
+      authDomain: viteEnv.authDomain || fallbackWinCfg.authDomain || defaultFirebaseConfig.authDomain,
+      projectId: viteEnv.projectId || fallbackWinCfg.projectId || defaultFirebaseConfig.projectId,
+      storageBucket: viteEnv.storageBucket || fallbackWinCfg.storageBucket || defaultFirebaseConfig.storageBucket,
+      messagingSenderId: viteEnv.messagingSenderId || fallbackWinCfg.messagingSenderId || defaultFirebaseConfig.messagingSenderId,
+      appId: viteEnv.appId || fallbackWinCfg.appId || defaultFirebaseConfig.appId,
+      measurementId: viteEnv.measurementId || fallbackWinCfg.measurementId || defaultFirebaseConfig.measurementId
     };
 
     let app = null;
@@ -7895,7 +7904,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           if (yes) getAnalytics(app);
         }).catch(() => {});
       } catch (err) {
-        console.warn('Firebase başlatılamadı, çevrimdışı mod aktif:', err);
+        console.warn('Firebase başlatılamadı:', err);
         app = null;
         auth = null;
         db = null;
@@ -8950,7 +8959,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     if (auth) {
       getRedirectResult(auth).catch((err) => {
         if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request' || err.code === 'auth/redirect-cancelled-by-user')) {
-          setSyncState('offline', 'Çevrimdışı (Giriş Yapılmadı)');
+          setSyncState('offline', 'Giriş Yapılmadı');
           return;
         }
         setSyncState('error', 'Bağlantı Hatası');
@@ -8997,21 +9006,21 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           if (userProfileBtn) userProfileBtn.style.display = 'none';
           if (profileDropdown) profileDropdown.classList.remove('active');
 
-          setSyncState('offline', 'Çevrimdışı (Giriş Yapılmadı)');
+          setSyncState('offline', 'Giriş Yapılmadı');
           loadAppState();
           updateAllModules();
           updateBacktestModules();
         }
       });
     } else {
-      setSyncState('offline', 'Çevrimdışı (Yerel Mod)');
+      setSyncState('error', 'Firebase Bağlantı Hatası');
     }
 
     let isGoogleSigningIn = false;
     if (googleSignInBtn) {
       googleSignInBtn.addEventListener('click', async () => {
         if (!auth) {
-          showToast('Bulut senkronizasyonu için Firebase yapılandırması gereklidir. Şu an yerel modda çalışıyorsunuz.', 'info');
+          showToast('Firebase kimlik doğrulama servisi başlatılamadı. Sayfayı yenileyip tekrar deneyin.', 'error');
           return;
         }
         if (isGoogleSigningIn) return;
@@ -9034,7 +9043,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               showToast('Google Giriş Hatası: ' + (redirErr?.message || redirErr), 'error');
             }
           } else if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request')) {
-            setSyncState('offline', 'Çevrimdışı (Giriş Yapılmadı)');
+            setSyncState('offline', 'Giriş Yapılmadı');
             showToast('Google giriş penceresi kapatıldı.', 'info');
           } else if (err && err.code === 'auth/unauthorized-domain') {
             setSyncState('error', 'Alan Adı Yetkisiz');
