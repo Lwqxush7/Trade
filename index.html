@@ -1218,7 +1218,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 .lightbox-img-box { max-width: 94vw; max-height: 90vh; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--glass-border-highlight); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); }
 .lightbox-img-box img { max-width: 100%; max-height: 90vh; object-fit: contain; display: block; }
 
-.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 500; display: flex; flex-direction: column; gap: 10px; }
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 500; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
 .toast-pill {
   padding: 12px 20px;
   border-radius: 999px;
@@ -1230,6 +1230,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
   display: flex;
   align-items: center;
   gap: 10px;
+  pointer-events: none;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.35);
   animation: toastSpring 0.35s var(--spring-easing);
 }
@@ -4159,6 +4160,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
 .rp-draw-props-bar.visible {
   display: inline-flex;
+  scrollbar-width: none;
+}
+
+.rp-draw-props-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.rp-draw-props-bar > * {
+  flex-shrink: 0;
 }
 
 :root[data-theme="light"] .rp-draw-props-bar {
@@ -4776,12 +4786,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     left: 44px;
     min-width: 176px;
   }
-  .rp-fav-toolbar {
+  .rp-fav-toolbar,
+  .rp-chart-wrap.rp-is-fullscreen .rp-fav-toolbar:not(.rp-custom-pos) {
     top: auto;
     bottom: 36px;
     left: 8px;
     padding: 3px 6px;
-    max-width: calc(100% - 16px);
+    max-width: calc(100% - 110px);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
@@ -19534,7 +19545,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     function pushRpDrawUndoSnapshot() {
       try {
-        rpDrawUndoStack.push(JSON.stringify(rpDrawings));
+        rpDrawUndoStack.push(JSON.stringify({
+          drawings: rpDrawings,
+          selectedId: rpSelectedDrawingId || null
+        }));
         if (rpDrawUndoStack.length > 40) rpDrawUndoStack.shift();
       } catch (_) {}
     }
@@ -19542,11 +19556,21 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function undoLastRpDrawAction() {
       if (rpDrawUndoStack.length === 0) return false;
       try {
-        const prev = JSON.parse(rpDrawUndoStack.pop());
-        if (Array.isArray(prev)) {
-          rpDrawings = prev;
-          if (rpSelectedDrawingId && !rpDrawings.some(d => d.id === rpSelectedDrawingId)) {
-            rpSelectedDrawingId = null;
+        const parsed = JSON.parse(rpDrawUndoStack.pop());
+        const prevDrawings = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.drawings) ? parsed.drawings : null);
+        const prevSelectedId = (!Array.isArray(parsed) && parsed && typeof parsed.selectedId === 'string') ? parsed.selectedId : null;
+        if (prevDrawings) {
+          const beforeIds = new Set(rpDrawings.map(d => d && d.id).filter(Boolean));
+          rpDrawings = prevDrawings;
+          if (prevSelectedId && rpDrawings.some(d => d && d.id === prevSelectedId)) {
+            rpSelectedDrawingId = prevSelectedId;
+          } else {
+            const restored = rpDrawings.find(d => d && d.id && !beforeIds.has(d.id));
+            if (restored) {
+              rpSelectedDrawingId = restored.id;
+            } else if (rpSelectedDrawingId && !rpDrawings.some(d => d && d.id === rpSelectedDrawingId)) {
+              rpSelectedDrawingId = null;
+            }
           }
           saveRpDrawingsToStorage();
           syncRpDrawPropsBar();
@@ -21618,6 +21642,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function setRpActiveDrawTool(toolId) {
       if (!RP_DRAW_TOOLS[toolId]) return;
       if (!rpDrawPrefs) loadRpDrawPrefs();
+      if (toolId !== 'cursor' && toolId !== 'eraser' && rpDrawPrefs.hideDrawings) {
+        rpDrawPrefs.hideDrawings = false;
+        saveRpDrawPrefs(true);
+        showToast('Gizlenen çizimler gösterildi.', 'info');
+      }
       rpActiveDrawTool = toolId;
       const gid = RP_DRAW_TOOLS[toolId].groupId;
       if (gid && rpDrawPrefs.groupTools) {
@@ -22934,6 +22963,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           if (rpReplayTimer !== null) {
             startRpReplay();
           }
+          speedSelect.blur();
         });
       }
 
@@ -23134,11 +23164,13 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         rpLastActiveTf = tfSelect.value || 'M15';
         tfSelect.addEventListener('change', () => {
           switchRpTimeframe(tfSelect.value);
+          tfSelect.blur();
         });
       }
       if (fsTfSelect) {
         fsTfSelect.addEventListener('change', () => {
           switchRpTimeframe(fsTfSelect.value);
+          fsTfSelect.blur();
         });
       }
       syncRpFullscreenTopbar();
@@ -23464,6 +23496,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         });
       }
 
+      const secChartRoot = document.getElementById('sec-chart');
+      if (secChartRoot) {
+        secChartRoot.addEventListener('click', (e) => {
+          if (e.detail <= 0) return;
+          const btn = e.target && e.target.closest('button');
+          if (!btn) return;
+          if (btn.closest('#rp-ctx-trade-panel, #rp-settings-panel, #rp-draw-settings-modal, #rp-tf-quick-modal, #rp-draw-text-modal, #rp-result-modal')) return;
+          btn.blur();
+        });
+      }
+
       document.addEventListener('fullscreenchange', syncRpFullscreenUi);
       document.addEventListener('webkitfullscreenchange', syncRpFullscreenUi);
       document.addEventListener('keydown', (e) => {
@@ -23471,56 +23514,74 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const chartActive = !!(secChart && secChart.classList.contains('active'));
 
         if (e.key === 'Escape') {
+          if (!chartActive) return;
+          if (document.querySelector('.modal-backdrop.active, .lightbox-wrapper.active')) return;
+          const consumeEsc = () => {
+            e.preventDefault();
+            e.stopPropagation();
+          };
           if (isRpDrawSettingsModalOpen()) {
             closeRpDrawSettingsModal();
+            consumeEsc();
             return;
           }
           if (isRpTfQuickModalOpen()) {
             closeRpTfQuickModal();
+            consumeEsc();
             return;
           }
           const textModal = document.getElementById('rp-draw-text-modal');
           if (textModal && textModal.classList.contains('visible')) {
             closeRpDrawTextModal();
+            consumeEsc();
+            return;
+          }
+          if (isRpSettingsOpen()) {
+            closeRpSettingsPanel();
+            consumeEsc();
+            return;
+          }
+          if (isRpContextPanelOpen()) {
+            closeRpContextPanel();
+            consumeEsc();
+            return;
+          }
+          if (isRpTradeActionMenuOpen()) {
+            closeRpTradeActionMenu();
+            consumeEsc();
             return;
           }
           if (rpOpenFlyoutGroupId) {
             closeRpDrawFlyout();
+            consumeEsc();
             return;
           }
           const clearPop = document.getElementById('rp-draw-clear-popover');
           if (clearPop && clearPop.classList.contains('visible')) {
             closeRpClearPopover();
+            consumeEsc();
             return;
           }
           if (rpDraftDrawing) {
             cancelRpDrawInteraction();
+            consumeEsc();
             return;
           }
           if (rpActiveDrawTool !== 'cursor') {
             setRpActiveDrawTool('cursor');
-            return;
-          }
-          if (isRpTradeActionMenuOpen()) {
-            closeRpTradeActionMenu();
+            consumeEsc();
             return;
           }
           if (rpSelectedDrawingId) {
             rpSelectedDrawingId = null;
             syncRpDrawPropsBar();
             renderRpDrawings();
+            consumeEsc();
             return;
           }
-          if (isRpSettingsOpen()) {
-            closeRpSettingsPanel();
-            return;
-          }
-          if (isRpContextPanelOpen()) {
-            closeRpContextPanel();
-            return;
-          }
-          if (rpChartFullscreenFallback) {
+          if (isRpChartFullscreen()) {
             exitRpChartFullscreen();
+            consumeEsc();
           }
           return;
         }
@@ -23813,10 +23874,19 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           }, true, flushCloud);
         };
         propColor.addEventListener('input', () => applyPropColor(false));
-        propColor.addEventListener('change', () => applyPropColor(true));
+        propColor.addEventListener('change', () => {
+          applyPropColor(true);
+          propColor.blur();
+        });
       }
-      if (propWidth) propWidth.addEventListener('change', () => updateSelectedDrawProp(d => { d.lineWidth = Number(propWidth.value) || 2; }, true, true));
-      if (propStyle) propStyle.addEventListener('change', () => updateSelectedDrawProp(d => { d.style = propStyle.value || 'solid'; }, true, true));
+      if (propWidth) propWidth.addEventListener('change', () => {
+        updateSelectedDrawProp(d => { d.lineWidth = Number(propWidth.value) || 2; }, true, true);
+        propWidth.blur();
+      });
+      if (propStyle) propStyle.addEventListener('change', () => {
+        updateSelectedDrawProp(d => { d.style = propStyle.value || 'solid'; }, true, true);
+        propStyle.blur();
+      });
       if (propSettings) {
         propSettings.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -24814,6 +24884,19 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           const insideControl = e.target && e.target.closest(rpChartControlSelector);
           if (insideControl) return;
 
+          const activeEl = document.activeElement;
+          const secChartEl = document.getElementById('sec-chart');
+          if (
+            activeEl &&
+            activeEl !== document.body &&
+            secChartEl &&
+            secChartEl.contains(activeEl) &&
+            !activeEl.closest('#rp-ctx-trade-panel, #rp-settings-panel, #rp-draw-settings-modal, #rp-tf-quick-modal, #rp-draw-text-modal, #rp-result-modal') &&
+            typeof activeEl.blur === 'function'
+          ) {
+            activeEl.blur();
+          }
+
           if (isRpTradeActionMenuOpen()) {
             closeRpTradeActionMenu();
           }
@@ -25228,19 +25311,39 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       });
 
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          document.querySelectorAll('.modal-backdrop, .lightbox-wrapper').forEach(el => el.classList.remove('active'));
+        if (e.key !== 'Escape') return;
+        const accountModal = document.getElementById('accountSetupModalBackdrop');
+        if (accountModal && accountModal.classList.contains('active')) {
+          closeAccountSetupModal(true);
+          return;
+        }
+        const activeBackdrops = document.querySelectorAll('.modal-backdrop.active, .lightbox-wrapper.active');
+        if (activeBackdrops.length > 0) {
+          activeBackdrops.forEach(el => {
+            if (el.id === 'deleteConfirmModalBackdrop') {
+              pendingDeleteTradeId = null;
+              pendingDeleteStrategyId = null;
+            }
+            el.classList.remove('active');
+          });
+          return;
+        }
+        const profileDd = document.getElementById('profileDropdown');
+        const sidebarEl = document.getElementById('appSidebar');
+        const sidebarOverlayEl = document.getElementById('sidebarMobileOverlay');
+        if ((profileDd && profileDd.classList.contains('active')) || (sidebarEl && sidebarEl.classList.contains('mobile-open'))) {
+          if (profileDd) profileDd.classList.remove('active');
+          if (sidebarEl) sidebarEl.classList.remove('mobile-open');
+          if (sidebarOverlayEl) sidebarOverlayEl.classList.remove('active');
+          return;
+        }
+        const hasOpenChartOverlay = document.querySelector(
+          '#rp-settings-panel.visible, #rp-ctx-trade-panel.visible, #rp-tf-quick-modal.visible, #rp-draw-settings-modal.visible, #rp-draw-text-modal.visible, #rp-draw-flyout.visible, #rp-draw-clear-popover.visible, #rp-trade-action-menu.visible'
+        );
+        if (!hasOpenChartOverlay && typeof window.closeSummaryPanel === 'function') {
+          window.closeSummaryPanel();
         }
       });
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-          const hasActiveModal = document.querySelector('.modal-backdrop.active, .lightbox-wrapper.active');
-          if (!hasActiveModal && typeof window.closeSummaryPanel === 'function') {
-            window.closeSummaryPanel();
-          }
-        }
-      }, true);
     });
   </script>
 </body>
