@@ -38,8 +38,12 @@ test('normalizeTimeframe maps TradingView intervals and aliases', () => {
 test('normalizeTime and normalizeDate extract bottom axis values cleanly', () => {
   assert.equal(normalizeTime('16:54'), '16:54');
   assert.equal(normalizeTime('9:05 UTC'), '09:05');
+  assert.equal(normalizeTime('4:54 PM'), '16:54');
+  assert.equal(normalizeTime('12:10 AM'), '00:10');
   assert.equal(normalizeTime('25:99'), null);
   assert.equal(normalizeDate('2026-11-11'), '2026-11-11');
+  assert.equal(normalizeDate('2026-11-11T16:54'), '2026-11-11');
+  assert.equal(normalizeDate('11.11.2026 16:54'), '2026-11-11');
   assert.equal(normalizeDate('2026-9-4'), '2026-09-04');
   assert.equal(normalizeDate('11-11'), null);
 });
@@ -52,13 +56,15 @@ test('normalizeSession infers session from clock when explicit session is absent
   assert.equal(normalizeSession('London Open', '18:20'), 'London');
 });
 
-test('normalizeDirection, normalizeResult, and toFiniteNumber handle standard values', () => {
+test('normalizeDirection, normalizeResult, and toFiniteNumber handle standard and comma-decimal values', () => {
   assert.equal(normalizeDirection('sell'), 'Short');
   assert.equal(normalizeDirection('Long'), 'Long');
   assert.equal(normalizeResult('tp'), 'Win');
   assert.equal(normalizeResult('Loss'), 'Loss');
   assert.equal(toFiniteNumber('$+1,240.50'), 1240.5);
   assert.equal(toFiniteNumber('$450.25'), 450.25);
+  assert.equal(toFiniteNumber('3936,80'), 3936.8);
+  assert.equal(toFiniteNumber('1.240,50'), 1240.5);
   assert.equal(toFiniteNumber('-150'), -150);
 });
 
@@ -110,7 +116,7 @@ test('runWithModelFallback retries transient 503 errors and falls back to lite m
   const out = await runWithModelFallback(
     async (attempt) => {
       calledModels.push(attempt.model);
-      if (calledModels.length < 3) {
+      if (calledModels.length < 2) {
         throw err503;
       }
       return { text: '{"pair":"NAS100"}' };
@@ -121,11 +127,10 @@ test('runWithModelFallback retries transient 503 errors and falls back to lite m
 
   assert.deepEqual(calledModels, [
     'gemini-4-hydrogen',
-    'gemini-3.8-flash',
     'gemini-3.1-flash-lite',
   ]);
   assert.equal(out.modelUsed, 'gemini-3.1-flash-lite');
-  assert.equal(out.attemptCount, 3);
+  assert.equal(out.attemptCount, 2);
 });
 
 test('runWithModelFallback stops immediately on non-transient 403 error', async () => {
@@ -148,7 +153,7 @@ test('runWithModelFallback stops immediately on non-transient 403 error', async 
   assert.equal(calls, 1);
 });
 
-test('runWithModelFallback falls through 404 NOT_FOUND on intermediate model to 3.1-flash-lite', async () => {
+test('runWithModelFallback falls through 404 NOT_FOUND on primary model to 3.1-flash-lite', async () => {
   const calledModels: string[] = [];
   const noopSleep = async () => {};
 
@@ -156,9 +161,6 @@ test('runWithModelFallback falls through 404 NOT_FOUND on intermediate model to 
     async (attempt) => {
       calledModels.push(attempt.model);
       if (attempt.model === 'gemini-4-hydrogen') {
-        throw Object.assign(new Error('{"error":{"code":503,"status":"UNAVAILABLE"}}'), { status: 503 });
-      }
-      if (attempt.model === 'gemini-3.8-flash') {
         throw Object.assign(new Error('{"error":{"code":404,"status":"NOT_FOUND"}}'), { status: 404 });
       }
       return { text: '{"pair":"XAUUSD"}' };
@@ -169,7 +171,6 @@ test('runWithModelFallback falls through 404 NOT_FOUND on intermediate model to 
 
   assert.deepEqual(calledModels, [
     'gemini-4-hydrogen',
-    'gemini-3.8-flash',
     'gemini-3.1-flash-lite',
   ]);
   assert.equal(out.modelUsed, 'gemini-3.1-flash-lite');

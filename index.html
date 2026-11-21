@@ -8399,9 +8399,30 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
 
     function parseOptionalNumber(val) {
       if (val === null || val === undefined) return null;
-      const trimmed = String(val).trim();
-      if (!trimmed) return null;
-      const n = Number(trimmed);
+      if (typeof val === 'number') return Number.isFinite(val) ? val : null;
+      const raw = String(val).trim();
+      if (!raw) return null;
+      const hasCurrency = /[$€₺]/.test(raw);
+      let cleaned = raw.replace(/[\s$€₺+]/g, '');
+      if (!cleaned) return null;
+      const hasComma = cleaned.includes(',');
+      const hasDot = cleaned.includes('.');
+      if (hasComma && hasDot) {
+        if (cleaned.lastIndexOf(',') > cleaned.lastIndexOf('.')) {
+          cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+        } else {
+          cleaned = cleaned.replace(/,/g, '');
+        }
+      } else if (hasComma) {
+        if (/^-?\d{1,3}(,\d{3}){2,}$/.test(cleaned) || (hasCurrency && /^-?\d{1,3},\d{3}$/.test(cleaned))) {
+          cleaned = cleaned.replace(/,/g, '');
+        } else {
+          cleaned = cleaned.replace(',', '.');
+        }
+      } else if (hasDot && /^-?\d{1,3}(\.\d{3}){2,}$/.test(cleaned)) {
+        cleaned = cleaned.replace(/\./g, '');
+      }
+      const n = Number(cleaned);
       return Number.isFinite(n) ? n : null;
     }
 
@@ -11850,7 +11871,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           const stopLoss = parseOptionalNumber(document.getElementById('bt-sl').value);
           const parsedRisk = parsePositiveBalance(document.getElementById('bt-risk').value);
           const risk = parsedRisk !== null ? parsedRisk : (parsePositiveBalance(AppState.settings.defaultRisk) || 1.0);
-          let pnl = parseFloat(document.getElementById('bt-pnl').value) || 0;
+          const parsedPnl = parseOptionalNumber(document.getElementById('bt-pnl').value);
+          let pnl = parsedPnl !== null ? parsedPnl : 0;
           const result = document.getElementById('bt-result').value;
 
           if (result === 'Loss') {
@@ -12556,7 +12578,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         const stopLoss = parseOptionalNumber(document.getElementById('f-sl').value);
         const parsedRisk = parsePositiveBalance(document.getElementById('f-risk').value);
         const risk = parsedRisk !== null ? parsedRisk : (parsePositiveBalance(AppState.settings.defaultRisk) || 1.0);
-        let pnl = parseFloat(document.getElementById('f-pnl').value) || 0;
+        const parsedPnl = parseOptionalNumber(document.getElementById('f-pnl').value);
+        let pnl = parsedPnl !== null ? parsedPnl : 0;
         const result = document.getElementById('f-result').value;
 
         if (result === 'Loss') {
@@ -12956,7 +12979,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function applyExtractedTradeToForm(mode, extracted) {
       const ui = getScanElementsForMode(mode);
       const { prefix, calcCtrl } = ui;
-      if (!extracted || typeof extracted !== 'object') return;
+      if (!extracted || typeof extracted !== 'object') return { manualPnlFromScan: false };
 
       const pairEl = document.getElementById(`${prefix}pair`);
       const dirEl = document.getElementById(`${prefix}direction`);
@@ -13006,15 +13029,32 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       if (extracted.entry !== null && Number.isFinite(extracted.entry) && entryEl) {
         entryEl.value = String(extracted.entry);
       }
-      if (extracted.exit !== null && Number.isFinite(extracted.exit) && exitEl) {
-        exitEl.value = String(extracted.exit);
+
+      let resolvedExit = (extracted.exit !== null && Number.isFinite(extracted.exit)) ? extracted.exit : null;
+      if (resolvedExit === null) {
+        if (extracted.result === 'Win' && Number.isFinite(extracted.tp)) {
+          resolvedExit = extracted.tp;
+        } else if (extracted.result === 'Loss' && Number.isFinite(extracted.sl)) {
+          resolvedExit = extracted.sl;
+        } else if (extracted.result === 'BE' && Number.isFinite(extracted.entry)) {
+          resolvedExit = extracted.entry;
+        }
       }
+      if (resolvedExit !== null && Number.isFinite(resolvedExit) && exitEl) {
+        exitEl.value = String(resolvedExit);
+      }
+
       if (extracted.sl !== null && Number.isFinite(extracted.sl) && slEl) {
         slEl.value = String(extracted.sl);
       }
 
-      if (riskEl && riskEl.dataset.userEdited !== 'true' && Number.isFinite(Number(AppState.settings.defaultRisk))) {
-        riskEl.value = String(AppState.settings.defaultRisk);
+      if (riskEl) {
+        if (extracted.riskPct !== null && Number.isFinite(extracted.riskPct) && extracted.riskPct > 0) {
+          riskEl.value = String(extracted.riskPct);
+          riskEl.dataset.userEdited = 'true';
+        } else if (riskEl.dataset.userEdited !== 'true' && Number.isFinite(Number(AppState.settings.defaultRisk))) {
+          riskEl.value = String(AppState.settings.defaultRisk);
+        }
       }
 
       if (extracted.result && resEl) {
@@ -13033,15 +13073,31 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       const extractedExit = parseOptionalNumber(exitEl?.value);
       const extractedSl = parseOptionalNumber(slEl?.value);
       const extractedPriceR = computeRealizedRFromPrices(extractedEntry, extractedExit, extractedSl, effectiveDir);
+      const hasAccountBalance = Boolean(parsePositiveBalance(AppState.settings[ui.balanceKey]));
+      const hasExtractedPnl = extracted.pnl !== null && Number.isFinite(extracted.pnl);
 
+      let manualPnlFromScan = false;
       scanPnlUserEdited = false;
 
-      if (pnlEl) pnlEl.value = '';
-      if (extractedPriceR !== null && calcCtrl && typeof calcCtrl.forceAutoCalculateFromPrices === 'function') {
+      if (extractedPriceR !== null && hasAccountBalance && calcCtrl && typeof calcCtrl.forceAutoCalculateFromPrices === 'function') {
+        if (pnlEl) pnlEl.value = '';
         calcCtrl.forceAutoCalculateFromPrices();
-      } else if (calcCtrl && typeof calcCtrl.refresh === 'function') {
-        calcCtrl.refresh();
+      } else if (hasExtractedPnl) {
+        manualPnlFromScan = true;
+        if (calcCtrl && typeof calcCtrl.applyManualPnl === 'function') {
+          calcCtrl.applyManualPnl(extracted.pnl);
+        } else if (pnlEl) {
+          pnlEl.value = String(extracted.pnl);
+        }
+      } else if ((resEl?.value === 'BE') || (extractedEntry !== null && extractedExit !== null && extractedEntry === extractedExit)) {
+        if (pnlEl) pnlEl.value = '0';
+        if (calcCtrl && typeof calcCtrl.refresh === 'function') calcCtrl.refresh();
+      } else {
+        if (pnlEl) pnlEl.value = '';
+        if (calcCtrl && typeof calcCtrl.refresh === 'function') calcCtrl.refresh();
       }
+
+      return { manualPnlFromScan };
     }
 
     const SCAN_FIELD_SPECS = [
@@ -13158,7 +13214,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           delete activeTradeScanSession.warnings.pnl;
           delete activeTradeScanSession.warnings.result;
         }
-      } else if (resEl?.value === 'BE' && pnlEl && !scanPnlUserEdited && changedKey === 'result') {
+      } else if (resEl?.value === 'BE' && pnlEl && !scanPnlUserEdited && (changedKey === 'result' || !oneR)) {
         pnlEl.value = '0';
       } else if (resEl?.value === 'Loss' && oneR && oneR > 0 && pnlEl && !scanPnlUserEdited && changedKey === 'result') {
         pnlEl.value = String(-Math.abs(Number(oneR.toFixed(2))));
@@ -13399,8 +13455,8 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     function openTradeScanReviewModal(session) {
       if (!session) return;
       activeTradeScanSession = session;
-      scanPnlUserEdited = false;
-      scanRiskUserEdited = false;
+      scanPnlUserEdited = Boolean(session.manualPnlFromScan);
+      scanRiskUserEdited = Boolean(session.extracted && Number(session.extracted.riskPct) > 0);
       const { prefix } = getScanElementsForMode(session.mode);
       const backdrop = document.getElementById('tradeScanReviewBackdrop');
       if (!backdrop) return;
@@ -13613,13 +13669,20 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             })
           });
 
-          const payload = await response.json().catch(() => ({}));
+          const contentType = response.headers.get('content-type') || '';
+          const payload = contentType.includes('application/json')
+            ? await response.json().catch(() => ({}))
+            : {};
           if (!response.ok || !payload || !payload.extracted) {
-            lastErrorMessage = payload?.error || 'Görsel otomatik okunamadı. Tekrar deneyebilir veya bilgileri elle girebilirsiniz.';
+            if (!contentType.includes('application/json') && (response.status === 404 || response.status === 405)) {
+              lastErrorMessage = 'Bu statik yayın ortamında görsel analiz sunucusu bulunmuyor; alanları elle tamamlayıp kaydedebilirsiniz.';
+            } else {
+              lastErrorMessage = payload?.error || 'Görsel otomatik okunamadı. Tekrar deneyebilir veya bilgileri elle girebilirsiniz.';
+            }
             isNetworkOrTimeout = response.status === 504 || response.status === 408;
           } else {
             const { extracted } = payload;
-            applyExtractedTradeToForm(mode, extracted);
+            const applyMeta = applyExtractedTradeToForm(mode, extracted) || {};
             const ui = getScanElementsForMode(mode);
             const coverage = inspectTradeScanCoverage(ui.prefix, extracted);
 
@@ -13627,6 +13690,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               mode,
               previewUrl: scanCandidate.previewUrl || scanCandidate.dataUrl,
               extracted,
+              manualPnlFromScan: Boolean(applyMeta.manualPnlFromScan),
               missing: coverage.errors,
               errors: coverage.errors,
               uncertain: coverage.uncertain,
@@ -15026,6 +15090,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
     let rpOpenFlyoutGroupId = null;
     let rpDraftDrawing = null;
     let rpHoverMagnetPx = null;
+    let rpLockedCrosshair = null;
+    let rpNativeCrosshairHidden = false;
+    let rpLastPointerWrapPos = null;
     let rpDrawingDragState = null;
     let rpFavBarDragState = null;
     let rpDrawRafId = null;
@@ -15347,11 +15414,15 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         crosshair: {
           mode: chMode,
           vertLine: {
+            visible: !rpNativeCrosshairHidden,
+            labelVisible: !rpNativeCrosshairHidden,
             color: hexToRgba(s.scales.crosshairColor, 0.55),
             style: chStyle,
             labelBackgroundColor: s.scales.crosshairLabelBg
           },
           horzLine: {
+            visible: !rpNativeCrosshairHidden,
+            labelVisible: !rpNativeCrosshairHidden,
             color: hexToRgba(s.scales.crosshairColor, 0.55),
             style: chStyle,
             labelBackgroundColor: s.scales.crosshairLabelBg
@@ -17045,6 +17116,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       rpLinePointerState = null;
       if (!rpDraggingLine) return;
       rpDraggingLine = null;
+      if (typeof clearRpLockedCrosshair === 'function') {
+        clearRpLockedCrosshair(true);
+      }
       if (rpChartInstance) {
         rpChartInstance.applyOptions({ handleScroll: true, handleScale: true });
       }
@@ -21526,6 +21600,273 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       ctx.restore();
 
       renderRpSelectedDrawingAxisPrices(ctx, plot, wrap.clientWidth, isLightTheme);
+      renderRpLockedCrosshair(ctx, plot, wrap.clientWidth, wrap.clientHeight, isLightTheme);
+    }
+
+    function setRpNativeCrosshairSuppressed(suppress) {
+      const nextHidden = Boolean(suppress);
+      if (rpNativeCrosshairHidden === nextHidden) return;
+      rpNativeCrosshairHidden = nextHidden;
+      if (!rpChartInstance) return;
+      const theme = AppState.settings.theme || document.documentElement.getAttribute('data-theme') || 'dark';
+      const s = rpChartSettings || loadRpChartSettings(theme);
+      const styleMap = { solid: 0, dotted: 1, dashed: 2 };
+      const chStyle = styleMap[s.scales.crosshairStyle] ?? 2;
+      const chMode = s.scales.crosshairMode === 'magnet' ? 1 : 0;
+      const chColor = hexToRgba(s.scales.crosshairColor || '#38BDF8', 0.55);
+      const chLabelBg = s.scales.crosshairLabelBg || '#1E293B';
+      rpChartInstance.applyOptions({
+        crosshair: {
+          mode: chMode,
+          vertLine: {
+            visible: !nextHidden,
+            labelVisible: !nextHidden,
+            color: chColor,
+            style: chStyle,
+            labelBackgroundColor: chLabelBg
+          },
+          horzLine: {
+            visible: !nextHidden,
+            labelVisible: !nextHidden,
+            color: chColor,
+            style: chStyle,
+            labelBackgroundColor: chLabelBg
+          }
+        }
+      });
+    }
+
+    function clearRpLockedCrosshair(skipRender = false) {
+      const hadLock = Boolean(rpLockedCrosshair);
+      rpLockedCrosshair = null;
+      setRpNativeCrosshairSuppressed(false);
+      if (hadLock && !skipRender) {
+        scheduleRpDrawRender();
+      }
+    }
+
+    function setRpLockedCrosshair(x, y, price = null, time = null, options = {}) {
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        clearRpLockedCrosshair();
+        return;
+      }
+      rpLockedCrosshair = {
+        x,
+        y,
+        price: Number.isFinite(price) ? price : null,
+        time: Number.isFinite(time) ? time : null,
+        showVert: options.showVert !== false,
+        showHorz: options.showHorz !== false
+      };
+      setRpNativeCrosshairSuppressed(true);
+    }
+
+    function formatRpCrosshairTime(unixSec, includeSeconds = false) {
+      if (!Number.isFinite(unixSec)) return '';
+      const d = new Date(unixSec * 1000);
+      if (Number.isNaN(d.getTime())) return '';
+      const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      const mon = months[d.getUTCMonth()] || '';
+      const yr = String(d.getUTCFullYear()).slice(-2);
+      const hh = String(d.getUTCHours()).padStart(2, '0');
+      const mm = String(d.getUTCMinutes()).padStart(2, '0');
+      const ss = String(d.getUTCSeconds()).padStart(2, '0');
+      const clock = includeSeconds ? `${hh}:${mm}:${ss}` : `${hh}:${mm}`;
+      return `${day} ${mon} '${yr} ${clock}`;
+    }
+
+    function resolvePointAndLockCrosshair(pt, options = {}) {
+      if (!pt || !rpChartInstance || !rpCandlestickSeries) return false;
+      const px = rpPointToPixel(pt);
+      if (!px) return false;
+      setRpLockedCrosshair(px.x, px.y, pt.price, pt.time, options);
+      return true;
+    }
+
+    function syncRpLockedCrosshairForDrag(d, st, fallbackX, fallbackY) {
+      if (!d || !st || !rpChartInstance || !rpCandlestickSeries) return;
+      const plot = getRpPlotRect();
+      if (!plot) return;
+
+      if (st.mode === 'handle') {
+        const pixels = getRpDrawingPixels(d, plot);
+        const handles = getRpDrawingHandles(d, pixels);
+        const wantMode = st.handleMode || 'xy';
+        const matched = handles.find(h => {
+          if ((h.handleMode || 'xy') !== wantMode) return false;
+          if (wantMode === 'rectCorner') {
+            return h.timeIndex === st.handleTimeIndex && h.priceIndex === st.handlePriceIndex;
+          }
+          return h.index === st.handleIndex;
+        });
+
+        if (matched) {
+          const timeScale = rpChartInstance.timeScale();
+          const contLog = rpCoordinateToContinuousLogical(timeScale, matched.x - plot.left);
+          const derivedTime = contLog !== null ? rpTimeFromLogical(contLog) : null;
+          const derivedPrice = rpCandlestickSeries.coordinateToPrice(matched.y - plot.top);
+
+          let lockPrice = derivedPrice;
+          let lockTime = derivedTime;
+          if (wantMode === 'timeOnly' && d.points[st.handleIndex]) {
+            lockTime = d.points[st.handleIndex].time;
+          } else if (wantMode === 'priceOnly' && d.points[st.handleIndex]) {
+            lockPrice = d.points[st.handleIndex].price;
+          } else if (wantMode === 'posWidth' && d.points[1] && d.points[0]) {
+            lockTime = d.points[1].time;
+            lockPrice = d.points[0].price;
+          } else if (wantMode === 'rectCorner' && d.points[st.handleTimeIndex] && d.points[st.handlePriceIndex]) {
+            lockTime = d.points[st.handleTimeIndex].time;
+            lockPrice = d.points[st.handlePriceIndex].price;
+          } else if (d.points[st.handleIndex]) {
+            lockTime = d.points[st.handleIndex].time;
+            lockPrice = d.points[st.handleIndex].price;
+          }
+
+          setRpLockedCrosshair(matched.x, matched.y, lockPrice, lockTime);
+          return;
+        }
+      }
+
+      if (st.lockAnchorPt && resolvePointAndLockCrosshair(st.lockAnchorPt)) {
+        return;
+      }
+
+      const fallbackPt = rpPixelToPoint(fallbackX, fallbackY, false);
+      if (fallbackPt) {
+        setRpLockedCrosshair(fallbackX, fallbackY, fallbackPt.price, fallbackPt.time);
+      }
+    }
+
+    function renderRpLockedCrosshair(ctx, plot, wrapWidth, wrapHeight, isLightTheme) {
+      if (!rpLockedCrosshair || !plot || !rpChartInstance || !rpCandlestickSeries) return;
+      const { x, y, price, time, showVert, showHorz } = rpLockedCrosshair;
+      if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+
+      const theme = isLightTheme ? 'light' : 'dark';
+      const s = rpChartSettings || loadRpChartSettings(theme);
+      const baseColor = s.scales.crosshairColor || '#38BDF8';
+      const labelBg = s.scales.crosshairLabelBg || (isLightTheme ? '#1E293B' : '#0F172A');
+      const chStyle = s.scales.crosshairStyle || 'dashed';
+
+      const clampedX = Math.max(plot.left, Math.min(plot.right, x));
+      const clampedY = Math.max(plot.top, Math.min(plot.bottom, y));
+      const lineX = Math.round(clampedX) + 0.5;
+      const lineY = Math.round(clampedY) + 0.5;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(plot.left, plot.top, plot.width, plot.height);
+      ctx.clip();
+
+      ctx.strokeStyle = hexToRgba(baseColor, 0.72);
+      ctx.lineWidth = 1;
+      if (chStyle === 'solid') ctx.setLineDash([]);
+      else if (chStyle === 'dotted') ctx.setLineDash([2, 3]);
+      else ctx.setLineDash([5, 4]);
+
+      if (showVert !== false && x >= plot.left - 2 && x <= plot.right + 2) {
+        ctx.beginPath();
+        ctx.moveTo(lineX, plot.top);
+        ctx.lineTo(lineX, plot.bottom);
+        ctx.stroke();
+      }
+      if (showHorz !== false && y >= plot.top - 2 && y <= plot.bottom + 2) {
+        ctx.beginPath();
+        ctx.moveTo(plot.left, lineY);
+        ctx.lineTo(plot.right, lineY);
+        ctx.stroke();
+      }
+
+      if (x >= plot.left - 2 && x <= plot.right + 2 && y >= plot.top - 2 && y <= plot.bottom + 2) {
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.arc(clampedX, clampedY, 3.2, 0, Math.PI * 2);
+        ctx.fillStyle = hexToRgba(baseColor, 0.95);
+        ctx.fill();
+        ctx.strokeStyle = isLightTheme ? '#FFFFFF' : '#091124';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Sağ fiyat ekseni rozeti
+      const axisW = wrapWidth - plot.right;
+      if (
+        showHorz !== false &&
+        s.scales.priceScaleVisible !== false &&
+        axisW >= 34 &&
+        y >= plot.top - 4 &&
+        y <= plot.bottom + 4
+      ) {
+        const displayPrice = Number.isFinite(price)
+          ? price
+          : rpCandlestickSeries.coordinateToPrice(clampedY - plot.top);
+        if (displayPrice !== null && Number.isFinite(displayPrice)) {
+          const pillH = 18;
+          const halfH = pillH / 2;
+          const badgeY = Math.max(plot.top + halfH + 1, Math.min(plot.bottom - halfH - 1, clampedY));
+          const pillX = plot.right + 2;
+          const pillW = Math.max(40, axisW - 5);
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(plot.right, plot.top, axisW, plot.height);
+          ctx.clip();
+          drawRpRoundedRectPath(ctx, pillX, badgeY - halfH, pillW, pillH, 3.5);
+          ctx.fillStyle = labelBg;
+          ctx.fill();
+          ctx.strokeStyle = hexToRgba(baseColor, 0.65);
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.font = '700 10.5px "JetBrains Mono", "Plus Jakarta Sans", monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = getRpAxisBadgeTextColor(labelBg);
+          ctx.fillText(Number(displayPrice).toFixed(rpCurrentPrecision), pillX + pillW / 2, badgeY + 0.5);
+          ctx.restore();
+        }
+      }
+
+      // Alt zaman ekseni rozeti
+      const timeAxisH = wrapHeight - plot.bottom;
+      if (
+        showVert !== false &&
+        s.scales.timeVisible !== false &&
+        timeAxisH >= 18 &&
+        x >= plot.left - 4 &&
+        x <= plot.right + 4
+      ) {
+        const contLog = Number.isFinite(time)
+          ? null
+          : rpCoordinateToContinuousLogical(rpChartInstance.timeScale(), clampedX - plot.left);
+        const displayTime = Number.isFinite(time)
+          ? time
+          : (contLog !== null ? rpTimeFromLogical(contLog) : null);
+        const timeStr = formatRpCrosshairTime(displayTime, !!s.scales.secondsVisible);
+        if (timeStr) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(plot.left, plot.bottom, plot.width, timeAxisH);
+          ctx.clip();
+          ctx.font = '700 10.5px "JetBrains Mono", "Plus Jakarta Sans", monospace';
+          const pillW = Math.min(plot.width - 4, Math.max(76, ctx.measureText(timeStr).width + 14));
+          const pillH = Math.min(18, Math.max(15, timeAxisH - 4));
+          const pillX = Math.max(plot.left + 2, Math.min(plot.right - pillW - 2, clampedX - pillW / 2));
+          const pillY = plot.bottom + 2;
+          drawRpRoundedRectPath(ctx, pillX, pillY, pillW, pillH, 3.5);
+          ctx.fillStyle = labelBg;
+          ctx.fill();
+          ctx.strokeStyle = hexToRgba(baseColor, 0.65);
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = getRpAxisBadgeTextColor(labelBg);
+          ctx.fillText(timeStr, pillX + pillW / 2, pillY + pillH / 2 + 0.5);
+          ctx.restore();
+        }
+      }
     }
 
     function getRpViewportSignature(precomputedPlot = null) {
@@ -21682,6 +22023,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
       rpDraftDrawing = null;
       rpHoverMagnetPx = null;
+      if (toolId === 'cursor' || toolId === 'eraser') {
+        clearRpLockedCrosshair(true);
+      }
       if (toolId !== 'cursor') {
         rpSelectedDrawingId = null;
         syncRpDrawPropsBar();
@@ -22026,6 +22370,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       rpDrawingDragState = null;
       rpFavBarDragState = null;
       rpHoverMagnetPx = null;
+      clearRpLockedCrosshair(true);
       const wrap = document.getElementById('rp-chart-wrap');
       if (wrap) wrap.classList.remove('rp-drawing-grabbing', 'rp-drawing-hover');
       const favBar = document.getElementById('rp-fav-toolbar');
@@ -24216,7 +24561,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           return bestHit;
         };
 
-        const handleRpPriceLineDragMove = (clientY) => {
+        const handleRpPriceLineDragMove = (clientY, clientX = null) => {
           if (!rpDraggingLine || !rpCandlestickSeries || !rpChartInstance) return;
           const rect = chartWrap.getBoundingClientRect();
           const plot = getRpPlotRect();
@@ -24226,6 +24571,17 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           const rawPrice = rpCandlestickSeries.coordinateToPrice(y);
           if (rawPrice === null || !Number.isFinite(rawPrice)) return;
           const roundedPrice = Number(rawPrice.toFixed(rpCurrentPrecision));
+
+          const lockLineCrosshair = (targetPrice) => {
+            if (!Number.isFinite(targetPrice) || !rpCandlestickSeries) return;
+            const py = rpCandlestickSeries.priceToCoordinate(targetPrice);
+            if (py === null || !Number.isFinite(py)) return;
+            const lockX = clientX !== null && Number.isFinite(clientX)
+              ? (clientX - rect.left)
+              : (rpLastPointerWrapPos ? rpLastPointerWrapPos.x : (plot ? (plot.left + plot.width / 2) : rect.width / 2));
+            setRpLockedCrosshair(lockX, py + plotTop, targetPrice, null);
+            scheduleRpDrawRender();
+          };
 
           const activeItem = rpOpenTrade || rpPendingOrder;
           if (activeItem) {
@@ -24239,6 +24595,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               updateRpPanelDollarHints();
               updateRpPriceLineLabels();
               updateRpChartOverlay();
+              lockLineCrosshair(roundedPrice);
               return;
             }
 
@@ -24257,12 +24614,14 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             updateRpPanelDollarHints();
             updateRpPriceLineLabels();
             updateRpContextActiveLive();
+            lockLineCrosshair(clamped);
             return;
           }
 
           if (rpPreviewOrder && rpPreviewOrder.active) {
             const dir = rpPreviewOrder.direction === 'Sell' ? 'Sell' : 'Buy';
             const minStep = getRpMinPriceStep();
+            let lockedTargetPrice = roundedPrice;
             if (rpDraggingLine === 'entry') {
               const prevEntry = rpPreviewOrder.entry !== null && Number.isFinite(rpPreviewOrder.entry)
                 ? rpPreviewOrder.entry
@@ -24276,6 +24635,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               }
               const nextEntry = Math.max(minStep, roundRpPrice(prevEntry + delta));
               rpPreviewOrder.entry = nextEntry;
+              lockedTargetPrice = nextEntry;
 
               if (rpPreviewOrder.sl !== null && Number.isFinite(rpPreviewOrder.sl)) {
                 rpPreviewOrder.sl = clampRpDraggedPrice('sl', rpPreviewOrder.sl + delta, nextEntry, dir);
@@ -24322,6 +24682,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               const nextTp = computeRpTpFromSlAndRr(entryRef, clampedSl, dir, rpPreviewOrder.rrRatio || rpPreviewRrRatio);
               rpPreviewOrder.sl = clampedSl;
               rpPreviewOrder.tp = nextTp;
+              lockedTargetPrice = clampedSl;
               if (rpTradePriceLines.sl) {
                 rpTradePriceLines.sl.applyOptions({ price: clampedSl });
               }
@@ -24339,6 +24700,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 : getRpPreviewEntryRef();
               const clampedTp = clampRpDraggedPrice('tp', rawPrice, entryRef, dir);
               rpPreviewOrder.tp = clampedTp;
+              lockedTargetPrice = clampedTp;
               if (rpTradePriceLines.tp) {
                 rpTradePriceLines.tp.applyOptions({ price: clampedTp });
               }
@@ -24357,6 +24719,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             }
             updateRpPanelDollarHints();
             updateRpPriceLineLabels();
+            lockLineCrosshair(lockedTargetPrice);
           }
         };
 
@@ -24446,6 +24809,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               locked: false
             });
             rpDrawingDragState = { mode: 'freehand' };
+            resolvePointAndLockCrosshair(pt);
             rpChartInstance.applyOptions({ handleScroll: false, handleScale: false });
             renderRpDrawings();
             return true;
@@ -24459,6 +24823,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               locked: false
             });
             rpDrawingDragState = { mode: 'place2', startX: wrapX, startY: wrapY, moved: false };
+            resolvePointAndLockCrosshair(pt);
             rpChartInstance.applyOptions({ handleScroll: false, handleScale: false });
             renderRpDrawings();
             return true;
@@ -24467,6 +24832,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           if (tool === 'channel' && rpDraftDrawing.points.length === 2) {
             rpDraftDrawing.points.push({ time: pt.time, price: pt.price });
             rpDrawingDragState = { mode: 'place3' };
+            resolvePointAndLockCrosshair(pt);
             rpChartInstance.applyOptions({ handleScroll: false, handleScale: false });
             renderRpDrawings();
             return true;
@@ -24479,6 +24845,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             const p1 = finalPoints[1];
             rpDraftDrawing = null;
             rpDrawingDragState = null;
+            clearRpLockedCrosshair(true);
             rpChartInstance.applyOptions({ handleScroll: true, handleScale: true });
             renderRpDrawings();
             openRpDrawTextModal({ type: 'callout', points: [p0, p1], pixel: { x: wrapX, y: wrapY } });
@@ -24487,6 +24854,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           rpDraftDrawing.points = finalPoints;
           const completed = rpDraftDrawing;
           rpDrawingDragState = null;
+          clearRpLockedCrosshair(true);
           rpChartInstance.applyOptions({ handleScroll: true, handleScale: true });
           commitRpCompletedDrawing(completed);
           return true;
@@ -24585,6 +24953,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                   if (startPt && startLogical !== null && startPrice !== null) {
                     pushRpDrawUndoSnapshot();
                     const dragMode = (drawHit.handleIndex >= 0 && drawHit.handleMode !== 'moveAll') ? 'handle' : 'move';
+                    const anchorSeed = drawHit.handleMode === 'moveAll' && drawHit.drawing.points && drawHit.drawing.points[0]
+                      ? { time: drawHit.drawing.points[0].time, price: drawHit.drawing.points[0].price }
+                      : { time: startPt.time, price: startPt.price };
                     rpDrawingDragState = {
                       mode: dragMode,
                       drawing: drawHit.drawing,
@@ -24595,8 +24966,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                       handleCursor: drawHit.handleCursor || 'pointer',
                       lastPt: startPt,
                       lastLogical: startLogical,
-                      lastPrice: startPrice
+                      lastPrice: startPrice,
+                      lockAnchorPt: anchorSeed
                     };
+                    syncRpLockedCrosshairForDrag(drawHit.drawing, rpDrawingDragState, x, y);
                     rpChartInstance.applyOptions({ handleScroll: false, handleScale: false });
                   }
                 }
@@ -24633,6 +25006,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           const rect = chartWrap.getBoundingClientRect();
           const x = clientX - rect.left;
           const y = clientY - rect.top;
+          rpLastPointerWrapPos = { x, y };
 
           if (rpDrawingDragState && rpDrawingDragState.mode === 'freehand' && rpDraftDrawing) {
             const pt = rpPixelToPoint(x, y, false);
@@ -24641,8 +25015,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               const lastPx = last ? rpPointToPixel(last) : null;
               if (!lastPx || Math.hypot(x - lastPx.x, y - lastPx.y) >= 3) {
                 rpDraftDrawing.points.push({ time: pt.time, price: pt.price });
-                scheduleRpDrawRender();
               }
+              resolvePointAndLockCrosshair(pt);
+              scheduleRpDrawRender();
             }
             return true;
           }
@@ -24660,6 +25035,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               }
               rpDraftDrawing.points[rpDraftDrawing.points.length - 1] = { time: pt.time, price: pt.price };
               rpHoverMagnetPx = pt.snapped ? rpPointToPixel(pt) : null;
+              resolvePointAndLockCrosshair(pt);
               scheduleRpDrawRender();
             }
             return true;
@@ -24673,6 +25049,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               }
               rpDraftDrawing.points[rpDraftDrawing.points.length - 1] = { time: pt.time, price: pt.price };
               rpHoverMagnetPx = pt.snapped ? rpPointToPixel(pt) : null;
+              resolvePointAndLockCrosshair(pt);
               scheduleRpDrawRender();
             }
             return true;
@@ -24682,16 +25059,18 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             const d = rpDrawingDragState.drawing;
             if (!d || d.locked) return true;
             if (rpDrawingDragState.mode === 'handle') {
-              let pt = rpPixelToPoint(x, y, true);
+              const hMode = rpDrawingDragState.handleMode || 'xy';
+              const allowHandleMagnet = (hMode !== 'timeOnly' && hMode !== 'posWidth');
+              let pt = rpPixelToPoint(x, y, allowHandleMagnet);
               if (pt && d.points[rpDrawingDragState.handleIndex]) {
-                if (rpDrawingDragState.handleMode === 'priceOnly') {
+                if (hMode === 'priceOnly') {
                   d.points[rpDrawingDragState.handleIndex].price = pt.price;
-                } else if (rpDrawingDragState.handleMode === 'posWidth') {
+                } else if (hMode === 'posWidth') {
                   if (d.points[1]) d.points[1].time = pt.time;
                   if (d.points[2]) d.points[2].time = pt.time;
-                } else if (rpDrawingDragState.handleMode === 'timeOnly') {
+                } else if (hMode === 'timeOnly') {
                   d.points[rpDrawingDragState.handleIndex].time = pt.time;
-                } else if (rpDrawingDragState.handleMode === 'rectCorner') {
+                } else if (hMode === 'rectCorner') {
                   if (d.points[rpDrawingDragState.handleTimeIndex]) {
                     d.points[rpDrawingDragState.handleTimeIndex].time = pt.time;
                   }
@@ -24708,7 +25087,14 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                     d.points[2].time = pt.time;
                   }
                 }
-                rpHoverMagnetPx = pt.snapped ? rpPointToPixel(pt) : null;
+                syncRpLockedCrosshairForDrag(d, rpDrawingDragState, x, y);
+                if (pt.snapped && allowHandleMagnet) {
+                  rpHoverMagnetPx = (hMode === 'priceOnly' && rpLockedCrosshair)
+                    ? { x: rpLockedCrosshair.x, y: rpLockedCrosshair.y }
+                    : rpPointToPixel(pt);
+                } else {
+                  rpHoverMagnetPx = null;
+                }
                 scheduleRpDrawRender();
               }
             } else {
@@ -24733,8 +25119,19 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                   }
                   p.price += dp;
                 });
+                if (rpDrawingDragState.lockAnchorPt) {
+                  const aLog = rpLogicalFromTime(rpDrawingDragState.lockAnchorPt.time);
+                  if (aLog !== null && Number.isFinite(aLog)) {
+                    const nextAT = rpTimeFromLogical(aLog + dl);
+                    if (nextAT !== null && Number.isFinite(nextAT)) {
+                      rpDrawingDragState.lockAnchorPt.time = nextAT;
+                    }
+                  }
+                  rpDrawingDragState.lockAnchorPt.price += dp;
+                }
                 rpDrawingDragState.lastLogical = curLogical;
                 rpDrawingDragState.lastPrice = curPrice;
+                syncRpLockedCrosshairForDrag(d, rpDrawingDragState, x, y);
                 scheduleRpDrawRender();
               } else {
                 const pt = rpPixelToPoint(x, y, false);
@@ -24745,7 +25142,12 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                     p.time += dt;
                     p.price += dp;
                   });
+                  if (rpDrawingDragState.lockAnchorPt) {
+                    rpDrawingDragState.lockAnchorPt.time += dt;
+                    rpDrawingDragState.lockAnchorPt.price += dp;
+                  }
                   rpDrawingDragState.lastPt = pt;
+                  syncRpLockedCrosshairForDrag(d, rpDrawingDragState, x, y);
                   scheduleRpDrawRender();
                 }
               }
@@ -24760,6 +25162,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           const st = rpDrawingDragState;
           if (st.mode === 'freehand' && rpDraftDrawing) {
             rpDrawingDragState = null;
+            clearRpLockedCrosshair(true);
             if (rpChartInstance) rpChartInstance.applyOptions({ handleScroll: true, handleScale: true });
             if (rpDraftDrawing.points.length >= 2) {
               commitRpCompletedDrawing(rpDraftDrawing);
@@ -24775,6 +25178,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 const pt = rpPixelToPoint(clientX - chartWrap.getBoundingClientRect().left, clientY - chartWrap.getBoundingClientRect().top, true) || rpDraftDrawing.points[1];
                 rpDraftDrawing.points.push({ time: pt.time, price: pt.price });
                 rpDrawingDragState = null;
+                resolvePointAndLockCrosshair(pt);
                 if (rpChartInstance) rpChartInstance.applyOptions({ handleScroll: true, handleScale: true });
                 renderRpDrawings();
                 return;
@@ -24785,6 +25189,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 const rect = chartWrap.getBoundingClientRect();
                 rpDraftDrawing = null;
                 rpDrawingDragState = null;
+                clearRpLockedCrosshair(true);
                 if (rpChartInstance) rpChartInstance.applyOptions({ handleScroll: true, handleScale: true });
                 renderRpDrawings();
                 openRpDrawTextModal({ type: 'callout', points: [p0, p1], pixel: { x: clientX - rect.left, y: clientY - rect.top } });
@@ -24792,6 +25197,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
               }
               const completed = rpDraftDrawing;
               rpDrawingDragState = null;
+              clearRpLockedCrosshair(true);
               if (rpChartInstance) rpChartInstance.applyOptions({ handleScroll: true, handleScale: true });
               commitRpCompletedDrawing(completed);
               return;
@@ -24805,6 +25211,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           if (st.mode === 'place3' && rpDraftDrawing) {
             const completed = rpDraftDrawing;
             rpDrawingDragState = null;
+            clearRpLockedCrosshair(true);
             if (rpChartInstance) rpChartInstance.applyOptions({ handleScroll: true, handleScale: true });
             commitRpCompletedDrawing(completed);
             return;
@@ -24812,6 +25219,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           if (st.mode === 'handle' || st.mode === 'move') {
             rpDrawingDragState = null;
             rpHoverMagnetPx = null;
+            clearRpLockedCrosshair(true);
             chartWrap.classList.remove('rp-drawing-grabbing');
             chartWrap.style.removeProperty('--rp-draw-cursor');
             if (rpChartInstance) rpChartInstance.applyOptions({ handleScroll: true, handleScale: true });
@@ -24835,7 +25243,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                   if (rpChartInstance) rpChartInstance.applyOptions({ handleScroll: false, handleScale: false });
                   chartWrap.classList.add('rp-line-hover');
                   if (e.cancelable) e.preventDefault();
-                  handleRpPriceLineDragMove(t.clientY);
+                  handleRpPriceLineDragMove(t.clientY, t.clientX);
                 }
               }
             }
@@ -24859,7 +25267,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             const t = e.touches && e.touches[0];
             if (t) {
               if (e.cancelable) e.preventDefault();
-              handleRpPriceLineDragMove(t.clientY);
+              handleRpPriceLineDragMove(t.clientY, t.clientX);
             }
             return;
           }
@@ -24979,6 +25387,9 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                   if (startPt && startLogical !== null && startPrice !== null) {
                     pushRpDrawUndoSnapshot();
                     const dragMode = (drawHit.handleIndex >= 0 && drawHit.handleMode !== 'moveAll') ? 'handle' : 'move';
+                    const anchorSeed = drawHit.handleMode === 'moveAll' && drawHit.drawing.points && drawHit.drawing.points[0]
+                      ? { time: drawHit.drawing.points[0].time, price: drawHit.drawing.points[0].price }
+                      : { time: startPt.time, price: startPt.price };
                     rpDrawingDragState = {
                       mode: dragMode,
                       drawing: drawHit.drawing,
@@ -24989,8 +25400,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                       handleCursor: drawHit.handleCursor || 'pointer',
                       lastPt: startPt,
                       lastLogical: startLogical,
-                      lastPrice: startPrice
+                      lastPrice: startPrice,
+                      lockAnchorPt: anchorSeed
                     };
+                    syncRpLockedCrosshairForDrag(drawHit.drawing, rpDrawingDragState, x, y);
                     if (drawHit.handleIndex >= 0 && drawHit.handleMode !== 'moveAll') {
                       chartWrap.style.setProperty('--rp-draw-cursor', drawHit.handleCursor || 'pointer');
                       chartWrap.classList.add('rp-drawing-hover');
@@ -25117,18 +25530,34 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           const rect = chartWrap.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
+          rpLastPointerWrapPos = { x, y };
           if (rpActiveDrawTool !== 'cursor') {
             clearRpHoverTimerNow();
             if (rpHoveredDrawingId) {
               rpHoveredDrawingId = null;
               syncRpDrawPropsBar();
             }
-            if (rpDrawPrefs && rpDrawPrefs.magnet) {
+            if (rpActiveDrawTool !== 'eraser' && rpDrawPrefs && rpDrawPrefs.magnet) {
               const pt = rpPixelToPoint(x, y, true);
-              rpHoverMagnetPx = (pt && pt.snapped) ? rpPointToPixel(pt) : null;
+              if (pt && pt.snapped) {
+                rpHoverMagnetPx = rpPointToPixel(pt);
+                resolvePointAndLockCrosshair(pt);
+              } else {
+                rpHoverMagnetPx = null;
+                clearRpLockedCrosshair(true);
+              }
+              scheduleRpDrawRender();
+            } else if (rpLockedCrosshair || rpHoverMagnetPx) {
+              rpHoverMagnetPx = null;
+              clearRpLockedCrosshair(true);
               scheduleRpDrawRender();
             }
             return;
+          }
+          if (rpLockedCrosshair || rpHoverMagnetPx) {
+            rpHoverMagnetPx = null;
+            clearRpLockedCrosshair(true);
+            scheduleRpDrawRender();
           }
           const hoveringHit = findRpHitPriceLine(y, 8);
           if (hoveringHit) {
@@ -25171,6 +25600,11 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
         });
 
         chartWrap.addEventListener('mouseleave', () => {
+          rpLastPointerWrapPos = null;
+          if (!rpDrawingDragState && !rpDraggingLine) {
+            rpHoverMagnetPx = null;
+            clearRpLockedCrosshair();
+          }
           if (!rpIsPointerOverPropsBar && rpHoveredDrawingId) {
             scheduleRpHoverClear(240);
           }
@@ -25189,7 +25623,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
                 if (rpChartInstance) rpChartInstance.applyOptions({ handleScroll: false, handleScale: false });
                 chartWrap.style.cursor = 'ns-resize';
                 chartWrap.classList.add('rp-line-hover');
-                handleRpPriceLineDragMove(e.clientY);
+                handleRpPriceLineDragMove(e.clientY, e.clientX);
               }
             }
             return;
@@ -25204,7 +25638,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             return;
           }
           if (rpDraggingLine) {
-            handleRpPriceLineDragMove(e.clientY);
+            handleRpPriceLineDragMove(e.clientY, e.clientX);
             return;
           }
           if ((e.buttons & 1) !== 0 && rpChartInstance && document.getElementById('sec-chart')?.classList.contains('active')) {

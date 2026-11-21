@@ -20,9 +20,8 @@ export interface ModelAttempt {
 export const ANALYZE_SERVER_BUDGET_MS = 32_000;
 
 export const MODEL_ATTEMPTS: readonly ModelAttempt[] = [
-  { model: 'gemini-4-hydrogen', thinkingLevel: ThinkingLevel.LOW, delayMs: 0, timeoutMs: 16_000 },
-  { model: 'gemini-3.8-flash', thinkingLevel: null, delayMs: 150, timeoutMs: 7_000 },
-  { model: 'gemini-3.1-flash-lite', thinkingLevel: null, delayMs: 200, timeoutMs: 8_000 },
+  { model: 'gemini-4-hydrogen', thinkingLevel: ThinkingLevel.LOW, delayMs: 0, timeoutMs: 18_000 },
+  { model: 'gemini-3.1-flash-lite', thinkingLevel: null, delayMs: 150, timeoutMs: 10_000 },
 ];
 
 export interface GeminiErrorInfo {
@@ -304,11 +303,32 @@ export function normalizeSession(raw: unknown, hhmm: string | null): string | nu
 export function normalizeDate(raw: unknown): string | null {
   if (typeof raw !== 'string') return null;
   const trimmed = raw.trim();
-  const m = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  if (!m) return null;
-  const y = Number(m[1]);
-  const mo = Number(m[2]);
-  const d = Number(m[3]);
+  if (!trimmed) return null;
+
+  let y = 0;
+  let mo = 0;
+  let d = 0;
+
+  const isoMatch = trimmed.match(/^(\d{4})[-./](\d{1,2})[-./](\d{1,2})(?:[T\s].*)?$/);
+  if (isoMatch) {
+    y = Number(isoMatch[1]);
+    mo = Number(isoMatch[2]);
+    d = Number(isoMatch[3]);
+  } else {
+    const euMatch = trimmed.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})(?:[T\s].*)?$/);
+    if (!euMatch) return null;
+    const first = Number(euMatch[1]);
+    const second = Number(euMatch[2]);
+    y = Number(euMatch[3]);
+    if (second > 12 && first <= 12) {
+      mo = first;
+      d = second;
+    } else {
+      d = first;
+      mo = second;
+    }
+  }
+
   if (y < 2000 || y > 2100 || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
   return `${String(y).padStart(4, '0')}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
@@ -316,10 +336,19 @@ export function normalizeDate(raw: unknown): string | null {
 export function normalizeTime(raw: unknown): string | null {
   if (typeof raw !== 'string') return null;
   const trimmed = raw.trim();
-  const m = trimmed.match(/(\d{1,2}):(\d{2})/);
+  const m = trimmed.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?/i);
   if (!m) return null;
-  const h = Number(m[1]);
+  let h = Number(m[1]);
   const mi = Number(m[2]);
+  const meridiem = m[3] ? m[3].toUpperCase() : null;
+  if (meridiem) {
+    if (h < 1 || h > 12) return null;
+    if (meridiem === 'AM') {
+      if (h === 12) h = 0;
+    } else if (meridiem === 'PM') {
+      if (h !== 12) h += 12;
+    }
+  }
   if (h < 0 || h > 23 || mi < 0 || mi > 59) return null;
   return `${String(h).padStart(2, '0')}:${String(mi).padStart(2, '0')}`;
 }
@@ -327,8 +356,29 @@ export function normalizeTime(raw: unknown): string | null {
 export function toFiniteNumber(raw: unknown): number | null {
   if (typeof raw === 'number') return Number.isFinite(raw) ? raw : null;
   if (typeof raw === 'string') {
-    const cleaned = raw.replace(/[\s,$€₺+]/g, '').replace(',', '.');
+    const hasCurrencySymbol = /[$€₺]/.test(raw);
+    let cleaned = raw.replace(/[\s$€₺+]/g, '');
     if (!cleaned) return null;
+
+    const hasComma = cleaned.includes(',');
+    const hasDot = cleaned.includes('.');
+
+    if (hasComma && hasDot) {
+      if (cleaned.lastIndexOf(',') > cleaned.lastIndexOf('.')) {
+        cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+      } else {
+        cleaned = cleaned.replace(/,/g, '');
+      }
+    } else if (hasComma) {
+      if (/^-?\d{1,3}(,\d{3}){2,}$/.test(cleaned) || (hasCurrencySymbol && /^-?\d{1,3},\d{3}$/.test(cleaned))) {
+        cleaned = cleaned.replace(/,/g, '');
+      } else {
+        cleaned = cleaned.replace(',', '.');
+      }
+    } else if (hasDot && /^-?\d{1,3}(\.\d{3}){2,}$/.test(cleaned)) {
+      cleaned = cleaned.replace(/\./g, '');
+    }
+
     const n = Number(cleaned);
     return Number.isFinite(n) ? n : null;
   }
@@ -675,7 +725,7 @@ async function startServer() {
       const pair = normalizePair(parsed.pair);
       let direction = normalizeDirection(parsed.direction);
       const date = normalizeDate(parsed.date);
-      const time = normalizeTime(parsed.time);
+      const time = normalizeTime(parsed.time) || normalizeTime(parsed.date);
       const datetime = date && time ? `${date}T${time}` : null;
       const timeframe = normalizeTimeframe(parsed.timeframe);
       const session = normalizeSession(parsed.session, time);
@@ -703,8 +753,12 @@ async function startServer() {
         tp,
         result,
       });
-      const exit = reconciled.exit;
+      let exit = reconciled.exit;
       result = reconciled.result;
+
+      if (exit === null && result === 'BE' && entry !== null) {
+        exit = entry;
+      }
 
       if (!result && entry !== null && exit !== null && direction) {
         if (Math.abs(exit - entry) === 0) {
