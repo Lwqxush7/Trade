@@ -106,7 +106,15 @@ test('parseGeminiErrorInfo and formatFriendlyGeminiError extract nested 503 JSON
   assert.equal(friendly.error.startsWith('{'), false);
 });
 
-test('runWithModelFallback retries transient 503 errors and falls back to lite model', async () => {
+test('MODEL_ATTEMPTS preserves 4-model priority chain with short timeouts', () => {
+  assert.deepEqual(
+    MODEL_ATTEMPTS.map((m) => m.model),
+    ['gemini-4-hydrogen', 'gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite']
+  );
+  assert.equal((MODEL_ATTEMPTS[0].timeoutMs ?? 0) <= 10_000, true);
+});
+
+test('runWithModelFallback retries transient 503 errors and falls back to 3.8-flash then lite models', async () => {
   const calledModels: string[] = [];
   const noopSleep = async () => {};
   const err503 = new Error(
@@ -116,7 +124,7 @@ test('runWithModelFallback retries transient 503 errors and falls back to lite m
   const out = await runWithModelFallback(
     async (attempt) => {
       calledModels.push(attempt.model);
-      if (calledModels.length < 2) {
+      if (calledModels.length < 3) {
         throw err503;
       }
       return { text: '{"pair":"NAS100"}' };
@@ -127,10 +135,11 @@ test('runWithModelFallback retries transient 503 errors and falls back to lite m
 
   assert.deepEqual(calledModels, [
     'gemini-4-hydrogen',
-    'gemini-3.1-flash-lite',
+    'gemini-3.8-flash',
+    'gemini-3.5-flash-lite',
   ]);
-  assert.equal(out.modelUsed, 'gemini-3.1-flash-lite');
-  assert.equal(out.attemptCount, 2);
+  assert.equal(out.modelUsed, 'gemini-3.5-flash-lite');
+  assert.equal(out.attemptCount, 3);
 });
 
 test('runWithModelFallback stops immediately on non-transient 403 error', async () => {
@@ -153,14 +162,43 @@ test('runWithModelFallback stops immediately on non-transient 403 error', async 
   assert.equal(calls, 1);
 });
 
-test('runWithModelFallback falls through 404 NOT_FOUND on primary model to 3.1-flash-lite', async () => {
+test('runWithModelFallback retries same model without thinkingLevel on 400 thinking error before falling through', async () => {
+  const trace: Array<{ model: string; thinkingLevel: unknown }> = [];
+  const noopSleep = async () => {};
+
+  const out = await runWithModelFallback(
+    async (attempt) => {
+      trace.push({ model: attempt.model, thinkingLevel: attempt.thinkingLevel });
+      if (attempt.model === 'gemini-4-hydrogen') {
+        throw Object.assign(new Error('{"error":{"code":503,"status":"UNAVAILABLE"}}'), { status: 503 });
+      }
+      if (attempt.model === 'gemini-3.8-flash' && attempt.thinkingLevel !== null) {
+        throw Object.assign(
+          new Error('{"error":{"code":400,"message":"thinkingLevel is not supported","status":"INVALID_ARGUMENT"}}'),
+          { status: 400 }
+        );
+      }
+      return { text: '{"pair":"XAUUSD"}' };
+    },
+    MODEL_ATTEMPTS,
+    noopSleep
+  );
+
+  assert.deepEqual(
+    trace.map((t) => `${t.model}:${t.thinkingLevel ? 'think' : 'none'}`),
+    ['gemini-4-hydrogen:think', 'gemini-3.8-flash:think', 'gemini-3.8-flash:none']
+  );
+  assert.equal(out.modelUsed, 'gemini-3.8-flash');
+});
+
+test('runWithModelFallback falls through 404 NOT_FOUND across models down to 3.1-flash-lite', async () => {
   const calledModels: string[] = [];
   const noopSleep = async () => {};
 
   const out = await runWithModelFallback(
     async (attempt) => {
       calledModels.push(attempt.model);
-      if (attempt.model === 'gemini-4-hydrogen') {
+      if (attempt.model !== 'gemini-3.1-flash-lite') {
         throw Object.assign(new Error('{"error":{"code":404,"status":"NOT_FOUND"}}'), { status: 404 });
       }
       return { text: '{"pair":"XAUUSD"}' };
@@ -171,6 +209,8 @@ test('runWithModelFallback falls through 404 NOT_FOUND on primary model to 3.1-f
 
   assert.deepEqual(calledModels, [
     'gemini-4-hydrogen',
+    'gemini-3.8-flash',
+    'gemini-3.5-flash-lite',
     'gemini-3.1-flash-lite',
   ]);
   assert.equal(out.modelUsed, 'gemini-3.1-flash-lite');

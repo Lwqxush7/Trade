@@ -9904,7 +9904,7 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
       }
     });
 
-    async function readFileAsScanDataUrl(file, maxDimension = 1920) {
+    async function readFileAsScanDataUrl(file, maxDimension = 1440) {
       if (!file || !file.type || !file.type.startsWith('image/')) return null;
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -10048,13 +10048,18 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
             } catch (_) {}
 
             const pngUrl = canvas.toDataURL('image/png');
-            if (pngUrl.length <= 2.6 * 1024 * 1024) {
+            if (pngUrl.length <= 750 * 1024) {
               resolve({ dataUrl: pngUrl, mimeType: 'image/png' });
             } else {
-              resolve({
-                dataUrl: canvas.toDataURL('image/jpeg', 0.92),
-                mimeType: 'image/jpeg'
-              });
+              const webpUrl = canvas.toDataURL('image/webp', 0.90);
+              if (webpUrl.startsWith('data:image/webp') && webpUrl.length < pngUrl.length) {
+                resolve({ dataUrl: webpUrl, mimeType: 'image/webp' });
+              } else {
+                resolve({
+                  dataUrl: canvas.toDataURL('image/jpeg', 0.90),
+                  mimeType: 'image/jpeg'
+                });
+              }
             }
           };
           img.onerror = () => resolve({ dataUrl: rawUrl, mimeType: file.type || 'image/png' });
@@ -10079,8 +10084,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           continue;
         }
 
-        const scanPrep = !firstScanCandidate ? await readFileAsScanDataUrl(file) : null;
-        const comp = await compressImageFileToWebP(file);
+        const [scanPrep, comp] = await Promise.all([
+          !firstScanCandidate ? readFileAsScanDataUrl(file) : Promise.resolve(null),
+          compressImageFileToWebP(file)
+        ]);
         if (comp) {
           const imgId = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
           AppState.pendingNewImages.push({
@@ -11591,8 +11598,10 @@ textarea.input-glass { resize: vertical; min-height: 80px; line-height: 1.45; }
           continue;
         }
 
-        const scanPrep = !firstScanCandidate ? await readFileAsScanDataUrl(file) : null;
-        const comp = await compressImageFileToWebP(file);
+        const [scanPrep, comp] = await Promise.all([
+          !firstScanCandidate ? readFileAsScanDataUrl(file) : Promise.resolve(null),
+          compressImageFileToWebP(file)
+        ]);
         if (comp) {
           const imgId = 'bt_img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
           AppState.pendingBacktestNewImages.push({

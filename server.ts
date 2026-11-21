@@ -20,8 +20,10 @@ export interface ModelAttempt {
 export const ANALYZE_SERVER_BUDGET_MS = 32_000;
 
 export const MODEL_ATTEMPTS: readonly ModelAttempt[] = [
-  { model: 'gemini-4-hydrogen', thinkingLevel: ThinkingLevel.LOW, delayMs: 0, timeoutMs: 18_000 },
-  { model: 'gemini-3.1-flash-lite', thinkingLevel: null, delayMs: 150, timeoutMs: 10_000 },
+  { model: 'gemini-4-hydrogen', thinkingLevel: ThinkingLevel.LOW, delayMs: 0, timeoutMs: 8_500 },
+  { model: 'gemini-3.8-flash', thinkingLevel: ThinkingLevel.LOW, delayMs: 100, timeoutMs: 8_500 },
+  { model: 'gemini-3.5-flash-lite', thinkingLevel: null, delayMs: 100, timeoutMs: 6_500 },
+  { model: 'gemini-3.1-flash-lite', thinkingLevel: null, delayMs: 100, timeoutMs: 6_500 },
 ];
 
 export interface GeminiErrorInfo {
@@ -194,8 +196,23 @@ export async function runWithModelFallback<T>(
     });
 
     try {
+      const invokeWithGuard = async () => {
+        try {
+          return await invokeFn(attempt, attemptController.signal);
+        } catch (firstErr) {
+          const firstInfo = parseGeminiErrorInfo(firstErr);
+          const isThinkingCompatErr =
+            attempt.thinkingLevel !== null &&
+            firstInfo.status === 400 &&
+            /thinking/i.test(`${firstInfo.statusText} ${firstInfo.message}`);
+          if (isThinkingCompatErr && !attemptController.signal.aborted) {
+            return await invokeFn({ ...attempt, thinkingLevel: null }, attemptController.signal);
+          }
+          throw firstErr;
+        }
+      };
       const result = await Promise.race([
-        invokeFn(attempt, attemptController.signal),
+        invokeWithGuard(),
         timeoutPromise,
       ]);
       return { result, modelUsed: attempt.model, attemptCount: i + 1 };
@@ -451,43 +468,17 @@ export function sanitizeTradeNotes(raw: unknown): string {
 
 function buildSystemInstruction(): string {
   return [
-    'Sen profesyonel bir finansal grafik analiz ve veri çıkarım motorusun. Görevin, yüklenen işlem (trade) grafik ekran görüntüsünden yalnızca kesin form verilerini ve kısa teknik yürütme notunu çıkarmaktır.',
-    '',
-    '1. PARİTE VE TIMEFRAME OKUMA (SOL ÜST VEYA ORTA FİLİGRAN):',
-    '- Parite ve zaman dilimi yalnızca sol üst köşede değil, çoğunlukla grafiğin TAM ORTASINDAKİ (arka plan filigranı / watermark) "PARİTE · TF" (ör. "XAUUSD · M5", "NAS100 · M15", "EURUSD · H1") yazısında da yer alır.',
-    '- Açık (beyaz) veya koyu zemin üzerinde silik olsa bile grafik ortasındaki filigran metnini dikkatle oku; pair ve timeframe alanlarını buradan çıkar.',
-    '',
-    '2. TARİH VE SAAT OKUMA (ÇOK ÖNEMLİ):',
-    '- Grafiğin EN ALTINDAKİ X-ekseni (zaman ekseni) üzerindeki saat ve tarih etiketlerini dikkatle incele (ör. "09:00 ... 18:00  18:45").',
-    '- Koyu/renkli crosshair saat rozetine (örn. "16:54", "11 Kas \'26 16:54", "2026-11-11 16:54"), giriş mumunun/pozisyonun dikey olarak denk geldiği alttaki X-ekseni saat işaretlerine ve sağ alt köşedeki son mum saatine bak.',
-    '- Alttaki zaman ekseninde saat (HH:mm) okunabiliyorsa ASLA time alanını null bırakma. Tarih görünmüyorsa date için null döndürüp time alanını mutlaka "HH:mm" olarak doldur.',
-    '- Tarihte yıl yazmıyorsa içinde bulunulan yılı (2026) kabul et.',
-    '',
-    '3. FİYAT, ÇİZGİ ETİKETLERİ, TP/SL ÇIKIŞ KURALI VE YÖN TUTARLILIĞI:',
-    '- TradingView/cTrader/MT5 Long/Short pozisyon kutularında yeşil alan TP (hedef), kırmızı alan SL (stop) ve orta çizgi Entry (giriş) fiyatıdır. Yeşil bölge girişin ÜSTÜNDE ise Long, ALTINDA ise Short.',
-    '- Yatay çizgi etiketli grafiklerde (sağ fiyat ekseninde renkli rozetler):',
-    '  * "Sell Giriş" / "Sell" / "Short Giriş" mavi rozetinin yanındaki fiyat = entry ve direction = "Short".',
-    '  * "Buy Giriş" / "Buy" / "Long Giriş" rozetinin yanındaki fiyat = entry ve direction = "Long".',
-    '  * Kırmızı "SL" veya "SL (-$...)" rozetinin yanındaki sayısal eksen fiyatı = sl.',
-    '  * Yeşil "TP" veya "TP (+$...)" rozetinin yanındaki sayısal eksen fiyatı = tp (hedef TP seviyesi).',
-    '- ÇOK ÖNEMLİ — ÇIKIŞ (exit) FİYATI İLE ANLIK FİYAT ROZETİNİ KARIŞTIRMA:',
-    '  * Grafik sağ ekseninde hem yeşil "TP (+$...) | 3897.32" etiketi hem de en son muma ait etiketsiz bir anlık fiyat rozeti (örn. TP çizgisinin ötesinde "3890.12") aynı anda görülebilir.',
-    '  * Mumlar veya son fiyat "TP" çizgisine değmiş ya da TP çizgisini geçmişse (Short işlemde fiyat TP altına indiyse; Long işlemde fiyat TP üstüne çıktıysa), pozisyon TP seviyesinde kârla kapanmış demektir: Bu durumda exit MUTLAKA tp fiyatı (örn. 3897.32) olmalıdır; TP ötesindeki anlık mum fiyatını (örn. 3890.12) ASLA exit alma! result = "Win" döndür.',
-    '  * Benzer şekilde mumlar veya son fiyat "SL" çizgisine değmiş ya da SL çizgisini geçmişse (Short işlemde fiyat SL üstüne çıktıysa; Long işlemde fiyat SL altına indiyse), pozisyon SL seviyesinde kapanmış demektir: exit MUTLAKA sl fiyatı olmalıdır ve result = "Loss" döndür.',
-    '  * Etiketsiz son fiyat/kapanış rozetini yalnızca ortada TP/SL çizgisi yoksa veya mumlar henüz ne TP ne SL çizgisine değmeden arada kapanmışsa exit olarak kullan.',
-    '- Short işlemde: Win için exit < entry ve sl > entry; Loss için exit > entry ve sl > entry.',
-    '- Long işlemde: Win için exit > entry ve sl < entry; Loss için exit < entry ve sl < entry.',
-    '- TradingView pozisyon kutusundaki hedef/stop mesafe yüzdelerini (örn. +0.17%, -0.09%) ASLA riskPct olarak alma. Yalnızca açıkça hesap risk yüzdesi yazıyorsa oku, aksi halde riskPct için null döndür.',
-    '- Grafik üzerindeki "SL (-$998.64)" veya "TP (+$2598.80)" etiketleri yalnızca ekran görüntüsüne ait bilgi rozetidir; kullanıcı hesabı üzerinden hesaplama yapılacağı için pnl alanına ekranda kesin gerçekleşmiş hesap PnL yazmıyorsa null döndürebilirsin.',
-    '',
-    '4. İŞLEM NOTLARI (notes ALANI) — KESİN KURALLAR:',
-    '- ASLA "Kullanıcı", "Trader", "Yatırımcı" ifadelerini veya "...kurmuş", "...açmış", "...hedeflemiş" gibi üçüncü tekil anlatımı kullanma.',
-    '- ASLA parite adını, zaman dilimini (M1, M5, M15 vb.), yönü (Long/Short) veya R:R oranını (1:2.32 vb.) tekrar eden arka plan özet cümlesi yazma.',
-    '- Yalnızca grafikte teknik olarak ne yapıldığını kısa, doğrudan ve edilgen işlem günlüğü diliyle 1-2 cümlede yaz (örnek: "Likidite alımı sonrası yapı kırılımı ile işleme girildi. Son swing tepe üzerinde stop konumlandırılıp alt likidite bölgesinde kâr alındı.").',
-    '',
-    '5. EMİN OLUNAMAYAN ALANLAR (uncertainFields ALANI):',
-    '- Görselde silik, kesik, kısmen görünen veya kapanış noktası belirsiz olan alanların adlarını uncertainFields dizisine ekle ("pair", "direction", "date", "time", "timeframe", "session", "entry", "exit", "sl", "riskPct", "pnl", "result").',
-    '- Net ve kesin okuduğun alanları uncertainFields içine EKLEME.'
+    'Sen profesyonel bir finansal grafik veri çıkarım motorusun. Yüklenen grafik ekran görüntüsünden yalnızca kesin form alanlarını ve kısa teknik notu JSON olarak çıkar.',
+    '1. PARİTE & TF: Sol üst veya grafik ortasındaki filigrandan (örn. "XAUUSD · M5", "NAS100 · H1") pair (borsa öneki/.P olmadan) ve timeframe çıkar.',
+    '2. TARİH & SAAT: En alttaki X-ekseni saat/tarih etiketlerini ve crosshair saat rozetini oku. Saat okunabiliyorsa time alanını "HH:mm" olarak mutlaka doldur; yıl yoksa 2026 kabul et.',
+    '3. FİYAT & TP/SL KURALI:',
+    '- Pozisyon kutularında yeşil bölge TP, kırmızı bölge SL, orta çizgi Entry fiyatıdır (yeşil üstteyse Long, alttaysa Short).',
+    '- Sağ eksendeki etiketler: "Buy/Long Giriş" = Long entry, "Sell/Short Giriş" = Short entry, kırmızı "SL" = sl, yeşil "TP" = tp.',
+    '- Mumlar veya fiyat TP çizgisine değmiş ya da geçmişse exit MUTLAKA tp fiyatı, result = "Win" olmalıdır; TP ötesindeki anlık mum rozetini exit alma. SL çizgisine değmiş ya da geçmişse exit MUTLAKA sl fiyatı, result = "Loss" olmalıdır.',
+    '- Long: Win -> exit > entry, Loss -> exit < entry, sl < entry. Short: Win -> exit < entry, Loss -> exit > entry, sl > entry.',
+    '- Kutu üzerindeki fiyat mesafe yüzdelerini (+0.17% vb.) riskPct alma; açık hesap riski yoksa null bırak. Yalnızca gerçek hesap P/L yazıyorsa pnl döndür, yoksa null.',
+    '4. NOTLAR (notes): "Kullanıcı/Trader/Yatırımcı" kelimelerini ve parite/timeframe/R:R özetini ASLA yazma; yalnızca teknik yürütmeyi 1-2 edilgen Türkçe cümlede anlat.',
+    '5. EMİN OLUNAMAYANLAR (uncertainFields): Yalnızca silik, kesik veya belirsiz alan adlarını ekle ("pair", "direction", "date", "time", "timeframe", "session", "entry", "exit", "sl", "riskPct", "pnl", "result").',
   ].join('\n');
 }
 
@@ -666,7 +657,7 @@ async function startServer() {
         },
       });
 
-      const { result: response } = await runWithModelFallback(
+      const { result: response, modelUsed } = await runWithModelFallback(
         async (attempt, signal) => {
           const config: {
             systemInstruction: string;
@@ -695,7 +686,7 @@ async function startServer() {
                 },
                 {
                   text:
-                    'Bu grafik ekran görüntüsündeki tüm işlem bilgilerini çıkar: ortadaki veya köşedeki parite·timeframe filigranını (örn. XAUUSD · M5, XAUUSD · H1), sağ fiyat eksenindeki Sell Giriş/Buy Giriş/SL/TP etiketlerini ve fiyatlarını, alt X-eksenindeki tarih/saat etiketlerini oku. Eğer fiyat TP çizgisine değmiş veya TP çizgisini geçmişse exit değerini en sondaki mum fiyatına değil TP çizgisinin fiyatına eşitle (ör. TP 3897.32 iken anlık fiyat 3890.12 ise exit=3897.32). notes alanında yalnızca teknik olarak ne yapıldığını yaz (kesinlikle "Kullanıcı" kelimesini ve parite/timeframe/R:R özet cümlesini yazma).',
+                    'Grafikteki parite·timeframe filigranını, sağ eksendeki Giriş/SL/TP fiyatlarını ve alt eksendeki tarih/saati çıkar. Fiyat TP/SL çizgisini geçtiyse exit olarak TP/SL çizgisini al. notes alanını edilgen ve kısa yaz.',
                 },
               ],
             },
@@ -774,6 +765,7 @@ async function startServer() {
       const uncertainFields = normalizeUncertainFields(parsed.uncertainFields);
 
       return res.json({
+        modelUsed,
         extracted: {
           pair,
           direction,
